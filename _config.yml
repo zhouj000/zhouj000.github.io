@@ -64,7 +64,7 @@ kramdown:
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
-sidebar-about-description: "人生有限，将麻烦的事弄在一起，不是更简单了吗"
+sidebar-about-description: "人生有限，将麻烦的事弄在一起，不是更简单了吗?"
 sidebar-avatar: /img/my-zj.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
