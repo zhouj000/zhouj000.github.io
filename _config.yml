@@ -11,8 +11,8 @@ baseurl: ""
 
 # SNS settings
 RSS: false
-# weibo_username:     huxpro
-# zhihu_username:     huxpro
+# weibo_username: zhouj000
+# zhihu_username: zhouj000
 # github_username: zhouj000
 
 
@@ -22,14 +22,12 @@ highlighter: rouge
 permalink: pretty
 paginate: 10
 exclude: ["less","node_modules","Gruntfile.js","package.json","README.md"]
-anchorjs: true                          # if you want to customize anchor. check out line:181 of `post.html`
-
+anchorjs: true                          # if you want to customize anchor. check out: `post.html`
 
 
 # Gems
 # from PR#40, to support local preview for Jekyll 3.0
 gems: [jekyll-paginate]
-
 
 
 # Markdown settings
@@ -41,16 +39,8 @@ kramdown:
   input: GFM                            # use Github Flavored Markdown !important
 
 
-
 # Disqus settings
 #disqus_username: _your_disqus_short_name_
-
-# Duoshuo settings
-# duoshuo_username: zhouj000 blog
-# Share component is depend on Comment so we can NOT use share only.
-# duoshuo_share: true                     # set to false if you want to use Comment without Sharing
-
-
 
 
 # Analytics settings
@@ -61,18 +51,15 @@ kramdown:
 # ga_domain: huangxuan.me
 
 
-
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
 sidebar-about-description: "人生有限，将麻烦的事弄在一起，不是更简单了吗?"
 sidebar-avatar: /img/my-zj.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
-
 # Featured Tags
 featured-tags: true                     # whether or not using Feature-Tags
 featured-condition-size: 1              # A tag will be featured if the size of it is more than this condition value
-
 
 
 # Friends

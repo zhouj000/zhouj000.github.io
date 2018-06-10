@@ -4,7 +4,7 @@ title:      "Welcome to ZhouJ000 Blog"
 subtitle:   "第一篇博文"
 date:       2018-06-07
 author:     "ZhouJ000"
-header-img: "img/post-bg-2018-first.jpg"
+header-img: "img/in-post/2018/post-bg-2018-first.jpg"
 tags:
     - test
 ---
