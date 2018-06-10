@@ -81,3 +81,9 @@ featured-condition-size: 1              # A tag will be featured if the size of 
 #        href: "#"
 #    }
 #]
+
+
+# gitee
+include: [_includes] 
+include: [_layouts] 
+include: [_posts] 
