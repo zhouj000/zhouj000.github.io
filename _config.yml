@@ -86,10 +86,3 @@ service-worker: true
 #        href: "#"
 #    }
 #]
-
-
-# gitee
-include: 
-  - _includes
-  - _layouts
-  - _posts
