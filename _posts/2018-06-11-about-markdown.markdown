@@ -52,8 +52,7 @@ Markdown编辑器在Windows下试用了几个都觉得不好，可以使用web�
 
 
 ## 2.列表：
-在文字前加上 *，+，- 表示无序列表；
-
+在文字前加上 *，+，- 表示无序列表；  
 在文字前加上1. 2. 3.表示有序列表。
 
 1. first
@@ -68,9 +67,9 @@ Markdown编辑器在Windows下试用了几个都觉得不好，可以使用web�
 - [x] 修复 LaTex 公式渲染问题
 - [x] 新增 LaTex 公式编号功能
 - [ ] **Cmd Markdown 开发**
-        - [ ] 改进 Cmd 渲染算法，使用局部渲染技术提高渲染效率
-        - [ ] 支持以 PDF 格式导出文稿
-        - [x] 新增Todo列表功能
+    - [ ] 改进 Cmd 渲染算法，使用局部渲染技术提高渲染效率
+    - [ ] 支持以 PDF 格式导出文稿
+    - [x] 新增Todo列表功能
 
 
 ## 3.引用：
@@ -80,9 +79,31 @@ Markdown编辑器在Windows下试用了几个都觉得不好，可以使用web�
 ## 4.图片与链接：
 图片为：\!\[描述](链接地址);
 
-链接为：\[描述](链接地址)。
+链接为：\[描述](链接地址 <title="Title">)。
 
-[跳到我的首页](https://zhouj000.github.io/)
+[跳到我的首页](https://zhouj000.github.io/ "myHome")
+
+参考式的链接是在链接文字的括号后面再接上另一个方括号，而在第二个方括号里面要填入用以辨识链接的标记：  
+`使用This is [an example] [id] reference-style link.`
+
+This is [an example][id] reference-style link.
+
+接着，在文件的任意处，你可以把这个标记的链接内容定义出来：  
+`[id]: https://zhouj000.github.io/  "Optional Title Here"`
+
+[id]: https://zhouj000.github.io/  "Optional Title Here"
+
+隐式链接标记功能让你可以省略指定链接标记，这种情形下，链接标记会视为等同于链接文字，要用隐式链接标记只要在链接文字后面加上一个空的方括号
+```
+[Google][]
+
+[Google]: http://google.com/
+```
+
+自动链接
+`<https://zhouj000.github.io/>`
+
+<https://zhouj000.github.io/>
 
 ## 5.代码框：
 
@@ -149,14 +170,26 @@ if __name__ == '__main__':
 
 **这里是粗体**  *这里是斜体*
 
-## 8.特殊标记：
+## 8.特殊标记与换行：
 
 使用 [^keyword] 表示注脚，并在最后同样的标记后写上标注
  
 书写一个质能守恒公式[^LaTeX]
 
 
+单个回车 视为空格。
+
+连续回车
+
+才能分段。
+
+行尾加两个空格，这里->  
+即可段内换行。
+
+
 ## 9.表格：
+
+比较麻烦的方法:
 
 | Item      |    Value | Qty  |
 | :-------- | --------:| :--: |
