@@ -3,11 +3,13 @@ layout:     post
 title:      "了解Markdown语法"
 date:       2018-06-11
 author:     "ZhouJ000"
-header-img: "img/in-post/2018/post-bg-2018-first.jpg"
+header-img: "img/in-post/2018/post-bg-2018-headbg.jpg"
 catalog: false
 tags:
     - markdown
 ---
+
+<font color="#FFB6C1" size="1" face="黑体">最后更新与：2018-06-25</font>
 
 blog的文章都用markdown格式，所以需要了解语法结构，方便以后写博客。
 
@@ -166,7 +168,7 @@ if __name__ == '__main__':
 
 
 ## 7.粗体与斜体：
-使用2个 * 包含的是粗体，使用1个 * 包含的是斜体:
+使用2个 *(或_) 包含的是粗体，使用1个 *(或_) 包含的是斜体:
 
 **这里是粗体**  *这里是斜体*
 
@@ -186,10 +188,64 @@ if __name__ == '__main__':
 行尾加两个空格，这里->  
 即可段内换行。
 
+常用需转义字符：
+<table>
+    <tr>
+        <th>显示结果</th>
+        <th>描述</th>
+        <th>实体名称</th>
+		<th>实体编号</th>
+    </tr>
+    <tr>
+        <td> </td>
+        <td>空格</td>
+        <td>&nbsp;</td>
+		<td>&#160;</td>
+    </tr>
+	<tr>
+        <td><</td>
+        <td>小于号</td>
+        <td>&lt;</td>
+		<td>&#60;</td>
+    </tr>
+	<tr>
+        <td>></td>
+        <td>大于号</td>
+        <td>&gt;</td>
+		<td>&#62;</td>
+    </tr>
+	<tr>
+        <td>&</td>
+        <td>和号</td>
+        <td>&amp;</td>
+		<td>&#38;</td>
+    </tr>
+	<tr>
+        <td>“</td>
+        <td>引号</td>
+        <td>&quot;</td>
+		<td>&#34;</td>
+    </tr>
+	<tr>
+        <td>‘</td>
+        <td>撇号</td>
+        <td>&apos;(IE不支持)</td>
+		<td>&#39;</td>
+    </tr>
+</table>
+
+
 
 ## 9.表格：
 
 比较麻烦的方法:
+```
+| Item      |    Value | Qty  |
+| :-------- | --------:| :--: |
+| Computer  | 1600 USD |  5   |
+| Phone     |   12 USD |  12  |
+| Pipe      |    1 USD | 234  |
+```
 
 | Item      |    Value | Qty  |
 | :-------- | --------:| :--: |
@@ -198,7 +254,7 @@ if __name__ == '__main__':
 | Pipe      |    1 USD | 234  |
 
 
-也可以使用HTML标签<table>来实现
+还是直接使用HTML标签<table>来实现
 
 <table>
     <tr>
@@ -215,6 +271,19 @@ if __name__ == '__main__':
 </table>
 
 
+## 10.字体与颜色
 
+使用html标签：
+
+`<font face="黑体">我是黑体字</font>`
+<font face="黑体">我是黑体字</font>
+
+`<font color=#0099ff size=4 face="黑体">海蓝，黑体，size为4</font>`
+<font color="#0099ff" size="4" face="黑体">海蓝，黑体，size为4</font> 
+
+参考： [颜色代码表](http://www.w3school.com.cn/tags/html_ref_colornames.asp)
+
+
+***
 
 [^LaTeX]: 支持 **LaTeX** 编辑显示支持，例如：$\sum_{i=1}^n a_i=0$
