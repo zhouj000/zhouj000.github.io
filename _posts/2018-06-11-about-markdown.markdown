@@ -9,7 +9,7 @@ tags:
     - markdown
 ---
 
-<font color="#FFB6C1" size="1" face="黑体">最后更新与：2018-06-25</font>
+<font color="#FFB6C1" size="1" face="黑体">最后更新于：2018-06-25</font>
 
 blog的文章都用markdown格式，所以需要了解语法结构，方便以后写博客。
 
