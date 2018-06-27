@@ -15,15 +15,14 @@ tags:
 
 > 一个应用占用CPU很高，除了确实是计算密集型应用之外，通常原因都是出现了死循环，死递归和死锁。
 
-```
-当us值过高时，表示运行的应用消耗大量的CPU。
+> 当us值过高时，表示运行的应用消耗大量的CPU。
 java应用造成us高的原因主要是线程一直处于可运行（Runnable）状态，
 通常这些线程在执行无阻塞、循环、正则或纯粹的计算等任务造成的；另外一个可能也会造成us高的原因是频繁GC。
 
-当sy值高时，表示linux花费了更多的时间在进行java线程切换。
+> 当sy值高时，表示linux花费了更多的时间在进行java线程切换。
 java应用造成这种现象的主要原因是启动的线程比较多，且这些线程多数处于不断的阻塞（例如锁等待，IO等待状态）和执行状态的变化过程中，
 这就导致了操作系统要不断地切换执行的线程，产生大量的线程上下文切换。
-```
+
 
 # 1.确定Java应用进程
 
@@ -92,6 +91,7 @@ top命令的结果分为两个部分：
 	- T： 根据时间/累计时间进行排序
 	- shift + > / shift + <： 向右或左改变排序列
 
+```
   Z,B,E,e   Global: 'Z' colors; 'B' bold; 'E'/'e' summary/task memory scale
   l,t,m     Toggle Summary: 'l' load avg; 't' task/cpu stats; 'm' memory info
   0,1,2,3,I Toggle: '0' zeros; '1/2/3' cpus or numa node views; 'I' Irix mode
@@ -122,7 +122,8 @@ The screen will be divided evenly between task displays.  But you can make
 some larger or smaller, using 'n' and 'i' commands.  Then later you could:
   = , +   . Rebalance tasks:  '=' Current window; '+' Every window
             (this also forces the current or every window to become visible)
-
+```
+			
 CPU状态信息字段：
 + us： 用户空间占用CPU百分比
 + sy： 内核空间占用CPU百分比
@@ -162,6 +163,7 @@ ps -mp <pid> -o THREAD,tid,time
 	+ -f:  全格式输出，生成一个完整列表
 	+ -o： 用户自定义格式
 
+```	
 ********* simple selection *********  ********* selection by list *********
 -A all processes                      -C by command name
 -N negate selection                   -G by real group ID (supports names)
@@ -186,6 +188,7 @@ x  processes w/o controlling ttys     t  by tty
 -m,m,-L,-T,H  threads   S  children in sum    -y change -l format
 -M,Z  security data     c  true command name  -c scheduling class
 -w,w  wide output       n  numeric WCHAN,UID  -H process hierarchy
+```
 
 常用字段：
 + 待
@@ -296,7 +299,7 @@ jstack [ option ] [server-id@]remote-hostname-or-IP
 >**NEW**： 未启动的。不会出现在Dump中。  
 **RUNNABLE**： 在虚拟机内执行的。运行中状态，可能里面还能看到locked字样，表明它获得了某把锁。 这个名字很具有欺骗性，很容易让人误以为处于这个状态的线程正在运行。事实上，这个状态只是表示，线程是可运行的。   
 **BLOCKED**(on object monitor)： 受阻塞并等待监视器锁。被某个锁(synchronizers)給block住了，正在等待一个monitor lock。通常情况下，是因为本线程与其他线程公用了一个锁。   
-**WATING**： 无限期等待另一个线程执行特定操作。等待某个condition或monitor发生，一般停留在park(), wait(), join() 等语句里。Object.wait()方法只能够在同步代码块中调用。调用了wait()方法后，会释放锁。 
+**WATING**： 无限期等待另一个线程执行特定操作。等待某个condition或monitor发生，一般停留在park(), wait(), join() 等语句里。Object.wait()方法只能够在同步代码块中调用。调用了wait()方法后，会释放锁。  
 Object.wait 不指定超时时间 # java.lang.Thread.State: WAITING (on object monitor)  
 Thread.join with no timeout  
 LockSupport.park #java.lang.Thread.State: WAITING (parking)  
@@ -379,9 +382,9 @@ Wait on condition 该状态出现在线程等待某个条件的发生。具体�
 阻塞： **Blocked**  
 停止： Parked
 
-daemon： 表示线程是否是守护线程
-prio： 表示我们为线程设置的优先级
-tid： 是java中为这个线程的id
+daemon： 表示线程是否是守护线程  
+prio： 表示我们为线程设置的优先级  
+tid： 是java中为这个线程的id  
 nid： 是这个线程对应的操作系统本地线程id，每一个java线程都有一个对应的操作系统线程
 
 ### 进入区等待
