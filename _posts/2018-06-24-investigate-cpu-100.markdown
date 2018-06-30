@@ -4,14 +4,14 @@ title:      "java项目 CPU占用100%问题"
 date:       2018-06-24
 author:     "ZhouJ000"
 header-img: "img/in-post/2018/post-bg-2018-headbg.jpg"
-catalog: false
+catalog: true
 tags:
     - java
     - 排查
     - 命令
 --- 
 
-<font color="#FFB6C1" size="1" face="黑体">最后更新于：2018-06-27</font>
+<font id="last-updated">最后更新于：2018-06-30</font>
 
 > 一个应用占用CPU很高，除了确实是计算密集型应用之外，通常原因都是出现了死循环，死递归和死锁。
 
@@ -53,9 +53,9 @@ jps -v
 ```
 
 
-## Linux下查看Java应用中线程CPU占比
+## Linux下查看
 
-### top操作查看%CPU
+### top命令
 
 > top命令是Linux下常用的性能分析工具，能够实时显示系统中各个进程的资源占用状况，常用于服务端性能分析
 
@@ -136,7 +136,7 @@ CPU状态信息字段：
 + 待
 
 
-### ps命令查找进程与线程
+### ps命令
 
 ```
 ps -ef 是用标准的格式显示进程的(System V风格)
@@ -217,7 +217,7 @@ iostat -c
 
 
 
-## windows下查看后台进程信息
+## windows下查看
 
 ### pslist命令
 
@@ -238,7 +238,7 @@ pslist -x <pid>
 + -x:  显示线程和内存详情
 
 
-### tasklist
+### tasklist命令
 
 > 该工具显示在本地或远程机器上当前运行的进程列表
 
@@ -256,7 +256,7 @@ tasklist /? 查看用法
 
 # 2.查看线程信息
 
-## 将tid转换为16进制
+#### 将tid转换为16进制
 
 Linux下:
 `printf "%x\n" <tid>`
@@ -264,7 +264,7 @@ Linux下:
 Windows下：
 `计算器进行转换`
 
-## jstack查看某进程的当前线程栈运行情况(thread dump)
+## jstack查看(thread dump)
 
 > jstack是java虚拟机自带的一种堆栈跟踪工具。jstack用于打印出给定的java进程ID或core file或远程调试服务的Java堆栈信息，如果是在64位机器上，需要指定选项"-J-d64"，Windows的jstack使用方式只支持以下的这种方式：jstack [-l] pid
 
@@ -309,7 +309,7 @@ LockSupport.parkUntil #java.lang.Thread.State: TIMED_WAITING (parking)
 **TERMINATED**： 已退出的。线程终止。
 
 对于 java.lang.Thread.State: WAITING (on object monitor)和java.lang.Thread.State: TIMED_WAITING (on object monitor)，对于这两个状态，是因为调用了Object的wait方法(前者没有指定超时，后者指定了超时)，由于wait方法肯定要在syncronized代码中编写，因此肯定是如类似以下代码导致：
-```
+```java
 synchronized(obj) {
 	...
 	obj.wait();
@@ -368,7 +368,7 @@ Wait on condition 该状态出现在线程等待某个条件的发生。具体�
 
 ## 线程Dump分析入手点
 
-### 值得关注信息
+#### 值得关注信息
 
 死锁： **Deadlock**  
 执行中： Runnable  
@@ -458,7 +458,7 @@ at com.test.core.impl.AcquirableAccessor.exclusive()
 at com.test.core.impl.Transaction.lock()
 ```
 
-### 入手点总结
+#### 入手点总结
 
 wait on monitor entry： 被阻塞的,肯定有问题
 runnable ： 注意IO线程
@@ -466,7 +466,7 @@ in Object.wait()： 注意非线程池等待
 
 ## 死锁分析
 
-```
+```java
 	public static Lock lockA = new ReentrantLock();
     public static Lock lockB = new ReentrantLock();
 

@@ -9,7 +9,7 @@ tags:
     - 历史
 --- 
 
-<font color="#FFB6C1" size="1" face="黑体">最后更新于：2018-06-27</font>
+<font id="last-updated">最后更新于：2018-06-30</font>
 
 # 旧石器时代
 > 约公元前300~200万年

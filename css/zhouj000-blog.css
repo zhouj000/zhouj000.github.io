@@ -1259,3 +1259,7 @@ img::-moz-selection {
 .page-fullscreen footer .copyright a:hover {
   color: #ddd;
 }
+#last-updated {
+  color: #FFB6C1;
+  font-size: 10px;
+}
