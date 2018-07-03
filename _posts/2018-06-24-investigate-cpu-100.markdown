@@ -312,7 +312,7 @@ LockSupport.parkUntil #java.lang.Thread.State: TIMED_WAITING (parking)
 **TERMINATED**： 已退出的。线程终止。
 
 对于 java.lang.Thread.State: WAITING (on object monitor)和java.lang.Thread.State: TIMED_WAITING (on object monitor)，对于这两个状态，是因为调用了Object的wait方法(前者没有指定超时，后者指定了超时)，由于wait方法肯定要在syncronized代码中编写，因此肯定是如类似以下代码导致：
-```java
+```
 synchronized(obj) {
 	...
 	obj.wait();
@@ -470,7 +470,7 @@ in Object.wait()： 注意非线程池等待
 ## 死锁分析
 
 ```java
-	public static Lock lockA = new ReentrantLock();
+public static Lock lockA = new ReentrantLock();
     public static Lock lockB = new ReentrantLock();
 
 	Thread t1 = new Thread(new Runnable() {
