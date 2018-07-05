@@ -470,7 +470,7 @@ in Object.wait()： 注意非线程池等待
 ## 死锁分析
 
 ```java
-public static Lock lockA = new ReentrantLock();
+	public static Lock lockA = new ReentrantLock();
     public static Lock lockB = new ReentrantLock();
 
 	Thread t1 = new Thread(new Runnable() {
