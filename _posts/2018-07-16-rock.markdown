@@ -1,0 +1,17 @@
+---
+layout:     post
+title:      "摇滚乐"
+date:       2018-07-16 23:10
+author:     "ZhouJ000"
+header-img: "img/in-post/2018/post-bg-2018-headbg.jpg"
+catalog: true
+tags:
+    - 音乐
+--- 
+
+<font id="last-updated">最后更新于：2018-07-16</font>
+
+
+### 1985 Live Aid
+
+B站地址：[欧美群星 巨星义助非洲慈善演唱会 LIVE AID 1985](https://www.bilibili.com/video/av3025108)
