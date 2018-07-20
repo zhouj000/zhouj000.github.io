@@ -238,9 +238,9 @@ if (!Constants.LOCAL_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
 	logger.info("Export dubbo service " + interfaceClass.getName() + " to local registry");
 }
 ```
-
-
-
+17. 
+18. export to remote if the config is not local，由于scope为null，所以继续。
+19. 遍历registryURLs所有地址列表，加载monitor，如果有则给URL设置monitor参数。
 
 
 
