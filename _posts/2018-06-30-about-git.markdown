@@ -40,7 +40,7 @@ $>tree -L 1
 
 ## 工作区域
 
-![git space](/img/in-post/2018/git_space.png)
+![git space](/img/in-post/2018/6/git_space.png)
 
 
 
@@ -113,7 +113,7 @@ git add 更新
 git rebase --continue 继续rebase，或
 git rebase --abort 终止rebase
 ```
-![rebase](/img/in-post/2018/rebase.png)
+![rebase](/img/in-post/2018/6/rebase.png)
 
 #### 交互式rebase
 > 交互式rebase提供了一个简单易用的途径让你在和别人分享提交之前对你的提交进行分割、合并或者重排序。

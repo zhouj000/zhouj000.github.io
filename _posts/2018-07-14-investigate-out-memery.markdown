@@ -13,6 +13,10 @@ tags:
 
 <font id="last-updated">最后更新于：2018-07-14</font>
 
+[java项目 CPU占用100%问题](https://zhouj000.github.io/2018/06/24/investigate-cpu-100/)
+
+
+
 # JVM内存体系
 
 JVM的基本组成:
@@ -27,7 +31,7 @@ JVM的基本组成:
 (2)基于栈的理由是为JVM更好地优化代码而设计的  
 (3)为了指令的紧凑性，因为java代码可能在网络上传输，所以class文件的大小也是设计JVM字节码指令的一个重要因素。
 
-![jvm](/img/in-post/2018/jvm-model.png)
+![jvm](/img/in-post/2018/7/jvm-model.png)
 
 JVM运行时内存 = 共享内存区 + 线程内存区  
 
@@ -41,7 +45,7 @@ Young Space = Eden + S0 + S1
 JVM栈 = 栈帧 + 栈帧 + ...  
 栈帧 = 局域变量区 + 操作数区 + 帧数据区  
 
-![jvm-m](/img/in-post/2018/jvm-memory.png)
+![jvm-m](/img/in-post/2018/7/jvm-memory.png)
 
 # 内存溢出问题
 
@@ -408,22 +412,22 @@ JVM自带监控工具：
 
 2. Open Perspective选择Memory Analyzer窗口，打开dump文件。
 
-![jvm](/img/in-post/2018/MAT1.png)
+![jvm](/img/in-post/2018/7/MAT1.png)
 
 1. Histogram可以列出内存中的对象，对象的个数以及大小。
 2. Dominator Tree可以列出那个线程，以及线程下面的那些对象占用的空间。
 3. Top consumers通过图形列出最大的object。
 4. Leak Suspects通过MA自动分析泄漏的原因。
 
-![jvm](/img/in-post/2018/MAT2.png)
+![jvm](/img/in-post/2018/7/MAT2.png)
 
-![jvm](/img/in-post/2018/MAT3.png)
+![jvm](/img/in-post/2018/7/MAT3.png)
 
 > Shallow Heap 为对象自身占用的内存大小，不包括它引用的对象。Retained Heap 为当前对象大小 + 当前对象可直接或间接引用到的对象的大小总和。
 
 右键出来选中List Objects,得到的结果再右键选中"Paths to GC Roots",我们可以通过它快速找到GC ROOT.如果存在GC ROOT，它就不会被回收。
 
-![jvm](/img/in-post/2018/MAT4.png)
+![jvm](/img/in-post/2018/7/MAT4.png)
 
 参考： [内存泄露分析之MAT工具使用](https://blog.csdn.net/yincheng886337/article/details/50524890)
 
@@ -435,7 +439,7 @@ JVM自带监控工具：
 
 #### VisualVM/jvisualvm.exe 
 
-![jvm](/img/in-post/2018/jvisualvm1.png)
+![jvm](/img/in-post/2018/7/jvisualvm1.png)
 
 > 一个主机如果希望支持远程监控，需要在启动时添加以下参数：  
 -Dcom.sun.management.jmxremote.port=1099  

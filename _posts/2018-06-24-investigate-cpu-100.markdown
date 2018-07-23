@@ -13,6 +13,10 @@ tags:
 
 <font id="last-updated">最后更新于：2018-06-30</font>
 
+[java项目 内存溢出问题](https://zhouj000.github.io/2018/07/14/investigate-out-memery/)
+
+
+
 > 一个应用占用CPU很高，除了确实是计算密集型应用之外，通常原因都是出现了死循环，死递归和死锁。
 
 > 当us值过高时，表示运行的应用消耗大量的CPU。
@@ -332,7 +336,7 @@ synchronized(obj) {
 #### Monitor
 
 Monitor是Java中用以实现线程之间的互斥与协作的主要手段，它可以看成是对象或者Class的锁。每一个对象都有，也仅有一个monitor。下 面这个图，描述了线程和Monitor之间关系，以及线程的状态转换图:
-![java Monitor](/img/in-post/2018/java-monitor.jpg)
+![java Monitor](/img/in-post/2018/6/java-monitor.jpg)
 
 >**进入区(Entrt Set)**： 表示线程通过synchronized要求获取对象的锁。如果对象未被锁住,则迚入拥有者;否则则在进入区等待。一旦对象锁被其他线程释放,立即参与竞争。  
 **拥有者(The Owner)**： 表示某一线程成功竞争到对象锁。  

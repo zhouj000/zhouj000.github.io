@@ -272,7 +272,7 @@ Nginx HTTP缓存设置：
 # 异步并发
 
 异步Web服务实现：
-![async web](/img/in-post/2018/async_web.jpg)
+![async web](/img/in-post/2018/6/async_web.jpg)
 
 
 
