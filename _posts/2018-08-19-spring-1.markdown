@@ -18,6 +18,51 @@ github上clone [spring](https://github.com/spring-projects/spring-framework.git)
 
 spring由[gradle](https://gradle.org/)编译。
 
+
+# 分层
+
+![spring-model](/img/in-post/2018/8/spring-model.png)
+
+**core部分**包含4个模块：  
+1 . spring-core：基本的核心工具类，Spring的其他组件都要使用到这个包里的类，Core模块是其他组件的基本核心：Resource、ResourceLoader  
+2 . spring-beans：IoC/DI操作相关的所有类，Bean工厂与bean的创建管理装配：DefaultListableBeanFactor->...->BeanFactory；RootBeanDefinition  
+3 . spring-context：为Spring核心提供了大量扩展，提供了对国际化(如资源绑定)、事件传播、资源加载和对Context的透明创建的支持：ApplicationContext  
+4 . spring-expression：spring表达式语言EL
+
+**aop部分**包含3个模块：  
+1 . spring-aop：面向切面编程  
+2 . spring-aspects：集成AspectJ框架  
+3 . spring-instrument：提供一些类级的工具支持和ClassLoader级的实现，用于服务器  
+
+**data access部分**包含5个模块：  
+1 . spring-jdbc：jdbc的抽象层  
+2 . spring-tx：事务控制  
+3 . spring-orm：对象关系映射，集成orm框架  
+4 . spring-oxm：对象xml映射  
+5 . spring-jms：java消息服务
+
+**web部分**包含4个模块：
+1 . spring-web：基础web功能，主要建立于核心容器之上，通过Servlet或者Listeners来初始化IOC容器，也包含一些与Web相关的支持。如文件上传  
+2 . spring-webmvc： Web-Servlet模块，实现了Spring MVC(model-view-Controller)的Web应用  
+3 . spring-websocket：主要是与Web前端的全双工通讯的协议  
+4 . spring-webflux：是一个新的非堵塞函数式Reactive Web框架，可以用来建立异步的，非阻塞，事件驱动的服务，并且扩展性非常好
+
+**报文发送部分**只有一个模块：  
+1 . spring-messaging：从Spring4开始新加入的一个模块，主要职责是为Spring框架集成一些基础的报文传送应用
+
+**test部分**只有一个模块：  
+1 . spring-test：spring测试提供支持，提供junit与mock测试功能
+
+**其他**：  
+1 . spring-framework-bom：用于解决jar包依赖，只要项目中引入了它，外部集成时依赖关系无需版本号，Spring IO platform  
+2 . spring-context-support：spring额外支持包，比如邮件服务、视图解析等  
+3 . spring-jcl：日志，采用了设计模式中的“适配器模式”，它对外提供统一的接口，然后在适配类中将对日志的操作委托给具体的日志框架，比如Log4J,Java Logging API等  
+4 . spring-context-indexer：索引功能。就是第一次扫描之后生成一个静态文件记录所有的组件，然后下一次扫描就直接读取文件中的内容，而不去执行扫描过程
+
+![spring-relevance](/img/in-post/2018/8/spring-relevance.png)
+
+
+
 # Spring IOC核心
 
 ## BeanFactory
