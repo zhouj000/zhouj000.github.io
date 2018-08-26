@@ -23,8 +23,7 @@ tags:
 
 通过maven构建项目，从[官网](https://maven.apache.org/)下载
 
-
-## dubbo-demo结构
+#### dubbo-demo结构
 
 + dubbo-demo-api
 	- I:DemoService
