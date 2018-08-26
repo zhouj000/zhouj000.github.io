@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "Spring(一)"
+title:      "Spring(一) IOC核心类"
 date:       2018-08-19
 author:     "ZhouJ000"
 header-img: "img/in-post/2018/post-bg-2018-headbg.jpg"
@@ -10,11 +10,15 @@ tags:
     - spring
 --- 
 
-<font id="last-updated">最后更新于：2018-08-20</font>
+<font id="last-updated">最后更新于：2018-08-26</font>
+
+[Spring(二) Resource定位与载入](https://zhouj000.github.io/2018/08/26/spring-2/)
+
+
 
 # 准备
 
-github上clone [spring](https://github.com/spring-projects/spring-framework.git) 最新源码。当前github最新版本5.1.0.BUILD-SNAPSHOT，正式版本5.0.8.RELEASE。
+github上clone [spring](https://github.com/spring-projects/spring-framework.git) 最新源码。当前github最新版本5.1.0.BUILD-SNAPSHOT(v5.1.0.RC2)，正式版本5.0.8.RELEASE。
 
 spring由[gradle](https://gradle.org/)编译。
 
@@ -98,6 +102,7 @@ BeanFactorty接口提供了配置框架及基本功能，但是无法支持sprin
 2 . 资源访问，如URL和文件  
 3 . 事件传播特性，即支持aop特性  
 4 . 载入多个(有继承关系)上下文 ，使得每一个上下文都专注于一个特定的层次，比如应用的web层
+	+ 上下文嵌套，通过保持父上下文可以维持一个上下文体系，对于bean的查找可以在这个上下文体系中发生。首先检查当前上下文，其次是父上下文，逐级向上，这样为不同的spring应用提供了一个共享的bean定义环境
 
 ### XmlWebApplicationContext
 
@@ -143,7 +148,7 @@ ApplicationContext factory = new ClassPathXmlApplicationContext("file:E:/Workspa
 该类的作用是读取Spring的配置文件的内容，并将其转换成Ioc容器内部的数据结构，而容器的数据结构就是BeanDefinition。
 该类的功能概括的讲可分为两步：  
 1 . 负责BeanDefinition的资源定位，是获取Resource实例对象的过程。BeanDefinitionReader本身不具备该功能，而是通过ResourceLoader获取Resource实例  
-2 . 负责BeanDefinition的载入，指的是读取Resource内容并加载为Doucument的过程，然后利用documentReader对配置文件的内容进行解析
+2 . 负责BeanDefinition的载入，指的是读取Resource内容并加载为Doucument的过程，然后利用documentReader对配置文件的内容进行解析，生成beanDefinition及注册到容器中
 ```java
 int loadBeanDefinitions(Resource resource) throws BeanDefinitionStoreException;
 int loadBeanDefinitions(Resource... resources) throws BeanDefinitionStoreException;
