@@ -1,3 +1,36 @@
+<!-- Baidu Tongji -->
+{% if site.ba_track_id %}
+<script>
+	// dynamic User by Hux
+    var _baId = '{{ site.ba_track_id }}';
+	// Originial
+	var _hmt = _hmt || [];
+	(function() {
+	  var hm = document.createElement("script");
+	  hm.src = "https://hm.baidu.com/hm.js?" + _baId;
+	  var s = document.getElementsByTagName("script")[0]; 
+	  s.parentNode.insertBefore(hm, s);
+	})();
+</script>
+{% endif %}
+
+<!-- Google Analytics -->
+{% if site.ga_track_id %}
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-124807582-1"></script>
+<script>
+	// dynamic User by Hux
+	var _gaId = '{{ site.ga_track_id }}';
+	// Originial
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', _gaId);
+</script>
+{% endif %}
+
+
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
