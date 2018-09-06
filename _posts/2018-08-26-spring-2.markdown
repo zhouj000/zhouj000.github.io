@@ -13,7 +13,8 @@ tags:
 <font id="last-updated">最后更新于：2018-08-26</font>
 
 [Spring(一) IOC核心类](https://zhouj000.github.io/2018/08/19/spring-1/)  
-[Spring(三) BeanDefinition解析与注册](https://zhouj000.github.io/2018/08/27/spring-3/)
+[Spring(三) BeanDefinition解析与注册](https://zhouj000.github.io/2018/08/27/spring-3/)  
+[Spring(四) 自定义标签解析](https://zhouj000.github.io/2018/09/06/spring-4/)  
 
 
 
