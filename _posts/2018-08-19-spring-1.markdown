@@ -12,9 +12,11 @@ tags:
 
 <font id="last-updated">最后更新于：2018-08-26</font>
 
+[Spring(一) IOC核心类](https://zhouj000.github.io/2018/08/19/spring-1/)  
 [Spring(二) Resource定位与载入](https://zhouj000.github.io/2018/08/26/spring-2/)  
 [Spring(三) BeanDefinition解析与注册](https://zhouj000.github.io/2018/08/27/spring-3/)  
 [Spring(四) 自定义标签解析](https://zhouj000.github.io/2018/09/06/spring-4/)  
+[Spring(五) 其他初始化步骤](https://zhouj000.github.io/2018/09/08/spring-5/)  
 
 
 
@@ -129,6 +131,8 @@ BeanFactorty接口提供了配置框架及基本功能，但是无法支持sprin
 ```
 
 ### ClassPathXmlApplicationContext
+
+![ClassPathXmlApplicationContext](/img/in-post/2018/8/ClassPathXmlApplicationContext.png)
 
 从classpath的xml配置文件创建，可以从jar包中读取配置文件
 ```java

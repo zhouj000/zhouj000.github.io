@@ -13,8 +13,10 @@ tags:
 <font id="last-updated">最后更新于：2018-08-26</font>
 
 [Spring(一) IOC核心类](https://zhouj000.github.io/2018/08/19/spring-1/)  
+[Spring(二) Resource定位与载入](https://zhouj000.github.io/2018/08/26/spring-2/)  
 [Spring(三) BeanDefinition解析与注册](https://zhouj000.github.io/2018/08/27/spring-3/)  
 [Spring(四) 自定义标签解析](https://zhouj000.github.io/2018/09/06/spring-4/)  
+[Spring(五) 其他初始化步骤](https://zhouj000.github.io/2018/09/08/spring-5/)  
 
 
 
@@ -50,44 +52,64 @@ if(refresh) {
 ```java
 public void refresh() throws BeansException, IllegalStateException {
 	synchronized (this.startupShutdownMonitor) {
+		// Prepare this context for refreshing.
 		// a.准备工作：设置spring启动时间，是否结束/激活标识；初始化属性源(默认空方法)；验证必要属性
 		prepareRefresh();
 
-		// b.创建beanFactory(过程是根据xml为每个bean生成BeanDefinition并注册到生成的beanFactory)
+		// Tell the subclass to refresh the internal bean factory.
+		// b.创建beanFactory，如果已有就销毁后创建
+		//   过程是对BeanDefinition的装载: 根据xml为每个bean生成BeanDefinition并注册到生成的beanFactory
 		ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 		
-		// 准备创建好的beanFactory: 
+		// Prepare the bean factory for use in this context.
+		// 配置创建好的beanFactory的标准上下文配置
 		// 给beanFactory设置ClassLoader，设置SpEL表达式解析器，设置类型转化器[能将xml String类型转成相应对象]，
 		// 增加内置ApplicationContextAwareProcessor对象，忽略各种Aware对象，注册各种内置的对账对象[BeanFactory，ApplicationContext]等，
-		// 注册AOP相关的一些东西，注册环境相关的一些bean
+		// 注册环境相关的一些系统属性等
 		prepareBeanFactory(beanFactory);
 
 		try {
 			// Allows post-processing of the bean factory in context subclasses.
+			// 模板方法，提供一个修改容器的beanFactory的入口，子类特殊的bean factory设置，默认为空实现
+			// 比如GenericWebApplicationContext容器会在BeanFactory中添加ServletContextAwareProcessor。
+			// 用于处理ServletContextAware类型的bean，初始化的时候调用setServletContext或者setServletConfig方法
 			postProcessBeanFactory(beanFactory);
 
-			// 实例化并调用BeanFactory中扩展了BeanFactoryPostProcessor的Bean的postProcessBeanFactory方法
+			// Invoke factory processors registered as beans in the context.
+			// 从Spring容器中找出BeanDefinitionRegistryPostProcessor和BeanFactoryPostProcessor接口的实现类，实例化并按照一定的规则顺序进行执行postProcessBeanFactory方法
+			// 比如ConfigurationClassPostProcessor(实现了PriorityOrdered接口)，会去BeanFactory中找出所有有@Configuration注解的bean，然后使用ConfigurationClassParser去解析这个类，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化
+			// 其内部有个Map类型的configurationClasses属性用于保存解析的类，ConfigurationClass是一个对要解析的配置类的封装，内部存储了配置类的注解信息、被@Bean注解修饰的方法、@ImportResource注解修饰的信息、ImportBeanDefinitionRegistrar等都存储在这个封装类中(@Component、@ComponentScan、@Import、@ImportResource修饰的类)
 			invokeBeanFactoryPostProcessors(beanFactory);
 
-			// 实例化和注册beanFactory中扩展了BeanPostProcessor的bean
+			// Register bean processors that intercept bean creation.
+			// 注册用于拦截bean创建过程的BeanPostProcessor
 			registerBeanPostProcessors(beanFactory);
 
+			// Initialize message source for this context.
 			// 实例化，注册和设置国际化工具类MessageSource
 			initMessageSource();
 
-			// 实例化，注册和设置消息广播类(如果没有自己定义使用默认的SimpleApplicationEventMulticaster实现，此广播使用同步的通知方式)
+			// Initialize event multicaster for this context.
+			// 实例化，注册和设置事件广播类，用于发布事件(如果没有自己定义使用默认的SimpleApplicationEventMulticaster实现，此广播使用同步的通知方式)
 			initApplicationEventMulticaster();
 
 			// Initialize other special beans in specific context subclasses.
+			// 模板方法，调用子类特殊的刷新逻辑，不同容器各自实现，默认为空方法
 			onRefresh();
 
-			// 添加用户定义的消息接收器到上面设置的消息广播ApplicationEventMulticaster
+			// Check for listener beans and register them.
+			// 为事件传播器注册事件监听器，添加ApplicationListener实现类到上面设置的消息广播ApplicationEventMulticaster
 			registerListeners();
 
-			// 设置自定义的类型转化器ConversionService，设置自定义AOP相关的类LoadTimeWeaverAware，清除临时的ClassLoader，冻结配置，实例化所有的类(懒加载的类除外)
+			// Instantiate all remaining (non-lazy-init) singletons.
+			// 完成容器的初始化，实例化BeanFactory中已经被注册但是没被实例化的所有单例(懒加载除外)
+			// 设置自定义的类型转化器ConversionService，设置自定义AOP相关的类LoadTimeWeaverAware，清除临时的ClassLoader，冻结配置
 			finishBeanFactoryInitialization(beanFactory);
 
-			// 注册和设置跟bean生命周期相关的类(默认使用DefaultLifecycleProcessor)，调用扩展了SmartLifecycle接口的start方法，使用上注册的广播类消息广播类ApplicationEventMulticaster广播ContextRefreshedEvent事件 
+			// Last step: publish corresponding event.
+			// 初始化容器的生命周期事件处理器，并发布容器的生命周期事件
+			// 初始化生命周期处理器LifecycleProcessor(默认使用DefaultLifecycleProcessor)并调用其onrefresh方法，找到SmartLifecycle接口的所有实现类并调用start方法
+			// 发布事件告知listener，如果设置了JMX相关属性，还会调用LiveBeansView的registerApplicationContext方法
 			finishRefresh();
 		}
 
