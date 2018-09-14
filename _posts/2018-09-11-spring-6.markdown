@@ -222,7 +222,7 @@ protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredTy
 		BeanFactory parentBeanFactory = getParentBeanFactory();
 		// d. 如果beanDefinitionMap中，也就是在所有已加载的类中不包括beanName则尝试从parentBeanFactory中检测
 		if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
-			// Not found -> check parent.
+			// 解析指定Bean名称的原始名称  Not found -> check parent.
 			String nameToLookup = originalBeanName(name);
 			// AbstractBeanFactory子类，调用本方法doGetBean
 			if (parentBeanFactory instanceof AbstractBeanFactory) {
@@ -232,10 +232,12 @@ protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredTy
 			// 递归到BeanFactory中查找getBean
 			else if (args != null) {
 				// Delegation to parent with explicit args.
+				// 委派父级容器根据指定名称和显式的参数查找
 				return (T) parentBeanFactory.getBean(nameToLookup, args);
 			}
 			else {
 				// No args -> delegate to standard getBean method.
+				// 委派父级容器根据指定名称和类型查找
 				return parentBeanFactory.getBean(nameToLookup, requiredType);
 			}
 		}
@@ -290,18 +292,23 @@ protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredTy
 			}
 			// prototype原型模式创建
 			else if (mbd.isPrototype()) {
-				// It's a prototype -> create a new instance.
+				// It's a prototype -> create a new instance. 每次都会创建一个新的对象
 				Object prototypeInstance = null;
 				try {
+					// 回调beforePrototypeCreation方法，默认的功能是注册当前创建的原型对象
 					beforePrototypeCreation(beanName);
+					// 创建指定Bean对象实例
 					prototypeInstance = createBean(beanName, mbd, args);
 				}
 				finally {
+					// 回调afterPrototypeCreation方法，默认的功能告诉IOC容器指定Bean的原型对象不再创建
 					afterPrototypeCreation(beanName);
 				}
 				bean = getObjectForBeanInstance(prototypeInstance, name, beanName, mbd);
 			}
 			// 指定的scope上实例化bean
+			// 根据Bean定义资源中配置的生命周期范围，选择实例化Bean的合适方法，
+			// 这种在Web应用程序中比较常用，如：request、session、application等生命周期
 			else {
 				String scopeName = mbd.getScope();
 				final Scope scope = this.scopes.get(scopeName);
@@ -309,6 +316,7 @@ protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredTy
 					throw new IllegalStateException("No Scope registered for scope name '" + scopeName + "'");
 				}
 				try {
+					// ObjectFactory中的方法与prototype一样
 					Object scopedInstance = scope.get(beanName, () -> {
 						beforePrototypeCreation(beanName);
 						try {
@@ -318,6 +326,7 @@ protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredTy
 							afterPrototypeCreation(beanName);
 						}
 					});
+					// 获取给定Bean的实例对象
 					bean = getObjectForBeanInstance(scopedInstance, name, beanName, mbd);
 				}
 				catch (IllegalStateException ex) {
