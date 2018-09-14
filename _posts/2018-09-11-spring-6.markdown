@@ -18,6 +18,7 @@ tags:
 [Spring(四) 自定义标签解析](https://zhouj000.github.io/2018/09/06/spring-4/)  
 [Spring(五) 其他初始化步骤](https://zhouj000.github.io/2018/09/08/spring-5/)  
 [Spring(六) bean的加载01](https://zhouj000.github.io/2018/09/11/spring-6/)  
+[Spring(七) bean的加载02](https://zhouj000.github.io/2018/09/14/spring-7/)  
 
 
 
@@ -285,7 +286,6 @@ protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredTy
 						throw ex;
 					}
 				});
-				// --->>>
 				bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
 			}
 			// prototype原型模式创建
@@ -396,21 +396,47 @@ public String canonicalName(String name) {
 
 ### b.尝试从缓存中加载单例
 
-单例在Spring的同一个容器内只会被创建一次，后续获取bean会到单例缓存中尝试获取，如果获取不到，再尝试从singletonFactories中加载
+单例在Spring的同一个容器内只会被创建一次，后续获取bean会到单例缓存**singletonObjects**中尝试获取，如果获取不到，再从**earlySingletonObjects**里获取，如果还是获取不到，再尝试从**singletonFactories**中获取beanName对应的ObjectFactory，然后调用这个ObjectFactory的getObject方法来创建bean，并放到**earlySingletonObjects**中去，且从**singletonFactories**中删掉这个ObjectFacotry
+
 ```java
 // DefaultSingletonBeanRegistry
-/** Cache of singleton objects: bean name --> bean instance */
+
+// Cache of singleton objects: bean name --> bean instance
+// 一级缓存：用于保存beanName与创建bean实例之间的关系
 private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
+
+// Cache of singleton factories: bean name --> ObjectFactory
+// 三级缓存：用于保存beanName与创建bean的工厂之间的关系
+private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
+
+// Cache of early singleton objects: bean name --> bean instance
+// 二级缓存：用于保存beanName与创建bean实例之间的关系，与singletonObjects不同之处在于
+// 当一个单例bean放到这里后，那么当bean还在创建的过程中，就可以通过getBean获取到了，其目的是来检测循环引用
+private final Map<String, Object> earlySingletonObjects = new HashMap<>(16);
+
+// Set of registered singletons, containing the bean names in registration order
+// 保存当前所有已注册的bean
+private final Set<String> registeredSingletons = new LinkedHashSet<>(256);
+
+/** Names of beans that are currently in creation */
+private final Set<String> singletonsCurrentlyInCreation = Collections.newSetFromMap(new ConcurrentHashMap<>(16));
 
 protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 	Object singletonObject = this.singletonObjects.get(beanName);
+	// 查看是否存在实例
 	if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
-		synchronized (this.singletonObjects) {
+		// 锁定singletonObjects全局变量进行处理
+		synchronized (this.singletonObjects) {	
 			singletonObject = this.earlySingletonObjects.get(beanName);
+			// 如果此bean正在加载则不处理，否则进入判断
 			if (singletonObject == null && allowEarlyReference) {
+				// 当某些方法需要提前初始化的时候，会调用addSingletonFactory方法将对应的objectFactory初始化策略存储在singletonFactories
+				// 做到提前曝光自己，虽然没有初始化完全，但是能被依赖拿到
 				ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
 				if (singletonFactory != null) {
+					// 调用预先设定的getObject()方法
 					singletonObject = singletonFactory.getObject();
+					// 记录在缓存中，earlySingletonObjects与singletonFactories互斥
 					this.earlySingletonObjects.put(beanName, singletonObject);
 					this.singletonFactories.remove(beanName);
 				}
@@ -423,7 +449,7 @@ protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 
 ### b-2.bean实例化
 
-如果从缓存中获取了bean的原始状态，则需要对bean进行实例化。因为缓存中记录的只是bean的最原始状态，并不一定是最后需要得到的bean。比如工厂bean就需要得到factory-method方法返回的bean
+如果从缓存中获取了bean的原始状态，则需要对bean进行实例化。因为缓存中记录的只是bean的最原始状态，并不一定是最后需要得到的bean。比如工厂bean就需要得到factory-method方法返回的bean，[下一篇对此进行详细解析](https://zhouj000.github.io/2018/09/14/spring-7/)
 ```java
 protected Object getObjectForBeanInstance(
 		Object beanInstance, String name, String beanName, @Nullable RootBeanDefinition mbd) {
@@ -582,14 +608,14 @@ protected RootBeanDefinition getMergedBeanDefinition(
 
 ```java
 public String[] getDependsOn() {
-	return this.dependsOn;
+	return this.dependsOn;	// depends-on属性
 }
 ```
 
 
 ### g.针对不同scope创建bean
 
-Spring中存在不同的scope，默认是singleton单例，还有比如prototype、request等。这里会根据不同的配置进行不同的初始化策略。这里是实例化bean的最重要步骤，下一篇对此进行详细解析
+Spring中存在不同的scope，默认是singleton单例，还有比如prototype、request等。这里会根据不同的配置进行不同的初始化策略。这里是实例化bean的最重要步骤，[下一篇对此进行详细解析](https://zhouj000.github.io/2018/09/14/spring-7/)
 
 
 ### h.类型转换
