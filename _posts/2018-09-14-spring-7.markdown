@@ -20,6 +20,7 @@ tags:
 [Spring(六) bean的加载01](https://zhouj000.github.io/2018/09/11/spring-6/)  
 [Spring(七) bean的加载02](https://zhouj000.github.io/2018/09/14/spring-7/)  
 [Spring(八) SpringBean的生命周期](https://zhouj000.github.io/2018/09/15/spring-8/)  
+[Spring(九) IOC时序图](https://zhouj000.github.io/2018/09/17/spring-9/)  
 
 
 
@@ -1293,8 +1294,8 @@ protected void applyPropertyValues(String beanName, BeanDefinition mbd, BeanWrap
 }
 ```
 
-3-1 . java
-```
+3-1 . 转换属性值，例如将引用转换为IOC容器中实例化对象引用
+```java
 public Object resolveValueIfNecessary(Object argName, @Nullable Object value) {
 	// We must check each value to see whether it requires a runtime reference
 	// to another bean to be resolved.

@@ -20,6 +20,7 @@ tags:
 [Spring(六) bean的加载01](https://zhouj000.github.io/2018/09/11/spring-6/)  
 [Spring(七) bean的加载02](https://zhouj000.github.io/2018/09/14/spring-7/)  
 [Spring(八) SpringBean的生命周期](https://zhouj000.github.io/2018/09/15/spring-8/)  
+[Spring(九) IOC时序图](https://zhouj000.github.io/2018/09/17/spring-9/)  
 
 
 
@@ -30,11 +31,11 @@ AbstractApplicationContext的refresh方法，前3篇对BeanDefinition的生成�
 public void refresh() throws BeansException, IllegalStateException {
 	synchronized (this.startupShutdownMonitor) {
 		// Prepare this context for refreshing.
-		// 准备工作：设置spring启动时间，是否结束/激活标识；初始化属性源(默认空方法)；验证必要属性
+		// 准备工作：设置spring启动时间，是否结束/激活标识；初始化属性源(默认空方法，留给子类覆盖)；验证必要属性
 		prepareRefresh();
 
 		// Tell the subclass to refresh the internal bean factory.
-		// 创建beanFactory，如果已有就销毁后创建
+		// 创建beanFactory，如果已有就销毁后创建，这里就是实现BeanFactory全部功能的地方，
 		// 过程是对BeanDefinition的装载: 根据xml为每个bean生成BeanDefinition并注册到生成的beanFactory
 		ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 		
@@ -57,6 +58,7 @@ public void refresh() throws BeansException, IllegalStateException {
 			//   比如ConfigurationClassPostProcessor(实现了PriorityOrdered接口)，会去BeanFactory中找出所有有@Configuration注解的bean，然后使用ConfigurationClassParser去解析这个类，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化
 			//   其内部有个Map类型的configurationClasses属性用于保存解析的类，ConfigurationClass是一个对要解析的配置类的封装，内部存储了配置类的注解信息、被@Bean注解修饰的方法、@ImportResource注解修饰的信息、ImportBeanDefinitionRegistrar等都存储在这个封装类中(@Component、@ComponentScan、@Import、@ImportResource修饰的类)
 			//   这个processor是优先级最高的被执行的processor，另外如果程序中有自定义的BeanFactoryPostProcessor，那么这个PostProcessor首先得通过ConfigurationClassPostProcessor被解析出来，然后才能被Spring容器找到并执行
+			//   比如PropertyPlaceholderConfigurer，用来解析${...}占位符
 			invokeBeanFactoryPostProcessors(beanFactory);
 
 			// Register bean processors that intercept bean creation.
@@ -68,7 +70,7 @@ public void refresh() throws BeansException, IllegalStateException {
 			initMessageSource();
 
 			// Initialize event multicaster for this context.
-			// h.实例化，注册和设置事件广播类，用于发布事件(如果没有自己定义使用默认的SimpleApplicationEventMulticaster实现，此广播使用同步的通知方式)
+			// h.实例化，注册和设置事件广播器，用于发布事件(如果没有自己定义使用默认的SimpleApplicationEventMulticaster实现，此广播使用同步的通知方式)
 			initApplicationEventMulticaster();
 
 			// Initialize other special beans in specific context subclasses.
@@ -76,7 +78,7 @@ public void refresh() throws BeansException, IllegalStateException {
 			onRefresh();
 
 			// Check for listener beans and register them.
-			// j.为事件传播器注册事件监听器，添加ApplicationListener实现类到上面设置的消息广播ApplicationEventMulticaster
+			// j.为事件广播器注册事件监听器，添加ApplicationListener实现类到上面设置的事件广播器ApplicationEventMulticaster
 			registerListeners();
 
 			// Instantiate all remaining (non-lazy-init) singletons.
@@ -154,7 +156,7 @@ protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
 	beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(this));
 
 	// Detect a LoadTimeWeaver and prepare for weaving, if found.
-	// 如果包含LoadTimeWeaver，（AspectJ支持）
+	// 如果包含LoadTimeWeaver，增加对AspectJ支持
 	if (beanFactory.containsBean(LOAD_TIME_WEAVER_BEAN_NAME)) {
 		// 添加后置处理器
 		beanFactory.addBeanPostProcessor(new LoadTimeWeaverAwareProcessor(beanFactory));
@@ -201,6 +203,7 @@ public static void invokeBeanFactoryPostProcessors(
 		ConfigurableListableBeanFactory beanFactory, List<BeanFactoryPostProcessor> beanFactoryPostProcessors) {
 
 	// Invoke BeanDefinitionRegistryPostProcessors first, if any.
+	// 处理过的bean
 	Set<String> processedBeans = new HashSet<>();
 
 	// 对BeanDefinitionRegistry类型的处理
@@ -215,6 +218,7 @@ public static void invokeBeanFactoryPostProcessors(
 				BeanDefinitionRegistryPostProcessor registryProcessor =
 						(BeanDefinitionRegistryPostProcessor) postProcessor;
 				// 对于BeanDefinitionRegistryPostProcess类型，在BeanFactoryPostProcessor基础上还有自己定义的方法，需要先调用 
+				// 通过AbstractApplicationContext中添加处理器方法addBeanFactoryPostProcessor进行添加
 				registryProcessor.postProcessBeanDefinitionRegistry(registry);
 				registryProcessors.add(registryProcessor);
 			}
@@ -228,6 +232,7 @@ public static void invokeBeanFactoryPostProcessors(
 		// uninitialized to let the bean factory post-processors apply to them!
 		// Separate between BeanDefinitionRegistryPostProcessors that implement
 		// PriorityOrdered, Ordered, and the rest.
+		// 当前待处理BeanDefinitionRegistryPostProcessor
 		List<BeanDefinitionRegistryPostProcessor> currentRegistryProcessors = new ArrayList<>();
 
 		// 配置注册的后处理器(BeanDefinitionRegistryPostProcessor)，PriorityOrdered、Ordered、其他
@@ -236,6 +241,7 @@ public static void invokeBeanFactoryPostProcessors(
 		String[] postProcessorNames =
 				beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
 		for (String ppName : postProcessorNames) {
+			// PriorityOrdered实现类
 			if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
 				currentRegistryProcessors.add(beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
 				processedBeans.add(ppName);
@@ -249,6 +255,7 @@ public static void invokeBeanFactoryPostProcessors(
 		// Next, invoke the BeanDefinitionRegistryPostProcessors that implement Ordered.
 		postProcessorNames = beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
 		for (String ppName : postProcessorNames) {
+			// Ordered实现类
 			if (!processedBeans.contains(ppName) && beanFactory.isTypeMatch(ppName, Ordered.class)) {
 				currentRegistryProcessors.add(beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
 				processedBeans.add(ppName);

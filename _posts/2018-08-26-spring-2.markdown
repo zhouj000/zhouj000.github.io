@@ -20,6 +20,7 @@ tags:
 [Spring(六) bean的加载01](https://zhouj000.github.io/2018/09/11/spring-6/)  
 [Spring(七) bean的加载02](https://zhouj000.github.io/2018/09/14/spring-7/)  
 [Spring(八) SpringBean的生命周期](https://zhouj000.github.io/2018/09/15/spring-8/)  
+[Spring(九) IOC时序图](https://zhouj000.github.io/2018/09/17/spring-9/)  
 
 
 
@@ -56,11 +57,11 @@ if(refresh) {
 public void refresh() throws BeansException, IllegalStateException {
 	synchronized (this.startupShutdownMonitor) {
 		// Prepare this context for refreshing.
-		// a.准备工作：设置spring启动时间，是否结束/激活标识；初始化属性源(默认空方法)；验证必要属性
+		// a.准备工作：设置spring启动时间，是否结束/激活标识；初始化属性源(默认空方法，留给子类覆盖)；验证必要属性
 		prepareRefresh();
 
 		// Tell the subclass to refresh the internal bean factory.
-		// b.创建beanFactory，如果已有就销毁后创建
+		// b.创建beanFactory，如果已有就销毁后创建，这里就是实现BeanFactory全部功能的地方，
 		//   过程是对BeanDefinition的装载: 根据xml为每个bean生成BeanDefinition并注册到生成的beanFactory
 		ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 		
@@ -82,6 +83,7 @@ public void refresh() throws BeansException, IllegalStateException {
 			// 从Spring容器中找出BeanDefinitionRegistryPostProcessor和BeanFactoryPostProcessor接口的实现类，实例化并按照一定的规则顺序进行执行postProcessBeanFactory方法
 			// 比如ConfigurationClassPostProcessor(实现了PriorityOrdered接口)，会去BeanFactory中找出所有有@Configuration注解的bean，然后使用ConfigurationClassParser去解析这个类，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化
 			// 其内部有个Map类型的configurationClasses属性用于保存解析的类，ConfigurationClass是一个对要解析的配置类的封装，内部存储了配置类的注解信息、被@Bean注解修饰的方法、@ImportResource注解修饰的信息、ImportBeanDefinitionRegistrar等都存储在这个封装类中(@Component、@ComponentScan、@Import、@ImportResource修饰的类)
+			// 比如PropertyPlaceholderConfigurer，用来解析${...}占位符
 			invokeBeanFactoryPostProcessors(beanFactory);
 
 			// Register bean processors that intercept bean creation.
