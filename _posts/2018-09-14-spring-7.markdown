@@ -21,6 +21,7 @@ tags:
 [Spring(七) bean的加载02](https://zhouj000.github.io/2018/09/14/spring-7/)  
 [Spring(八) SpringBean的生命周期](https://zhouj000.github.io/2018/09/15/spring-8/)  
 [Spring(九) IOC时序图](https://zhouj000.github.io/2018/09/17/spring-9/)  
+[Spring(十) AOP 01](https://zhouj000.github.io/2018/09/22/spring-10/)  
 
 
 
@@ -989,6 +990,7 @@ protected void populateBean(String beanName, RootBeanDefinition mbd, @Nullable B
 		return;
 	}
 
+	// 对依赖注入处理，首先处理autowiring自动装配的依赖注入
 	// 获取容器在解析Bean定义资源时为BeanDefiniton中设置的属性值
 	PropertyValues pvs = (mbd.hasPropertyValues() ? mbd.getPropertyValues() : null);
 
@@ -1011,6 +1013,8 @@ protected void populateBean(String beanName, RootBeanDefinition mbd, @Nullable B
 		pvs = newPvs;
 	}
 
+	// 对非autowiring的属性进行依赖注入处理
+	
 	// 后处理器已经初始化
 	boolean hasInstAwareBpps = hasInstantiationAwareBeanPostProcessors();
 	// 需要依赖检查
@@ -1191,6 +1195,7 @@ protected void applyPropertyValues(String beanName, BeanDefinition mbd, BeanWrap
 	}
 
 	if (System.getSecurityManager() != null && bw instanceof BeanWrapperImpl) {
+		// 设置安全上下文，JDK安全机制
 		((BeanWrapperImpl) bw).setSecurityContext(getAccessControlContext());
 	}
 
@@ -1269,6 +1274,7 @@ protected void applyPropertyValues(String beanName, BeanDefinition mbd, BeanWrap
 					!((TypedStringValue) originalValue).isDynamic() &&
 					!(convertedValue instanceof Collection || ObjectUtils.isArray(convertedValue))) {
 				pv.setConvertedValue(convertedValue);
+				// 重新封装属性的值
 				deepCopy.add(pv);
 			}
 			else {
