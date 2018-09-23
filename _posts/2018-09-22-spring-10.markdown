@@ -10,7 +10,7 @@ tags:
     - spring
 --- 
 
-<font id="last-updated">最后更新于：2018-09-22</font>
+<font id="last-updated">最后更新于：2018-09-23</font>
 
 [Spring(一) IOC核心类](https://zhouj000.github.io/2018/08/19/spring-1/)  
 [Spring(二) Resource定位与载入](https://zhouj000.github.io/2018/08/26/spring-2/)  
@@ -22,6 +22,7 @@ tags:
 [Spring(八) SpringBean的生命周期](https://zhouj000.github.io/2018/09/15/spring-8/)  
 [Spring(九) IOC时序图](https://zhouj000.github.io/2018/09/17/spring-9/)  
 [Spring(十) AOP 01](https://zhouj000.github.io/2018/09/22/spring-10/)  
+[Spring(十一) AOP 02](https://zhouj000.github.io/2018/09/23/spring-11/)  
 
 
 
@@ -41,8 +42,8 @@ tags:
 
 # JDK中的动态代理
 
-1. 创建InvocationHandler接口实现类(代理执行类)
-2. 实现invoke(Object proxy, Method method, Object[] args)方法
+1. 创建InvocationHandler接口实现类(代理执行类)，创建构造函数传入被代理对象
+2. 实现invoke(Object proxy, Method method, Object[] args)方法，实现AOP增强逻辑
 3. 创建getProxy方法，也可以在外面直接调用代码
 	+ Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), target.getClass().getInterfaces(), this)
 4. 创建目标被代理类与接口
@@ -51,8 +52,8 @@ tags:
 ![proxy](/img/in-post/2018/9/proxy.png)
 ```java
 public static Object newProxyInstance(ClassLoader loader,	// 用于加载代理类的 Loader 类，通常这个 Loader 和被代理的类是同一个 Loader 类
-									  Class<?>[] interfaces,	// 要被代理的那些那些接口
-									  InvocationHandler h)	// 用于执行除了被代理接口中方法之外的用户自定义的操作
+				  Class<?>[] interfaces,	// 要被代理的那些那些接口
+				  InvocationHandler h)	// 用于执行除了被代理接口中方法之外的用户自定义的操作
 	throws IllegalArgumentException {
 	Objects.requireNonNull(h);
 	
@@ -119,9 +120,11 @@ private static Class<?> getProxyClass0(ClassLoader loader,
 	return proxyClassCache.get(loader, interfaces);
 }
 
+// proxyClassCache定义
 private static final WeakCache<ClassLoader, Class<?>[], Class<?>>
         proxyClassCache = new WeakCache<>(new KeyFactory(), new ProxyClassFactory());
 
+// 拿到代理类
 public V get(K key, P parameter) {
 	Objects.requireNonNull(parameter);
 
@@ -190,7 +193,7 @@ public V get(K key, P parameter) {
 # Spring对AOP的支持
 
 **Spring中AOP代理由Spring的IOC容器负责生成、管理，其依赖关系也由IOC容器负责管理。**因此，AOP代理可以直接使用容器中的其它bean实例作为目标，这种关系可由IOC容器的依赖注入提供。Spring创建代理的规则为：  
-1、默认使用Java动态代理来创建AOP代理，这样就可以为任何接口实例创建代理了
+1、默认使用Java动态代理来创建AOP代理，这样就可以为任何接口实例创建代理了  
 2、当需要代理的类不是代理接口的时候，Spring会切换为使用CGLIB代理，也可强制使用CGLIB
 
 **applicationContext配置方式**：  
@@ -213,7 +216,7 @@ public V get(K key, P parameter) {
 
 ## parseCustomElement
 
-自定义标签解析，根据命名空间找到NamespaceHandler，即AopNamespaceHandler，执行其init方法
+自定义标签解析，根据命名空间找到NamespaceHandler，即AopNamespaceHandler，在其resolve方法中调用init初始化注册
 ```java
 public void init() {
 	// In 2.0 XSD as well as in 2.1 XSD.
@@ -226,11 +229,65 @@ public void init() {
 }
 ```
 
-## aspectj-autoproxy
+
+## config标签
+
+注册了ConfigBeanDefinitionParser(BeanDefinitionParser接口实现类)后，对于config类型标签，parseCustomElement方法调用其parse方法
+```java
+public BeanDefinition parse(Element element, ParserContext parserContext) {
+	CompositeComponentDefinition compositeDef =
+			new CompositeComponentDefinition(element.getTagName(), parserContext.extractSource(element));
+	parserContext.pushContainingComponent(compositeDef);
+
+	// AopNamespaceUtils.registerAspectJAutoProxyCreatorIfNecessary(parserContext, element)
+	// 注册AspectJAwareAdvisorAutoProxyCreator
+	configureAutoProxyCreator(parserContext, element);
+	// 子元素处理
+	List<Element> childElts = DomUtils.getChildElements(element);
+	for (Element elt: childElts) {
+		String localName = parserContext.getDelegate().getLocalName(elt);
+		// pointcut处理
+		if (POINTCUT.equals(localName)) {
+			parsePointcut(elt, parserContext);
+		} 
+		// advisor处理
+		else if (ADVISOR.equals(localName)) {
+			parseAdvisor(elt, parserContext);
+		}
+		// aspect处理
+		else if (ASPECT.equals(localName)) {
+			parseAspect(elt, parserContext);
+		}
+	}
+	parserContext.popAndRegisterContainingComponent();
+	return null;
+}
+```
+
+AspectJAwareAdvisorAutoProxyCreator实现了BeanPostProcessor接口，会被调用其postProcessAfterInitialization方法，然后调用其父类AbstractAutoProxyCreator的wrapIfNecessary方法
+![aspectJAwareAdvisorAutoProxyCreator](/img/in-post/2018/9/aspectJAwareAdvisorAutoProxyCreator.png)
+
+```java
+public Object postProcessAfterInitialization(@Nullable Object bean, String beanName) throws BeansException {
+	if (bean != null) {
+		Object cacheKey = getCacheKey(bean.getClass(), beanName);
+		if (!this.earlyProxyReferences.contains(cacheKey)) {
+			return wrapIfNecessary(bean, beanName, cacheKey);
+		}
+	}
+	return bean;
+}
+```
+
+
+
+## aspectj-autoproxy标签
+
+对于&lt;aop:aspectj-autoproxy />标签
 
 ### parse
 
-注册了AspectJAutoProxyBeanDefinitionParser，BeanDefinitionParser接口从parse函数开始
+注册了AspectJAutoProxyBeanDefinitionParser(BeanDefinitionParser接口实现类)后，parseCustomElement方法同样调用其parse方法
 ```java
 public BeanDefinition parse(Element element, ParserContext parserContext) {
 	// 注册AnnotationAwareAspectJAutoProxyCreator
@@ -339,7 +396,7 @@ private void extendBeanDefinition(Element element, ParserContext parserContext) 
 
 ### postProcessAfterInitialization
 
-实现了BeanPostProcessor接口，所以当Spring预实例化bean后会调用其postProcessAfterInitialization方法
+AnnotationAwareAspectJAutoProxyCreator也实现了BeanPostProcessor接口，所以当Spring预实例化bean后会调用其postProcessAfterInitialization方法
 ![annotationAwareAspectJAutoProxyCreator](/img/in-post/2018/9/annotationAwareAspectJAutoProxyCreator.png)
 ```java
 // AbstractAutoProxyCreator
@@ -435,7 +492,7 @@ protected List<Advisor> findCandidateAdvisors() {
 
 1-a-2 . 获取注解增强
 
-在实例化单例的时候，会调用resolveBeforeInstantiation方法，里面会调用applyBeanPostProcessorsBeforeInstantiation方法，获取到org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator(InstantiationAwareBeanPostProcessor)，调用它的postProcessBeforeInstantiation方法。在判断shouldSkip时，会去findCandidateAdvisors，那时候会调用buildAspectJAdvisors方法，所以在缓存中已经能取到aspectNames和cachedAdvisors了
+在实例化单例的时候，会调用resolveBeforeInstantiation方法([Spring(七)b.实例化的前置处理](https://zhouj000.github.io/2018/09/14/spring-7/))，里面会调用applyBeanPostProcessorsBeforeInstantiation方法，获取到org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator(也是InstantiationAwareBeanPostProcessor接口实现类)，调用它的postProcessBeforeInstantiation方法。在判断shouldSkip时，会去findCandidateAdvisors，那时候会调用buildAspectJAdvisors方法，所以在缓存中已经能取到aspectNames和cachedAdvisors了
 ```java
 // BeanFactoryAspectJAdvisorsBuilder
 public List<Advisor> buildAspectJAdvisors() {
