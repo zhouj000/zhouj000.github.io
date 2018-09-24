@@ -10,7 +10,7 @@ tags:
     - spring
 --- 
 
-<font id="last-updated">最后更新于：2018-09-23</font>
+<font id="last-updated">最后更新于：2018-09-24</font>
 
 [Spring(一) IOC核心类](https://zhouj000.github.io/2018/08/19/spring-1/)  
 [Spring(二) Resource定位与载入](https://zhouj000.github.io/2018/08/26/spring-2/)  
@@ -570,9 +570,228 @@ public Object proceed() throws Throwable {
 ```
 
 
+
+# 解决疑问
+那么现在来看一下，为什么advice的执行顺序是那样的：  
+@Around -> @Before -> invoke -> [@Around] -> @After -> @AfterReturning/@AfterThrowing   
+从拦截器调用链来看，顺序是这样的:
+![interceptorsMatchers](/img/in-post/2018/9/interceptorsMatchers.png)
+
+依次在ReflectiveMethodInvocation的proceed方法中调用`((MethodInterceptor) interceptorOrInterceptionAdvice).invoke(this)`  
+```java
+// ExposeInvocationInterceptor
+public Object invoke(MethodInvocation mi) throws Throwable {
+	MethodInvocation oldInvocation = invocation.get();
+	invocation.set(mi);
+	try {
+		return mi.proceed();
+	}
+	finally {
+		invocation.set(oldInvocation);
+	}
+}
+
+// AspectJAfterThrowingAdvice
+public Object invoke(MethodInvocation mi) throws Throwable {
+	try {
+		return mi.proceed();
+	}
+	catch (Throwable ex) {
+		if (shouldInvokeOnThrowing(ex)) {
+			// 捕获到异常后才执行Advice增强
+			invokeAdviceMethod(getJoinPointMatch(), null, ex);
+		}
+		throw ex;
+	}
+}
+
+// AfterReturningAdviceInterceptor
+public Object invoke(MethodInvocation mi) throws Throwable {
+	Object retVal = mi.proceed();
+	// 结果返回后执行
+	this.advice.afterReturning(retVal, mi.getMethod(), mi.getArguments(), mi.getThis());
+	return retVal;
+}
+
+// AspectJAfterAdvice
+public Object invoke(MethodInvocation mi) throws Throwable {
+	try {
+		return mi.proceed();
+	}
+	// 在返回结果后一定执行AfterAdvice
+	finally {
+		invokeAdviceMethod(getJoinPointMatch(), null, null);
+	}
+}
+
+// AspectJAroundAdvice
+public Object invoke(MethodInvocation mi) throws Throwable {
+	if (!(mi instanceof ProxyMethodInvocation)) {
+		throw new IllegalStateException("MethodInvocation is not a Spring ProxyMethodInvocation: " + mi);
+	}
+	ProxyMethodInvocation pmi = (ProxyMethodInvocation) mi;
+	ProceedingJoinPoint pjp = lazyGetProceedingJoinPoint(pmi);
+	JoinPointMatch jpm = getJoinPointMatch(pmi);
+	return invokeAdviceMethod(pjp, jpm, null, null);
+}
+
+// MethodBeforeAdviceInterceptor
+public Object invoke(MethodInvocation mi) throws Throwable {
+	// 在proceed之前调用
+	this.advice.before(mi.getMethod(), mi.getArguments(), mi.getThis());
+	return mi.proceed();
+}
+```
+所以相当于:
+```
+try {
+	try {
+		【AspectJAroundAdvice】.invoke -> invokeAdviceMethod -> 
+			Around方法{:begin -> ProceedingJoinPoint.proceed ->
+				【MethodBeforeAdviceInterceptor】.invoke -> advice.before方法 -> mi.proceed ->
+				【myMethod】  <!可能会抛出异常!> -----> 直接去finally后被catch捕获
+			Around方法 :end}
+	} finally {
+		【AspectJAfterAdvice】.invokeAdviceMethod -> after方法
+	}
+	【AfterReturningAdviceInterceptor】.invoke -> advice.afterReturning方法
+} catch (Throwable ex) {
+	【AspectJAfterThrowingAdvice】.invokeAdviceMethod -> afterThrowing方法
+}
+```
+那么问题来了，为什么拦截链的顺序是这样的呢？其实在[上一篇](https://zhouj000.github.io/2018/09/22/spring-10/)中的findEligibleAdvisors方法里，对拦截器链进行了排序
+```java
+// AbstractAdvisorAutoProxyCreator
+protected List<Advisor> findEligibleAdvisors(Class<?> beanClass, String beanName) {
+	// 1. 获取增强器
+	List<Advisor> candidateAdvisors = findCandidateAdvisors();
+	// 2. 获取其中能应用(合适)的增强器
+	List<Advisor> eligibleAdvisors = findAdvisorsThatCanApply(candidateAdvisors, beanClass, beanName);
+	// ----> ExposeInvocationInterceptor是在这里添加进去的
+	extendAdvisors(eligibleAdvisors);
+	if (!eligibleAdvisors.isEmpty()) {
+		// ----> 就是在这里
+		eligibleAdvisors = sortAdvisors(eligibleAdvisors);
+	}
+	return eligibleAdvisors;
+}
+
+protected List<Advisor> sortAdvisors(List<Advisor> advisors) {
+	List<PartiallyComparableAdvisorHolder> partiallyComparableAdvisors = new ArrayList<>(advisors.size());
+	for (Advisor element : advisors) {
+		partiallyComparableAdvisors.add(
+				new PartiallyComparableAdvisorHolder(element, DEFAULT_PRECEDENCE_COMPARATOR));
+	}
+	// 使用PartialOrder进行排序
+	List<PartiallyComparableAdvisorHolder> sorted = PartialOrder.sort(partiallyComparableAdvisors);
+	if (sorted != null) {
+		List<Advisor> result = new ArrayList<>(advisors.size());
+		for (PartiallyComparableAdvisorHolder pcAdvisor : sorted) {
+			result.add(pcAdvisor.getAdvisor());
+		}
+		return result;
+	}
+	else {
+		return super.sortAdvisors(advisors);
+	}
+}
+```
+里面使用AspectJAwareAdvisorAutoProxyCreator的compareTo方法进行比较
+```java
+public int compareTo(Object obj) {
+	Advisor otherAdvisor = ((PartiallyComparableAdvisorHolder) obj).advisor;
+	return this.comparator.compare(this.advisor, otherAdvisor);
+}
+
+// AspectJPrecedenceComparator
+public int compare(Advisor o1, Advisor o2) {
+	// 比较，有Order的时候，不然为默认值则会SAME_PRECEDENCE
+	int advisorPrecedence = this.advisorComparator.compare(o1, o2);
+	if (advisorPrecedence == SAME_PRECEDENCE && declaredInSameAspect(o1, o2)) {
+		// 就要在这里进行比较
+		advisorPrecedence = comparePrecedenceWithinAspect(o1, o2);
+	}
+	return advisorPrecedence;
+}
+
+private int comparePrecedenceWithinAspect(Advisor advisor1, Advisor advisor2) {
+	// 是否是AfterAdvice
+	boolean oneOrOtherIsAfterAdvice =
+			(AspectJAopUtils.isAfterAdvice(advisor1) || AspectJAopUtils.isAfterAdvice(advisor2));
+	// 比较declarationOrder的值
+	int adviceDeclarationOrderDelta = getAspectDeclarationOrder(advisor1) - getAspectDeclarationOrder(advisor2);
+
+	if (oneOrOtherIsAfterAdvice) {
+		// the advice declared last has higher precedence
+		if (adviceDeclarationOrderDelta < 0) {
+			// advice1 was declared before advice2
+			// so advice1 has lower precedence
+			return LOWER_PRECEDENCE;
+		}
+		else if (adviceDeclarationOrderDelta == 0) {
+			return SAME_PRECEDENCE;
+		}
+		else {
+			return HIGHER_PRECEDENCE;
+		}
+	}
+	else {
+		// the advice declared first has higher precedence
+		if (adviceDeclarationOrderDelta < 0) {
+			// advice1 was declared before advice2
+			// so advice1 has higher precedence
+			return HIGHER_PRECEDENCE;
+		}
+		else if (adviceDeclarationOrderDelta == 0) {
+			return SAME_PRECEDENCE;
+		}
+		else {
+			return LOWER_PRECEDENCE;
+		}
+	}
+}
+```
+那declarationOrder的值是哪里获取的呢？查找获取Advisor的代码发现，是在ReflectiveAspectJAdvisorFactory获取方法getAdvisors中的getAdvisorMethods里对方法Method进行了排序，然后在获取方法getAdvisor里创建InstantiationModelAwarePointcutAdvisorImpl，其中的declarationOrder为当前advisors数组的大小，所以就相当于获取到的Method的顺序:
+```java
+// ReflectiveAspectJAdvisorFactory
+private List<Method> getAdvisorMethods(Class<?> aspectClass) {
+	final List<Method> methods = new ArrayList<>();
+	ReflectionUtils.doWithMethods(aspectClass, method -> {
+		// Exclude pointcuts
+		if (AnnotationUtils.getAnnotation(method, Pointcut.class) == null) {
+			methods.add(method);
+		}
+	});
+	methods.sort(METHOD_COMPARATOR);
+	return methods;
+}
+
+// ReflectiveAspectJAdvisorFactory的静态方法定义了METHOD_COMPARATOR
+static {
+	Comparator<Method> adviceKindComparator = new ConvertingComparator<>(
+			new InstanceComparator<>(
+					// 这里就定义了顺序，从小到大依次。在比较时先converter转换，再按comparator比较
+					Around.class, Before.class, After.class, AfterReturning.class, AfterThrowing.class),
+			(Converter<Method, Annotation>) method -> {
+				AspectJAnnotation<?> annotation =
+					AbstractAspectJAdvisorFactory.findAspectJAnnotationOnMethod(method);
+				return (annotation != null ? annotation.getAnnotation() : null);
+			});
+	Comparator<Method> methodNameComparator = new ConvertingComparator<>(Method::getName);
+	METHOD_COMPARATOR = adviceKindComparator.thenComparing(methodNameComparator);
+}
+```
+
+
+
 # 总结
 所以AOP中  
 aspectj-autoproxy配置方式通过AspectJAutoProxyBeanDefinitionParser注册AnnotationAwareAspectJAutoProxyCreator，  
 config配置方式通过ConfigBeanDefinitionParser注册AspectJAwareAdvisorAutoProxyCreator，  
 在他们的postProcessAfterInitialization方法中，调用父类AbstractAutoProxyCreator的wrapIfNecessary方法，  
 获取所有合适的增强器方法，然后通过JDK或者CGLIB创建代理类，代理类内通过拦截器链来处理相应的增强方法
+  
+  
+扩展资料：  
+[Spring之AOP由浅入深](https://www.cnblogs.com/zhaozihan/p/5953063.html)  
+[docs.spring.io](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#aop)
