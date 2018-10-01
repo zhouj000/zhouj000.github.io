@@ -58,7 +58,7 @@ public void refresh() throws BeansException, IllegalStateException {
 
 			// Invoke factory processors registered as beans in the context.
 			// e.从Spring容器中找出BeanDefinitionRegistryPostProcessor和BeanFactoryPostProcessor接口的实现类，实例化并按照一定的规则顺序进行执行postProcessBeanFactory方法
-			//   比如ConfigurationClassPostProcessor(实现了PriorityOrdered接口)，会去BeanFactory中找出所有有@Configuration注解的bean，然后使用ConfigurationClassParser去解析这个类，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化
+			//   (在用AnnotationConfigApplicationContext时会register这个)比如ConfigurationClassPostProcessor(实现了PriorityOrdered接口)，会去BeanFactory中找出所有有@Configuration注解的bean，然后使用ConfigurationClassParser去解析这个类，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化
 			//   其内部有个Map类型的configurationClasses属性用于保存解析的类，ConfigurationClass是一个对要解析的配置类的封装，内部存储了配置类的注解信息、被@Bean注解修饰的方法、@ImportResource注解修饰的信息、ImportBeanDefinitionRegistrar等都存储在这个封装类中(@Component、@ComponentScan、@Import、@ImportResource修饰的类)
 			//   这个processor是优先级最高的被执行的processor，另外如果程序中有自定义的BeanFactoryPostProcessor，那么这个PostProcessor首先得通过ConfigurationClassPostProcessor被解析出来，然后才能被Spring容器找到并执行
 			//   比如PropertyPlaceholderConfigurer，用来解析${...}占位符

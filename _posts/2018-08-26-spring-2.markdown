@@ -55,6 +55,21 @@ if(refresh) {
 }
 ```
 
+ps.对于AnnotationConfigApplicationContext来说有点不同
+```java
+public AnnotationConfigApplicationContext(Class<?>... annotatedClasses) {
+	// 设置reader与scanner：AnnotatedBeanDefinitionReader、ClassPathBeanDefinitionScanner
+	// 创建AnnotatedBeanDefinitionReader时里面会调用registerAnnotationConfigProcessors，里面注册了多个Processor Definition
+	this();
+	// 注册传入的annotatedClasses：@Configuration
+	register(annotatedClasses);
+	// 一样，因为继承GenericApplicationContext而不是AbstractXmlApplicationContext，所以部分模板方法调用父类的实现不同
+	// beanDefinition的注册不在obtainFreshBeanFactory中进行，而是在invokeBeanFactoryPostProcessors中通过
+	// invokeBeanDefinitionRegistryPostProcessors方法里的ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry去查找注册
+	refresh(); 
+}
+```
+
 2 . 调用父类AbstractApplicationContext的refresh方法，是比较核心的方法，Spring所有的初始化都在这个方法中完成
 ```
 public void refresh() throws BeansException, IllegalStateException {
@@ -84,7 +99,7 @@ public void refresh() throws BeansException, IllegalStateException {
 
 			// Invoke factory processors registered as beans in the context.
 			// 从Spring容器中找出BeanDefinitionRegistryPostProcessor和BeanFactoryPostProcessor接口的实现类，实例化并按照一定的规则顺序进行执行postProcessBeanFactory方法
-			// 比如ConfigurationClassPostProcessor(实现了PriorityOrdered接口)，会去BeanFactory中找出所有有@Configuration注解的bean，然后使用ConfigurationClassParser去解析这个类，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化
+			// (在用AnnotationConfigApplicationContext时会register这个)比如ConfigurationClassPostProcessor(实现了PriorityOrdered接口)，会去BeanFactory中找出所有有@Configuration注解的bean，然后使用ConfigurationClassParser去解析这个类，解析完成之后把这些bean注册到BeanFactory中。需要注意的是这个时候注册进来的bean还没有实例化
 			// 其内部有个Map类型的configurationClasses属性用于保存解析的类，ConfigurationClass是一个对要解析的配置类的封装，内部存储了配置类的注解信息、被@Bean注解修饰的方法、@ImportResource注解修饰的信息、ImportBeanDefinitionRegistrar等都存储在这个封装类中(@Component、@ComponentScan、@Import、@ImportResource修饰的类)
 			// 比如PropertyPlaceholderConfigurer，用来解析${...}占位符
 			invokeBeanFactoryPostProcessors(beanFactory);
