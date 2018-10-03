@@ -352,6 +352,9 @@ public static void invokeBeanFactoryPostProcessors(
 }
 ```
 
+例子：ConfigurationClassPostProcessor(图片来自互联网)
+![configuration-annotation-process](/img/in-post/2018/09/configuration-annotation-process.png)
+
 [Spring内部的BeanPostProcessor接口总结](http://fangjian0423.github.io/2017/06/20/spring-bean-post-processor/)  
 [Spring内置的BeanPostProcessor总结](http://fangjian0423.github.io/2017/06/24/spring-embedded-bean-post-processor/)
 
