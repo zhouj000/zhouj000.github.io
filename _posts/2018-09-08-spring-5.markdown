@@ -10,7 +10,7 @@ tags:
     - spring
 --- 
 
-<font id="last-updated">最后更新于：2018-09-10</font>
+<font id="last-updated">最后更新于：2018-10-03</font>
 
 [Spring(一) IOC核心类](https://zhouj000.github.io/2018/08/19/spring-1/)  
 [Spring(二) Resource定位与载入](https://zhouj000.github.io/2018/08/26/spring-2/)  
@@ -353,7 +353,7 @@ public static void invokeBeanFactoryPostProcessors(
 ```
 
 例子：ConfigurationClassPostProcessor(图片来自互联网)
-![configuration-annotation-process](/img/in-post/2018/09/configuration-annotation-process.png)
+![configuration-annotation-process](/img/in-post/2018/9/configuration-annotation-process.png)
 
 [Spring内部的BeanPostProcessor接口总结](http://fangjian0423.github.io/2017/06/20/spring-bean-post-processor/)  
 [Spring内置的BeanPostProcessor总结](http://fangjian0423.github.io/2017/06/24/spring-embedded-bean-post-processor/)
