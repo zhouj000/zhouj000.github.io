@@ -1,0 +1,74 @@
+---
+layout:     post
+title:      "【置顶】技术类导航"
+author:     "ZhouJ000"
+header-img: "img/in-post/2018/post-bg-2018-headbg.jpg"
+catalog: true
+--- 
+
+# Java
+
+## > 基础
+
+
+
+## > 进阶
+
+### >> 框架知识
+[Spring(一) IOC核心类](https://zhouj000.github.io/2018/08/19/spring-1/)  
+[Spring(二) Resource定位与载入](https://zhouj000.github.io/2018/08/26/spring-2/)  
+[Spring(三) BeanDefinition解析与注册](https://zhouj000.github.io/2018/08/27/spring-3/)  
+[Spring(四) 自定义标签解析](https://zhouj000.github.io/2018/09/06/spring-4/)  
+[Spring(五) 其他初始化步骤](https://zhouj000.github.io/2018/09/08/spring-5/)  
+[Spring(六) bean的加载01](https://zhouj000.github.io/2018/09/11/spring-6/)  
+[Spring(七) bean的加载02](https://zhouj000.github.io/2018/09/14/spring-7/)  
+[Spring(八) SpringBean的生命周期](https://zhouj000.github.io/2018/09/15/spring-8/)  
+[Spring(九) IOC时序图](https://zhouj000.github.io/2018/09/17/spring-9/)  
+[Spring(十) AOP 01](https://zhouj000.github.io/2018/09/22/spring-10/)  
+[Spring(十一) AOP 02](https://zhouj000.github.io/2018/09/23/spring-11/)  
+[Spring(十二) spring事务](https://zhouj000.github.io/2018/09/24/spring-12/)  
+
+[SpringMVC(一) 初始化](https://zhouj000.github.io/2018/09/28/springmvc-1/)  
+[SpringMVC(二) 请求调度](https://zhouj000.github.io/2018/10/02/springmvc-2/)  
+
+### >> 工具
+
+[about git](https://zhouj000.github.io/2018/06/30/about-git/)  
+
+
+
+## > 高级
+
+### >> 线上问题分析
+
+[java项目 CPU占用100%问题](https://zhouj000.github.io/2018/06/24/investigate-cpu-100/)  
+[java项目 内存溢出问题](https://zhouj000.github.io/2018/07/14/investigate-out-memery/)  
+
+
+
+## > 框架
+
+### >> 分布式
+
+[Dubbo(一):从dubbo-demo初探dubbo源码](https://zhouj000.github.io/2018/07/16/dubbo-demo-exploration/)  
+[Dubbo(二):架构与SPI](https://zhouj000.github.io/2018/08/10/dubbo-framework-spi/)  
+
+### >> 高并发
+
+[RabbitMQ(二) 持久化与消息确认](https://zhouj000.github.io/2018/07/15/rabbitmq-study2/)  
+
+
+
+## > 读书笔记
+
+[亿级流量网站构架核心技术-读书笔记](https://zhouj000.github.io/2018/06/25/coreTechnologyOfWebArchitecture-kaitao/)  
+
+
+
+# Python
+
+
+
+# 其他
+
+[了解Markdown语法](https://zhouj000.github.io/2018/06/11/about-markdown/)
