@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "SpringMVC(一)"
+title:      "SpringMVC(一) 初始化"
 date:       2018-09-28
 author:     "ZhouJ000"
 header-img: "img/in-post/2018/post-bg-2018-headbg.jpg"
@@ -11,6 +11,9 @@ tags:
 --- 
 
 <font id="last-updated">最后更新于：2018-10-01</font>
+
+[SpringMVC(一) 初始化](https://zhouj000.github.io/2018/09/28/springmvc-1/)  
+[SpringMVC(二) 请求调度](https://zhouj000.github.io/2018/10/02/springmvc-2/)  
 
 
 
@@ -60,8 +63,8 @@ servlet框架由两个java包组成: javax.servlet和javax.servlet.http。在jav
 
 ## 配置文件
 
-1、web.xml中配置servlet与servlet-mapping拦截，自动加载DispatcherServlet
-2、创建配置文件，比如SpringMvcContext.xml
+1、web.xml中配置servlet与servlet-mapping拦截，自动加载DispatcherServlet  
+2、创建配置文件，比如SpringMvcContext.xml  
 3、配置context:component-scan自动扫包，配置mvc:annotation-driven启用注解映射的支持，配置mvc:default-servlet-handler不处理静态资源，配置InternalResourceViewResolver视图解析器
 ```
 // web.xml
@@ -484,6 +487,7 @@ protected WebApplicationContext initWebApplicationContext() {
 	if (this.webApplicationContext != null) {
 		// A context instance was injected at construction time -> use it
 		// WebApplicationContext通过构造方法中被注入
+		// 就比如上面说的，用java方式配置，会将WebApplicationContext通过DispatcherServlet构造方法设入
 		wac = this.webApplicationContext;
 		if (wac instanceof ConfigurableWebApplicationContext) {
 			ConfigurableWebApplicationContext cwac = (ConfigurableWebApplicationContext) wac;
