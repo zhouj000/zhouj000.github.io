@@ -794,11 +794,24 @@ public class DispatcherServletAutoConfiguration {
 	// ...
 }
 ```
-使用@EnableConfigurationProperties、@ConfigurationProperties提供配置参数
+使用@EnableConfigurationProperties、@ConfigurationProperties提供配置参数，
 ```java
 @ConfigurationProperties(prefix = "spring.mvc")
 public class WebMvcProperties {
 	// ...
+}
+```
+刷新中applyBeanPostProcessorsBeforeInitialization方法会触发ConfigurationPropertiesBindingPostProcessor.postProcessBeforeInitialization方法
+```java
+public Object postProcessBeforeInitialization(Object bean, String beanName)
+		throws BeansException {
+	// 获取类上的@ConfigurationProperties注解
+	ConfigurationProperties annotation = getAnnotation(bean, beanName,
+			ConfigurationProperties.class);
+	if (annotation != null) {
+		bind(bean, beanName, annotation);
+	}
+	return bean;
 }
 ```
 
