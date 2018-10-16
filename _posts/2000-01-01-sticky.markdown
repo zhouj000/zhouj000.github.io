@@ -62,6 +62,8 @@ catalog: true
 ### >> 高并发
 
 [RabbitMQ(二) 持久化与消息确认](https://zhouj000.github.io/2018/07/15/rabbitmq-study2/)  
+[秒杀系统设计(一) 概述和原则](https://zhouj000.github.io/2018/10/14/SecKill-System-1)  
+[秒杀系统设计(二) 高性能01-动静分离与热点缓存](https://zhouj000.github.io/2018/10/15/SecKill-System-2)  
 
 
 

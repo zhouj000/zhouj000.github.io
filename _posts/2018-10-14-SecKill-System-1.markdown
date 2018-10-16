@@ -12,6 +12,8 @@ tags:
 
 <font id="last-updated">最后更新于：2018-10-15</font>
 
+[秒杀系统设计(一) 概述和原则](https://zhouj000.github.io/2018/10/14/SecKill-System-1)  
+[秒杀系统设计(二) 高性能01-动静分离与热点缓存](https://zhouj000.github.io/2018/10/15/SecKill-System-2)  
 
 
 
