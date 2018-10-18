@@ -14,6 +14,7 @@ tags:
 
 [秒杀系统设计(一) 概述和原则](https://zhouj000.github.io/2018/10/14/SecKill-System-1)  
 [秒杀系统设计(二) 高性能01-动静分离与热点缓存](https://zhouj000.github.io/2018/10/15/SecKill-System-2)  
+[秒杀系统设计(三) 高性能02-流量削峰与服务端优化](https://zhouj000.github.io/2018/10/16/SecKill-System-3)  
 
 
 

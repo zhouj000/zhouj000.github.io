@@ -10,7 +10,7 @@ tags:
     - spring
 --- 
 
-<font id="last-updated">最后更新于：2018-09-27</font>
+<font id="last-updated">最后更新于：2018-10-17</font>
 
 [Spring(一) IOC核心类](https://zhouj000.github.io/2018/08/19/spring-1/)  
 [Spring(二) Resource定位与载入](https://zhouj000.github.io/2018/08/26/spring-2/)  
@@ -1585,4 +1585,47 @@ private RootBeanDefinition parseAttributeSource(Element attrEle, ParserContext p
 }
 ```
 然后通过aop:config标签，通过aop:advisor子标签与aop:pointcut子标签去创建代理，在拦截器链中进行事务管理
+
+
+## 自我调用处理
+
+从上面的源码分析可以了解到，aop代理是在方法入口层面的。所以内部调用自己的方法，如果入口没有@Transactional注解，那么这个调用就不会使用事务；如果在内部调用中还配有其他@Transactional的不同配置，那么也将无法奏效。
+
+![aop-defect](/img/in-post/2018/9/aop-defect.png)
+Spring通过AopProxy接口，抽象了这两种实现，实现了一致的AOP方式。这种抽象同样带了一个缺陷，那就是抹杀了Cglib能够直接创建普通类的增强子类的能力，Spring相当于把Cglib动态生成的子类，当普通的代理类了，这也是为什么会创建两个对象的原因
+
+那么解决方案是什么呢？那就是通过AOP代理调用内部方法，就可走事务切面进行增强
+```java
+public void step1() {
+	jdbcTemplate.execute(SQL);
+	((TestDao)(AopContext.currentProxy())).step2();
+	((TestDao)(AopContext.currentProxy())).step3();
+}
+
+@Transactional
+public void step2() {
+	jdbcTemplate.execute(SQL);
+}
+@Transactional
+public void step3() {
+	jdbcTemplate.execute(SQL);
+	throw new RuntimeException();
+}
+```
+另一种方法就是将代理对象注入，然后通过代理对象调用内部方法
+```java
+@Autowired
+private ApplicationContext context; 
+private ITestDao proxySelf;
+
+@PostConstruct
+private void setSelf() {  
+	// 从上下文获取代理对象（如果通过proxtSelf=this是不对的，this是目标对象）  
+	// 此种方法不适合于prototype Bean，因为每次getBean返回一个新的Bean  
+	proxySelf = context.getBean(ITestDao.class);   
+}
+```
+
+参考:  
+[Spring事务处理时自我调用的解决方案及一些实现方式的风险](http://www.iteye.com/topic/1122740)
 
