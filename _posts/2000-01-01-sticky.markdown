@@ -66,6 +66,7 @@ catalog: true
 [秒杀系统设计(二) 高性能01-动静分离与热点缓存](https://zhouj000.github.io/2018/10/15/SecKill-System-2)  
 [秒杀系统设计(三) 高性能02-流量削峰与服务端优化](https://zhouj000.github.io/2018/10/16/SecKill-System-3)  
 [秒杀系统设计(四) 一致性-库存](https://zhouj000.github.io/2018/10/18/SecKill-System-4)  
+[秒杀系统设计(五) 高可用-兜底方案](https://zhouj000.github.io/2018/10/19/SecKill-System-5)  
 
 
 
