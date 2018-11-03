@@ -45,6 +45,11 @@ catalog: true
 [java项目 CPU占用100%问题](https://zhouj000.github.io/2018/06/24/investigate-cpu-100/)  
 [java项目 内存溢出问题](https://zhouj000.github.io/2018/07/14/investigate-out-memery/)  
 
+### >> 数据库知识
+
+[Redis(一) 基础与api](https://zhouj000.github.io/2018/10/23/redis-1)  
+[Redis(二) 小功能](https://zhouj000.github.io/2018/11/01/redis-2)  
+
 
 
 ## > 框架
