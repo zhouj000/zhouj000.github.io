@@ -14,6 +14,7 @@ tags:
 
 [Redis(一) 基础与api](https://zhouj000.github.io/2018/10/23/redis-1)  
 [Redis(二) 小功能](https://zhouj000.github.io/2018/11/01/redis-2)  
+[Redis(三) 阻塞与内存](https://zhouj000.github.io/2018/11/03/redis-3)  
 
 
 
