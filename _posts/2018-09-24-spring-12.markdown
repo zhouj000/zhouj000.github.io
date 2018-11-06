@@ -1595,6 +1595,9 @@ private RootBeanDefinition parseAttributeSource(Element attrEle, ParserContext p
 Spring通过AopProxy接口，抽象了这两种实现，实现了一致的AOP方式。这种抽象同样带了一个缺陷，那就是抹杀了Cglib能够直接创建普通类的增强子类的能力，Spring相当于把Cglib动态生成的子类，当普通的代理类了，这也是为什么会创建两个对象的原因
 
 那么解决方案是什么呢？那就是通过AOP代理调用内部方法，就可走事务切面进行增强
+```
+<aop:aspectj-autoproxy expose-proxy="true" />
+```
 ```java
 public void step1() {
 	jdbcTemplate.execute(SQL);

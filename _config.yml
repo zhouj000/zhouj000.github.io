@@ -67,10 +67,11 @@ service-worker: true
 
 
 # Friends
-#friends: [
-#    {
-#        title: "test",
-#        href: "#"
+friends: [
+    {
+        title: "paulzjw",
+        href: "https://paulzjw.github.io/"
+	}
 #    },{
 #        title: "Foo",
 #        href: "#"
@@ -84,4 +85,4 @@ service-worker: true
 #        title: "It helps SEO",
 #        href: "#"
 #    }
-#]
+]
