@@ -1587,7 +1587,10 @@ private RootBeanDefinition parseAttributeSource(Element attrEle, ParserContext p
 然后通过aop:config标签，通过aop:advisor子标签与aop:pointcut子标签去创建代理，在拦截器链中进行事务管理
 
 
-## 自我调用处理
+
+## 平时遇到的
+
+### 自我调用处理
 
 从上面的源码分析可以了解到，aop代理是在方法入口层面的。所以内部调用自己的方法，如果入口没有@Transactional注解，那么这个调用就不会使用事务；如果在内部调用中还配有其他@Transactional的不同配置，那么也将无法奏效。
 
@@ -1629,6 +1632,53 @@ private void setSelf() {
 }
 ```
 
+### 判断在事务中
+
+```java
+if (TransactionSynchronizationManager.isActualTransactionActive()) {
+   TransactionStatus status = TransactionAspectSupport.currentTransactionStatus();
+   ...
+}
+```
+额外
+```java
+TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+	@Override
+	public void afterCommit() {
+		System.out.println("send email after transaction commit...");
+	}
+});
+
+public class LogTransactionSynchronization extends TransactionSynchronizationAdapter {
+   @Override
+   public afterCompletion(int status) {
+      // log the status or store it for later usage
+   }
+}
+```
+
+### 事务后操作
+
+```java
+public class MyTransactionEvent extends ApplicationEvent {
+	public MyTransactionEvent(String msg, Object source) {
+        super(source);
+        this.msg = msg;
+    }
+}
+
+@Component
+@Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+public class MyTransactionListener {
+
+    @TransactionalEventListener(fallbackExecution = true)
+    public void onApplicationEvent(MyTransactionEvent event) {
+		// do something...
+    }
+}
+```
+
+
+
 参考:  
 [Spring事务处理时自我调用的解决方案及一些实现方式的风险](http://www.iteye.com/topic/1122740)
-
