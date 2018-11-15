@@ -17,6 +17,7 @@ tags:
 [Redis(三) 阻塞与内存](https://zhouj000.github.io/2018/11/03/redis-3)  
 [Redis(四) 缓存设计](https://zhouj000.github.io/2018/11/04/redis-4)  
 [Redis(五) 客户端调用](https://zhouj000.github.io/2018/11/06/redis-5)  
+[Redis(六) 持久化与复制](https://zhouj000.github.io/2018/11/15/redis-6)  
 
 
 
