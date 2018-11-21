@@ -10,7 +10,7 @@ tags:
     - nosql
 --- 
 
-<font id="last-updated">最后更新于：2018-11-16</font>
+<font id="last-updated">最后更新于：2018-11-21</font>
 
 [Redis(一) 基础与api](https://zhouj000.github.io/2018/10/23/redis-1)  
 [Redis(二) 小功能](https://zhouj000.github.io/2018/11/01/redis-2)  
@@ -41,7 +41,7 @@ Redis Sentinel与Redis主从复制模式只是多了若干个Sentinel节点，�
 
 ## 安装和部署
 
-一主两从，三个Sentinel节点
+一主两从，三个Sentinel节点(一般至少3个，3台以下如果1台哨兵也宕机了，会导致majority不满足)
 
 主节点：
 ```

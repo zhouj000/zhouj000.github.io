@@ -10,7 +10,7 @@ tags:
     - nosql
 --- 
 
-<font id="last-updated">最后更新于：2018-11-18</font>
+<font id="last-updated">最后更新于：2018-11-21</font>
 
 [Redis(一) 基础与api](https://zhouj000.github.io/2018/10/23/redis-1)  
 [Redis(二) 小功能](https://zhouj000.github.io/2018/11/01/redis-2)  
@@ -23,7 +23,7 @@ tags:
 
 
 
-# 集群
+# Cluster集群
 
 ## 数据分布
 
@@ -297,6 +297,27 @@ Pub/Sub广播问题
 手动故障转移
 
 数据迁移
+
+
+
+# 分布式Redis服务的解决方案
+
+![redis_compared](/img/in-post/2018/11/redis_compared.png)
+
+**codis和twemproxy最大的区别有两个：**  
+1、codis支持动态水平扩展，对client完全透明不影响服务的情况下可以完成增减redis实例的操作  
+2、codis是用go语言写的并支持多线程，twemproxy用C并只用单线程。 后者又意味着：codis在多核机器上的性能会好于twemproxy；codis的最坏响应时间可能会因为GC的STW而变大，不过go1.5发布后会显著降低STW的时间；如果只用一个CPU的话go语言的性能不如C，因此在一些短连接而非长连接的场景中，整个系统的瓶颈可能变成accept新tcp连接的速度，这时codis的性能可能会差于twemproxy
+
+**codis和redis cluster的区别：**  
+redis cluster基于smart client和无中心的设计，client必须按key的哈希将请求直接发送到对应的节点。Redis Cluster的成员管理(节点名称、IP、端口、状态、角色)等，都通过节点之间两两通讯，定期交换并更新，这是一种非常“重”的方案。而codis因其有中心节点、基于proxy的设计，对client来说可以像对单机redis一样去操作proxy(除了一些命令不支持)，Codis引入了Group的概念，每个Group包括1个Redis Master及至少1个Redis Slave。采用预先分片（Pre-Sharding）机制，事先规定好了，分成1024个slots，这些路由信息保存在ZooKeeper中，ZooKeeper还维护Codis Server Group信息，并提供分布式锁等服务
+
+
+
+参考：  
+[codis](https://github.com/CodisLabs/codis)  
+[Codis——分布式Redis服务的解决方案](https://www.cnblogs.com/chenny7/p/5063368.html)  
+[Codis 3集群搭建详解](http://www.ywnds.com/?p=6646)
+
 
 
 # 监控云平台
