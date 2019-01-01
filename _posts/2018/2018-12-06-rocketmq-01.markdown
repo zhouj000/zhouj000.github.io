@@ -9,7 +9,7 @@ tags:
     - mq
 --- 
 
-<font id="last-updated">最后更新于：2018-12-16</font>
+<font id="last-updated">最后更新于：2019-01-01</font>
 
 
 
@@ -35,6 +35,23 @@ Broker：消息暂存，消息转发
 3、修改server.port，rocketmq.config.namesrvAddr，还可以修改rocketmq.config.dataPath  
 4、在rocketmq-externals\rocketmq-console文件夹下进行打包`mvn clean package -Dmaven.test.skip=true`  
 5、进入target文件夹下执行`java -jar rocketmq-console-ng-1.0.0.jar`启动
+
+
+
+# 介绍
+
+**Name Server:**Name Server为producer和consumer提供路由信息  
+**Broker:**Broker是RocketMQ系统的主要角色，其实就是MQ。Broker接收来自生产者的消息，储存以及为消费者拉取消息的请求做好准备
+
+**Producer:**消息生产者，生产者的作用就是将消息发送到MQ  
+**Producer Group:**生产者组，简单来说就是多个发送同一类消息的生产者称之为一个生产者组
+
+**Consumer:**消息消费者  
+**Consumer Group:**消费者组，和生产者类似，消费同一类消息的多个 consumer 实例组成一个消费者组
+
+**Topic:**Topic是一种消息的逻辑分类，比如说你有订单类的消息，也有库存类的消息，那么就需要进行分类。topic只是消息的逻辑分类，内部实现其实是由queue组成  
+**Tag:**标签可以被认为是对 Topic 进一步细化。一般在相同业务模块中通过引入标签来标记不同用途的消息  
+**Message:**Message是消息的载体。一个Message必须指定topic，相当于寄信的地址。Message还有一个可选的tag设置，以便消费端可以基于tag进行过滤消息，也可以添加额外的键值对
 
 
 
