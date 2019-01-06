@@ -56,6 +56,9 @@ catalog: true
 [Redis(七) 哨兵](https://zhouj000.github.io/2018/11/16/redis-7)  
 [Redis(八) 集群](https://zhouj000.github.io/2018/11/17/redis-8)  
 
+### >> 大数据知识
+[Solr学习01 - 入门](https://zhouj000.github.io/2018/12/02/solr-1/)  
+
 
 
 ## > 框架
@@ -73,6 +76,7 @@ catalog: true
 ### >> 高并发
 
 [RabbitMQ(二) 持久化与消息确认](https://zhouj000.github.io/2018/07/15/rabbitmq-study2/)  
+[RocketMQ(一) 入门](https://zhouj000.github.io/2018/12/06/rocketmq-01/)  
 [秒杀系统设计(一) 概述和原则](https://zhouj000.github.io/2018/10/14/SecKill-System-1)  
 [秒杀系统设计(二) 高性能01-动静分离与热点缓存](https://zhouj000.github.io/2018/10/15/SecKill-System-2)  
 [秒杀系统设计(三) 高性能02-流量削峰与服务端优化](https://zhouj000.github.io/2018/10/16/SecKill-System-3)  
@@ -86,7 +90,7 @@ catalog: true
 [亿级流量网站构架核心技术-读书笔记](https://zhouj000.github.io/2018/06/25/coreTechnologyOfWebArchitecture-kaitao/)  
 [深入浅出数据分析-读书笔记](https://zhouj000.github.io/2018/10/04/HeadFirst-DataAnalysis/)  
 [技术之瞳-读书笔记](https://zhouj000.github.io/2018/10/13/technology-eyes/)
-[企业IT架构转型之道—— 读书笔记](https://zhouj000.github.io/2018/11/24/company-mid-architecture/)
+[企业IT架构转型之道——读书笔记](https://zhouj000.github.io/2018/11/24/company-mid-architecture/)
 
 
 

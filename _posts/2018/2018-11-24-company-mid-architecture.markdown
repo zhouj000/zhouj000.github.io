@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "企业IT架构转型之道—— 读书笔记"
+title:      "企业IT架构转型之道——读书笔记"
 date:       2018-11-24
 author:     "ZhouJ000"
 header-img: "img/in-post/2018/post-bg-2018-headbg.jpg"
