@@ -11,6 +11,9 @@ tags:
 
 <font id="last-updated">最后更新于：2019-01-01</font>
 
+[RocketMQ(一) 入门](https://zhouj000.github.io/2018/12/06/rocketmq-01/)  
+[RocketMQ(二) NameServer与Broker](https://zhouj000.github.io/2019/01/07/rocketmq-02/)  
+
 
 
 # 准备
