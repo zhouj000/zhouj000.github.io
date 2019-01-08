@@ -10,6 +10,9 @@ tags:
     - 优化
 --- 
 
+[Java性能优化01-程序优化](https://zhouj000.github.io/2019/01/06/java-optimize-01/)  
+[Java性能优化02-并行优化](https://zhouj000.github.io/2019/01/08/java-optimize-02/)  
+
 
 
 # 字符串
