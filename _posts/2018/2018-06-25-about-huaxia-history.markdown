@@ -12,7 +12,7 @@ tags:
 <font id="last-updated">最后更新于：2018-10-24</font>
 
 [中华历史(一) 上古夏商周-笔记](https://zhouj000.github.io/2018/06/25/about-huaxia-history/)  
-[中华历史(二) 秦汉-笔记](https://zhouj000.github.io/2018/06/25/about-huaxia-history/)  
+[中华历史(二) 秦汉三国-笔记](https://zhouj000.github.io/2018/10/27/about-huaxia-history2/)  
 
 
 
