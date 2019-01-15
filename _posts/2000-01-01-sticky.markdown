@@ -82,6 +82,7 @@ catalog: true
 
 ### >> 高并发
 
+[RabbitMQ(一) 基础概念](https://zhouj000.github.io/2019/01/15/rabbitmq-study1/)  
 [RabbitMQ(二) 持久化与消息确认](https://zhouj000.github.io/2018/07/15/rabbitmq-study2/)  
 [RocketMQ(一) 入门](https://zhouj000.github.io/2018/12/06/rocketmq-01/)  
 [RocketMQ(二) NameServer与Broker](https://zhouj000.github.io/2019/01/07/rocketmq-02/)  

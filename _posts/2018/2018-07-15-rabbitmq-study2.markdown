@@ -9,7 +9,12 @@ tags:
     - mq
 --- 
 
-<font id="last-updated">最后更新于：2018-07-15</font>
+<font id="last-updated">最后更新于：2019-01-15</font>
+
+[RabbitMQ(一) 基础概念](https://zhouj000.github.io/2019/01/15/rabbitmq-study1/)  
+[RabbitMQ(二) 持久化与消息确认](https://zhouj000.github.io/2018/07/15/rabbitmq-study2/)  
+
+
 
 RabbitMQ Java Client: 5.3.0  
 spring-rabbit: 1.3.9.RELEASE  
@@ -510,4 +515,6 @@ public void process(@Payload Message msg, @Header(AmqpHeaders.DELIVERY_TAG) long
 
 
 本文参考：  
-[消息中间件（Kafka/RabbitMQ）收录集](https://blog.csdn.net/u013256816/article/details/54743481)
+[消息中间件（Kafka/RabbitMQ）收录集](https://blog.csdn.net/u013256816/article/details/54743481)  
+推荐阅读：  
+[RabbitMQ消息可靠性分析](https://blog.csdn.net/u013256816/article/details/79147591)  
