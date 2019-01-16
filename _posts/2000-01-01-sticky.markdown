@@ -65,6 +65,7 @@ catalog: true
 
 ### >> 大数据知识
 [Solr学习01 - 入门](https://zhouj000.github.io/2018/12/02/solr-1/)  
+[Solr学习02 - 基本配置](https://zhouj000.github.io/2019/01/16/solr-2/)  
 
 
 

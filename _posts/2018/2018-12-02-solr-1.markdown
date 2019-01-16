@@ -10,7 +10,10 @@ tags:
     - search
 --- 
 
-<font id="last-updated">最后更新于：2018-12-20</font>
+<font id="last-updated">最后更新于：2019-01-16</font>
+
+[Solr学习01 - 入门](https://zhouj000.github.io/2018/12/02/solr-1/)  
+[Solr学习02 - 基本配置](https://zhouj000.github.io/2019/01/16/solr-2/)  
 
 
 
@@ -23,11 +26,13 @@ Solr搜索引擎擅长处理的数据表现为几大特征：
 4、灵活的模式  
 5、大数据
 
-Solr使用Lucene来实现索引文档的核心数据结构，并执行文档搜索。在后台，lucene是一个Java类库，用于倒排索引的构建和管理，倒排索引是专门用于匹配查询词项羽文本文档的数据结构
+Solr使用Lucene来实现索引文档的核心数据结构，并执行文档搜索。在后台，lucene是一个Java类库，用于倒排索引的构建和管理，倒排索引是专门用于匹配查询词项与文本文档的数据结构
+![solr-des-index](/img/in-post/2018/12/solr-des-index.png)
 
 Lucene提供搜索的核心基础构架，Solr在Lucene基础上做了增强：灵活的模式管理、Java Web应用、一台服务器上的多个索引、可扩展性(插件)、可伸缩性、容错性
 
 Solr的内核由配置文件、Lucene索引文件和Solr事务日志组成
+![solr-core](/img/in-post/2018/12/solr-core.png)
 
 [下载Solr](http://www.apache.org/dyn/closer.lua/lucene/solr/7.5.0)完后解压缩，在根目录下执行`bin\solr -e techproducts`(example文件夹下README)命令，可以启动示例服务器，然后通过`http://localhost:8983/solr`地址访问
 
