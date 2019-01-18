@@ -12,10 +12,32 @@ tags:
 
 [Solr学习01 - 入门](https://zhouj000.github.io/2018/12/02/solr-1/)  
 [Solr学习02 - 基本配置](https://zhouj000.github.io/2019/01/16/solr-2/)  
+[Solr学习03 - 创建索引与文本分析](https://zhouj000.github.io/2019/01/18/solr-3/)  
 
 
 
 # 配置
+
+先看下$SOLR_INSTALL下的文件
+```
+\bin		包括一些能够让solr用起来更容易的重要的脚本，和普通的bin目录的作用是一样的
+\contrib	包含一些solr的一些插件或扩展
+\dist		包含主要的Solr .jar文件
+\docs		包含一个指向Solr在线Javadocs的链接
+\example	包含一些展示solr功能的例子
+\licenses	包含所有的solr所用到的第三方库的许可证
+\server		solr应用程序的核心：包含了运行Solr实例和安装好的Jetty servlet容器
+	- \contexts			包含了solr Web应用程序的Jetty Web应用的部署的配置文件
+	- \etc				一些Jetty的配置文件和示例SSL密钥库
+	- \lib				Jetty和其他第三方的jar包
+	- \logs				日志文件
+	- \modules			jetty的启动模式
+	- \resources		Jetty-logging和log4j的属性配置文件
+	- \scripts			cloud-scripts
+	- \solr				新建的core或Collection的默认保存目录，里面必须要包含solr.xml文件
+	- \solr-webapp		包含solr服务器使用的文件；不要在此目录中编辑文件(solr不是JavaWeb应用程序)
+	- \tmp				临时文件
+```
 
 ## solrconfig基本
 

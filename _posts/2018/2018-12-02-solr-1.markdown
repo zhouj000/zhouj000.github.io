@@ -14,6 +14,7 @@ tags:
 
 [Solr学习01 - 入门](https://zhouj000.github.io/2018/12/02/solr-1/)  
 [Solr学习02 - 基本配置](https://zhouj000.github.io/2019/01/16/solr-2/)  
+[Solr学习03 - 创建索引与文本分析](https://zhouj000.github.io/2019/01/18/solr-3/)  
 
 
 
