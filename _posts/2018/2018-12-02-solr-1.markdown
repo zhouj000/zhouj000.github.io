@@ -17,6 +17,7 @@ tags:
 [Solr学习03 - 创建索引与文本分析](https://zhouj000.github.io/2019/01/18/solr-3/)  
 [Solr学习04 - 查询与处理结果](https://zhouj000.github.io/2019/01/20/solr-4/)  
 [Solr学习05 - solr分面、高亮、查询建议和分组](https://zhouj000.github.io/2019/01/22/solr-5/)  
+[Solr学习06 - solr与solrCloud](https://zhouj000.github.io/2019/01/24/solr-6/)  
 
 
 
