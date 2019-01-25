@@ -16,6 +16,7 @@ tags:
 [Solr学习04 - 查询与处理结果](https://zhouj000.github.io/2019/01/20/solr-4/)  
 [Solr学习05 - solr分面、高亮、查询建议和分组](https://zhouj000.github.io/2019/01/22/solr-5/)  
 [Solr学习06 - solr与solrCloud](https://zhouj000.github.io/2019/01/24/solr-6/)  
+[Solr学习07 - 多语种等复杂查询和相关度提升](https://zhouj000.github.io/2019/01/25/solr-7/)  
 
 
 
@@ -280,3 +281,6 @@ solr返回数从千位数量级开始，请求速度和吞吐速度大幅降低�
 
 如果要了解查询背后发生了什么，可以开启调试选项，在请求中传入`debug=true`参数，激活DebugComponent
 
+
+扩展：  
+[Solr系列五：solr搜索详解（solr搜索流程介绍、查询语法及解析器详解）](https://www.cnblogs.com/leeSmall/p/9148360.html)

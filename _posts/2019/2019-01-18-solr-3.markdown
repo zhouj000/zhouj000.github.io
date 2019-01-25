@@ -16,6 +16,7 @@ tags:
 [Solr学习04 - 查询与处理结果](https://zhouj000.github.io/2019/01/20/solr-4/)  
 [Solr学习05 - solr分面、高亮、查询建议和分组](https://zhouj000.github.io/2019/01/22/solr-5/)  
 [Solr学习06 - solr与solrCloud](https://zhouj000.github.io/2019/01/24/solr-6/)  
+[Solr学习07 - 多语种等复杂查询和相关度提升](https://zhouj000.github.io/2019/01/25/solr-7/)  
 
 
 
@@ -413,3 +414,5 @@ field标签可以设置一些高级属性
 5、将包含插件类的所有JAR文件放在solr初始化时能找到的位置。比如放在新建文件夹/plugins中，将该地址添加到solrconfig中。这样启动solr服务器时，plugins中的所有JAR文件都可以通过solr的ClassLoader加载
 
 
+扩展：  
+[Solr系列四：Solr（solrj 、索引API 、 结构化数据导入）](https://www.cnblogs.com/leeSmall/p/9127718.html)

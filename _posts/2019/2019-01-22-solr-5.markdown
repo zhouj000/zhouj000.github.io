@@ -16,6 +16,7 @@ tags:
 [Solr学习04 - 查询与处理结果](https://zhouj000.github.io/2019/01/20/solr-4/)  
 [Solr学习05 - solr分面、高亮、查询建议和分组](https://zhouj000.github.io/2019/01/22/solr-5/)  
 [Solr学习06 - solr与solrCloud](https://zhouj000.github.io/2019/01/24/solr-6/)  
+[Solr学习07 - 多语种等复杂查询和相关度提升](https://zhouj000.github.io/2019/01/25/solr-7/)  
 
 
 
@@ -192,3 +193,5 @@ solr的分组功能将全局参数rows、start以及sort也应用到分组本身
 **折叠查找解析器**：CollapsingQParserPlugin进行高效的字段折叠，该解析器不需要激活完整的结果分组堆栈，就能按照不同字段值将搜索结果折叠成单个结果。比如`/select?q=...&fq={!collapse field=fieldToCollapseOn}`，查询fieldToCollapseOn，只会为字段里的不同值返回一个文档，且是相关度最高的，还可以通过`fq={!collapse field=fieldToCollapseOn max=sum(field1, field2) nullPolicy=ignore}`
 
 
+扩展：  
+[Solr系列六：solr搜索详解优化查询结果（分面搜索、搜索结果高亮、查询建议、折叠展开结果、结果分组、其他搜索特性介绍）](https://www.cnblogs.com/leeSmall/p/9163736.html)
