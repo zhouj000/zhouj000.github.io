@@ -6,10 +6,11 @@ author:     "ZhouJ000"
 header-img: "img/in-post/2018/post-bg-2018-headbg.jpg"
 catalog: true
 tags:
-    - markdown
+    - 语法
 ---
 
 <font id="last-updated">最后更新于：2018-06-30</font>
+
 
 blog的文章都用markdown格式，所以需要了解语法结构，方便以后写博客。
 

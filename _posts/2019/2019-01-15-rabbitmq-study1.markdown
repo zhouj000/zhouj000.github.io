@@ -7,6 +7,7 @@ header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
 catalog: true
 tags:
     - mq
+    - 高并发
 --- 
 
 [RabbitMQ(一) 基础概念](https://zhouj000.github.io/2019/01/15/rabbitmq-study1/)  
