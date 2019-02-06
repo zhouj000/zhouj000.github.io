@@ -133,37 +133,51 @@ ZooKeeper可以定义不同类型的通知，这依赖于设置监视点对应�
     <tr>
         <th>操作</th>
         <th>event For “/path”</th>
+		<th>设置监视点</th>
         <th>event For “/path/child”</th>
+		<th>设置监视点</th>
     </tr>
     <tr>
         <td>create(“/path”)	</td>
         <td>EventType.NodeCreated</td>
+		<td>exists</td>
         <td>无</td>
+		<td>无</td>
     </tr>
 	<tr>
         <td>delete(“/path”)	</td>
         <td>EventType.NodeDeleted</td>
+		<td>exists或getData</td>
         <td>无</td>
+		<td>无</td>
     </tr>
 	<tr>
         <td>setData(“/path”)</td>
         <td>EventType.NodeDataChanged</td>
+		<td>exists或getData</td>
         <td>无</td>
+		<td>无</td>
     </tr>
 	<tr>
         <td>create(“/path/child”)</td>
         <td>EventType.NodeChildrenChanged(getChild)</td>
+		<td>getChildren</td>
         <td>EventType.NodeCreated</td>
+		<td>exists</td>
     </tr>
 	<tr>
         <td>delete(“/path/child”)</td>
         <td>EventType.NodeChildrenChanged(getChild)</td>
+		<td>getChildren</td>
         <td>EventType.NodeDeleted</td>
+		<td>exists或getData</td>
     </tr>
 	<tr>
         <td>setData(“/path/child”)</td>
         <td>无</td>
+		<td>无</td>
         <td>EventType.NodeDataChanged</td>
+		<td>exists或getData</td>
     </tr>
 </table>
 
