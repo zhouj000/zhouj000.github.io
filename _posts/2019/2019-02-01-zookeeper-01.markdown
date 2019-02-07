@@ -6,8 +6,12 @@ author:     "ZhouJ000"
 header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
 catalog: true
 tags:
-    - 高并发
+    - 大数据
+    - 分布式
 --- 
+
+[zookeeper(一) 基础](https://zhouj000.github.io/2019/02/01/zookeeper-01/)  
+[zookeeper(二) Java API](https://zhouj000.github.io/2019/02/06/zookeeper-02/)  
 
 
 
