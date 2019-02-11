@@ -73,6 +73,7 @@ catalog: true
 [Solr学习07 - 多语种等复杂查询和相关度提升](https://zhouj000.github.io/2019/01/25/solr-7/)  
 [zookeeper(一) 基础](https://zhouj000.github.io/2019/02/01/zookeeper-01/)  
 [zookeeper(二) Java API](https://zhouj000.github.io/2019/02/06/zookeeper-02/)  
+[zookeeper(三) 管理](https://zhouj000.github.io/2019/02/11/zookeeper-03/)  
 
 
 
