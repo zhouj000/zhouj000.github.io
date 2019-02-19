@@ -12,6 +12,7 @@ tags:
 [Dubbo(一):从dubbo-demo初探dubbo源码](https://zhouj000.github.io/2018/07/16/dubbo-demo-exploration/)  
 [Dubbo(二):架构与SPI](https://zhouj000.github.io/2018/08/10/dubbo-framework-spi/)  
 [Dubbo(三):高并发下降级与限流](https://zhouj000.github.io/2019/02/18/dubbo-03/)  
+[Dubbo(四):其他常用特性](https://zhouj000.github.io/2019/02/19/dubbo-04/)  
 
 
 
@@ -726,6 +727,8 @@ public class ActiveLimitFilter implements Filter {
 }
 ```
 
+消费端并发控制配置(接口/方法)：`<dubbo:service interface="com.foo.BarService" actives="10" />`表示限制com.foo.BarService的每个方法，每客户端并发执行(或占用连接的请求数)不能超过10个
+
 #### ExecuteLimitFilter
 
 控制在单台服务上的并行度，单个方法的并发处理个数，与客户端控制区别是超过数量不会等待，而是直接抛出异常：
@@ -775,6 +778,24 @@ public class ExecuteLimitFilter implements Filter {
         }
     }
 }
+```
+
+服务端并发控制配置(接口/方法)：`<dubbo:service interface="com.foo.BarService" executes="10" />`表示限制com.foo.BarService的每个方法，服务器端并发执行(或占用线程池线程数)不能超过10个
+
+#### 连接控制
+
+限制服务器端接受的连接不能超过10个：
+```
+<dubbo:provider protocol="dubbo" accepts="10" />
+或
+<dubbo:protocol name="dubbo" accepts="10" />
+```
+
+限制客户端服务使用连接不能超过10个：
+```
+<dubbo:reference interface="com.foo.BarService" connections="10" />
+优先于
+<dubbo:service interface="com.foo.BarService" connections="10" />
 ```
 
 
