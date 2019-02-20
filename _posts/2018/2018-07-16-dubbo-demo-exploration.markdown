@@ -9,12 +9,13 @@ tags:
     - rpc
 --- 
 
-<font id="last-updated">最后更新于：2018-08-06</font>
+<font id="last-updated">最后更新于：2019-02-20</font>
 
 [Dubbo(一):从dubbo-demo初探dubbo源码](https://zhouj000.github.io/2018/07/16/dubbo-demo-exploration/)  
 [Dubbo(二):架构与SPI](https://zhouj000.github.io/2018/08/10/dubbo-framework-spi/)  
 [Dubbo(三):高并发下降级与限流](https://zhouj000.github.io/2019/02/18/dubbo-03/)  
 [Dubbo(四):其他常用特性](https://zhouj000.github.io/2019/02/19/dubbo-04/)  
+[Dubbo(五):自定义扩展](https://zhouj000.github.io/2019/02/20/dubbo-05/)  
 
 
 
@@ -708,7 +709,7 @@ private <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type
 2. 如果传入的invoker列表不是空的，则意味着它是最新的调用列表。
 3. 如果传入的invokerURL列表为空，则意味着该规则仅是重写规则或路由规则，需要重新对比以决定是否重新引用。
 
-23 . 因为第一次调用，肯定不在缓存内，因此创建一个InvokerDelegate(Invoker<T> invoker, URL url, URL providerUrl)，其中url(`dubbo://<registry-host>:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=demo-consumer&check=false&dubbo=2.0.2&generic=false&interface=org.apache.dubbo.demo.DemoService&methods=sayHello&pid=5092&qos.port=33333&register.ip=<registry-host>&remote.timestamp=1532569637175&side=consumer&timestamp=1532573298293`)，providerUrl(`dubbo://<registry-host>:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=demo-provider&dubbo=2.0.2&generic=false&interface=org.apache.dubbo.demo.DemoService&methods=sayHello&pid=6636&side=provider&timestamp=1532569637175`)，invoker调用protocol.refer去生成。
+23 . 因为第一次调用，肯定不在缓存内，因此创建一个InvokerDelegate(Invoker&lt;T> invoker, URL url, URL providerUrl)，其中url(`dubbo://<registry-host>:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=demo-consumer&check=false&dubbo=2.0.2&generic=false&interface=org.apache.dubbo.demo.DemoService&methods=sayHello&pid=5092&qos.port=33333&register.ip=<registry-host>&remote.timestamp=1532569637175&side=consumer&timestamp=1532573298293`)，providerUrl(`dubbo://<registry-host>:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=demo-provider&dubbo=2.0.2&generic=false&interface=org.apache.dubbo.demo.DemoService&methods=sayHello&pid=6636&side=provider&timestamp=1532569637175`)，invoker调用protocol.refer去生成。
 
 24 . 依旧通过ProtocolFilterWrapper(buildInvokerChain)，ProtocolListenerWrapper(ListenerInvokerWrapper)调用到DubboProtocol的refer方法。创建了一个DubboInvoker(Class<T> serviceType, URL url, ExchangeClient[] clients, Set<Invoker<?>> invokers)，并放入invokers里。
 ```java
@@ -720,7 +721,7 @@ public <T> Invoker<T> refer(Class<T> serviceType, URL url) throws RpcException {
 	return invoker;
 }
 ```
-25. 获取参数ExchangeClient，执行getClients(url)。通过URL中connections参数确定创建多少连接。创建ExchangeClient，调用getSharedClient，里面调用initClient -> Exchangers.connect -> HeaderExchanger.connect创建一个HeaderExchangeClient(Client client, boolean needHeartbeat)。调用Transporters.connect，最后调用NettyTransporter.connect(URL url, ChannelHandler listener)创建一个NettyClient。doOpen()启动，connect()连接。返回的client包装成ReferenceCountExchangeClient，放入map，key为Address(<registry-host>:20880)。
+25 .  获取参数ExchangeClient，执行getClients(url)。通过URL中connections参数确定创建多少连接。创建ExchangeClient，调用getSharedClient，里面调用initClient -> Exchangers.connect -> HeaderExchanger.connect创建一个HeaderExchangeClient(Client client, boolean needHeartbeat)。调用Transporters.connect，最后调用NettyTransporter.connect(URL url, ChannelHandler listener)创建一个NettyClient。doOpen()启动，connect()连接。返回的client包装成ReferenceCountExchangeClient，放入map，key为Address(<registry-host>:20880)。
 
 26 . 在RegistryDirectory中将返回的invoker按key(`dubbo://<registry-host>:20880/org.apache.dubbo.demo.DemoService?参数`)放入newUrlInvokerMap。
 
@@ -1281,6 +1282,8 @@ protected Object decodeBody(Channel channel, InputStream is, byte[] header) thro
 
 4 . 接口调用超时，在DefaultFuture.get方法里判断跳出循环还有个条件就是(System.currentTimeMillis() - start > timeout)，这时会向上抛出TimeoutException异常。框架把TimeoutException封装成RpcException抛给应用层。
 
+扩展：  
+[RPC框架（八）dubbo源码分析--dubbo调用过程分析](https://blog.csdn.net/yjp198713/article/details/79474622)  
 
 
 
