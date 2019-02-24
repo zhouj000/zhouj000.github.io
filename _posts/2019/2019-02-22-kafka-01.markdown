@@ -11,6 +11,7 @@ tags:
 --- 
 
 [Kafka(一): 入门](https://zhouj000.github.io/2019/02/22/kafka-01/)  
+[Kafka(二) Producer与Consumer开发](https://zhouj000.github.io/2019/02/24/kafka-02/)  
 
 
 
