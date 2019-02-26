@@ -528,6 +528,16 @@ public String reliable(String name) {
 	return "hystrix fallback value";
 }
 ```
+3、如果是使用hystrix-core + hystrix-javanica，那么需要配置Aspect：
+```java
+@Configuration
+public class HystrixConfig {
+	@Bean
+	public HystrixCommandAspect hystrixCommandAspect() {
+		return new HystrixCommandAspect();
+	}
+}
+```
 
 #### 其他
 
@@ -535,8 +545,9 @@ hystrix-metrics-event-stream，是收集hystrix统计的接口信息，比如suc
 
 Hystrix-dashboard可以搭建监控平台
 
-参考：[dubbo集成netflix原生的hystrix框架](https://blog.csdn.net/kailuan2zhong/article/details/81367106)
-
+参考：  
+[dubbo集成netflix原生的hystrix框架](https://blog.csdn.net/kailuan2zhong/article/details/81367106)  
+[如何在springboot中快速加入Hystrix](https://www.2cto.com/kf/201802/723519.html)  
 
 
 # 限流(current limiting)
