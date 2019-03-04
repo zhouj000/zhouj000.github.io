@@ -10,9 +10,10 @@ tags:
     - 高并发
 --- 
 
-[Kafka(一): 入门](https://zhouj000.github.io/2019/02/22/kafka-01/)  
+[Kafka(一) 入门](https://zhouj000.github.io/2019/02/22/kafka-01/)  
 [Kafka(二) Producer与Consumer开发](https://zhouj000.github.io/2019/02/24/kafka-02/)  
-[Kafka(三) 简略集群管理](https://zhouj000.github.io/2019/02/25/kafka-04/)  
+[Kafka(三) 简略集群管理](https://zhouj000.github.io/2019/02/25/kafka-03/)  
+[Kafka(四) 简略设计原理](https://zhouj000.github.io/2019/03/04/kafka-04/)  
 
 
 

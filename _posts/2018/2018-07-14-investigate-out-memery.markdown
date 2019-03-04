@@ -34,8 +34,8 @@ JVM的基本组成:
 
 JVM运行时内存 = 共享内存区 + 线程内存区  
 
-共享内存区 = 持久带 + 堆  
-持久带 = 方法区 + 其他  
+共享内存区 = 持久代 + 堆  
+持久代 = 方法区 + 其他  
 堆 = Old Space + Young Space  
 Young Space = Eden + S0 + S1  
 

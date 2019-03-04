@@ -78,6 +78,8 @@ starter主要的作用是做了包依赖管理，查看spring-boot-starters文�
 
 ## 实现自己的starter
 
+@EnableAutoConfiguration里通过@Import导入了AutoConfigurationImportSelector，在selectImports方法中通过SpringFactoriesLoader读取META-INF/spring.factories的配置。**@Enable开头的Annotation可以借助@Import的支持，收集和注册特定场景相关的bean定义**。将其中EnableAutoConfiguration对应的配置项通过反射实例化为对应的标注了@Configuration的JavaConfig形式的IOC容器配置类，然后汇总为一个并加载到IOC容器。ConfigurationClassPostProcessor由于实现了BeanDefinitionRegistryPostProcessor，会在Spring容器初始化时被调用postProcessBeanDefinitionRegistry方法，其中会创建ConfigurationClassParser类解析configCandidates，实际是用ConditionEvaluator来判断@Conditional注解
+
 由上一篇知道，自动配置通过META-INF/spring.factories配置与@Conditional注解来生成java配置，通过@ConfigurationProperties注解的配置文件加载默认配置
 
 1 . 创建一个简单的maven项目  

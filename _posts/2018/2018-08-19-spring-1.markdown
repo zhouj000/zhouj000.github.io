@@ -55,7 +55,7 @@ spring由[gradle](https://gradle.org/)编译。
 4 . spring-oxm：对象xml映射  
 5 . spring-jms：java消息服务
 
-**web部分**包含4个模块：
+**web部分**包含4个模块：  
 1 . spring-web：基础web功能，主要建立于核心容器之上，通过Servlet或者Listeners来初始化IOC容器，也包含一些与Web相关的支持。如文件上传  
 2 . spring-webmvc： Web-Servlet模块，实现了Spring MVC(model-view-Controller)的Web应用  
 3 . spring-websocket：主要是与Web前端的全双工通讯的协议  

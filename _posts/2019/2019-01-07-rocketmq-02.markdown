@@ -616,7 +616,7 @@ public static void main(String[] args) {
 	start(createBrokerController(args));
 }
 ```
-1、创建NamesrvController
+1、创建BrokerController
 ```java
 public static BrokerController createBrokerController(String[] args) {
 	// ...
