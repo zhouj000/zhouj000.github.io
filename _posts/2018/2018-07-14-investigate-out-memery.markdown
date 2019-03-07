@@ -12,7 +12,10 @@ tags:
 
 <font id="last-updated">最后更新于：2018-07-14</font>
 
-[java项目 CPU占用100%问题](https://zhouj000.github.io/2018/06/24/investigate-cpu-100/)
+[java项目 CPU占用100%问题](https://zhouj000.github.io/2018/06/24/investigate-cpu-100/)  
+[java项目 内存溢出问题](https://zhouj000.github.io/2018/07/14/investigate-out-memery/)
+
+[Java性能优化04-调优工具](https://zhouj000.github.io/2019/01/11/java-optimize-04/)  
 
 
 

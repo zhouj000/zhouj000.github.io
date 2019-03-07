@@ -7,6 +7,7 @@ header-img: "img/in-post/2018/post-bg-2018-headbg.jpg"
 catalog: true
 tags:
     - rpc
+    - 分布式
 --- 
 
 <font id="last-updated">最后更新于：2018-08-10</font>
