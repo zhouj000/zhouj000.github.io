@@ -10,6 +10,8 @@ catalog: true
 
 ## > 基础
 
+[Java基础(一) JVM概述与字节码](https://zhouj000.github.io/2019/03/11/java-base-jvm1/)  
+
 
 
 ## > 进阶
