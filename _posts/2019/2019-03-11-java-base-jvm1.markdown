@@ -10,8 +10,7 @@ tags:
 --- 
 
 [Java基础(一) JVM概述与字节码](https://zhouj000.github.io/2019/03/11/java-base-jvm1/)  
-
-[Java性能优化03-JVM调优](https://zhouj000.github.io/2019/01/10/java-optimize-03/)  
+[Java基础(二) 常量池](https://zhouj000.github.io/2019/03/12/java-base-jvm2/)  
 
 
 
@@ -159,6 +158,8 @@ private:
 
 
 # Java字节码
+
+![java-byte-code](/img/in-post/2019/03/java-byte-code.png)
 
 例子：
 ```java
