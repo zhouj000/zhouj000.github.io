@@ -7,10 +7,12 @@ header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
 catalog: true
 tags:
     - java
+    - jvm
 --- 
 
 [Java基础(一) JVM概述与字节码](https://zhouj000.github.io/2019/03/11/java-base-jvm1/)  
 [Java基础(二) 常量池](https://zhouj000.github.io/2019/03/12/java-base-jvm2/)  
+[Java基础(三) JVM执行引擎01](https://zhouj000.github.io/2019/03/14/java-base-jvm3/)  
 
 
 
@@ -195,6 +197,7 @@ constantPoolOop在创建的过程中，会执行constantPoolKlass::allocate()函
 
 完成constantPoolOop的基本构建工作，然后JVM就是一步一步将字节码信息翻译成可被物理机器识别的动态的数据结构，即本文顶端步骤里写到的ClassFileParser::parse_constant_pool_entries()解析常量池信息，这个函数中通过一个**for循环**处理所有的常量池元素，每次循环开始先执行`u1 tag = cfs->get_u1_fast()`从字节码文件中读取占1字节宽度的字节流，这时因为每个常量池元素起始的1字节都用于描述常量池元素类型，这在[上一篇文章](https://zhouj000.github.io/2019/03/11/java-base-jvm1/)中有说过，JVM解析常量池的第一步就是需要知道这是哪个元素类型。在获取常量池元素类型后，通过**swtich**对不同元素进行处理，由于不同类型的组成结构不同，例如JVM_CONSTANT_Class类型的结构是u1标识+u2索引，因此JVM只需要再调用`cfs->get_u2_fast()`获取索引即可，在获取到索引后将当前信息保存到constantPoolOop中，将当前常量池元素的**类型**保存到constantPoolOop所指的tag对应位置的数组中，然后将**名称索引**保存到constantPoolOop的数据区中对应的位置
 ![klass_index_at_put](/img/in-post/2019/03/klass_index_at_put.png)
+对于像JVM_CONSTANT_Class，由于其在常量区中的位置是1，因此最终在tag和constantPoolOop数据区中的位置也是1，其中在constantPoolOop数据区存储的值为2，因为当前常量池元素的名称索引为2，而tag的存储值为7，即当前常量池元素类型是JVM_CONSTANT_Class枚举值7。然而并非所有元素类型在标识后面只有1个属性，方法元素就是其中之一，那么类型存在tag中，而因为有2个索引，JVM给出的方案就是将这两个索引进行**拼接**，变成一个值，然后再保存。对于常量池来说字符串的概念比较广泛，并不单指字符串变量，类名、方法名、类型、this指针名等等，都可以看做字符串，最终都会被JVM当做字符串处理，存储到符号区。由于无论是tag还是constantPoolOop的数据区，一个存储位置只能存放一个指针宽度的数据，而字符串往往很大，因此JVM专门设计了一个**"符号表"**的内存区(Symbol Table)，tag和constantPoolOop数据区内仅保存指针指向符号区
 
 
 参考：  
