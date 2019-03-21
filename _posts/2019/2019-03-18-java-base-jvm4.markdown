@@ -14,6 +14,7 @@ tags:
 [Java基础(二) 常量池](https://zhouj000.github.io/2019/03/12/java-base-jvm2/)  
 [Java基础(三) JVM执行引擎01](https://zhouj000.github.io/2019/03/14/java-base-jvm3/)  
 [Java基础(四) Java栈帧](https://zhouj000.github.io/2019/03/18/java-base-jvm4/)  
+[Java基础(五) JVM执行引擎02](https://zhouj000.github.io/2019/03/21/java-base-jvm5/)  
 
 
 
@@ -516,7 +517,4 @@ public static void main(java.lang.String[]);
 
 参考：  
 《解密Java虚拟机》  
-
-扩展：  
-[运行时栈帧结构](https://www.cnblogs.com/wade-luffy/p/6058067.html)  
 
