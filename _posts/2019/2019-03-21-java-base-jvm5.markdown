@@ -300,7 +300,7 @@ stack=2, locals=4, args_size=1
 HSDIS：  
 [How to build hsdis-amd64.dll and hsdis-i386.dll on Windows](https://dropzone.nfshost.com/hsdis/)  
 我本地用的是[jdk8U77-b03](http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/rev/223b64a19e94)，只在Makefile里多加了`$(TARGET_DIR)/zlib/libz.a`。然后用binutils-2.30最后会出错，我用binutils-2.27是没问题的，命令为`make OS=Linux MINGW=x86_64-w64-mingw32 'AR=$(MINGW)-ar' BINUTILS=~/binutils-2.27
-`
+`，生成的hsdis-amd64.dll文件放到JAVA_HOME/jre/bin下就可以了，例如使用命令`java -XX:+UnlockDiagnosticVMOptions -XX:+PrintAssembly Test.class`查看
 
 OpenJDK 8下载：  
 [OpenJDK™ Source Releases](https://download.java.net/openjdk/jdk8)
