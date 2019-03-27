@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "Java基础(五) JVM执行引擎02"
+title:      "Java基础: JVM(五) JVM执行引擎02"
 date:       2019-03-21
 author:     "ZhouJ000"
 header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
@@ -10,11 +10,12 @@ tags:
     - jvm
 --- 
 
-[Java基础(一) JVM概述与字节码](https://zhouj000.github.io/2019/03/11/java-base-jvm1/)  
-[Java基础(二) 常量池](https://zhouj000.github.io/2019/03/12/java-base-jvm2/)  
-[Java基础(三) JVM执行引擎01](https://zhouj000.github.io/2019/03/14/java-base-jvm3/)  
-[Java基础(四) Java栈帧](https://zhouj000.github.io/2019/03/18/java-base-jvm4/)  
-[Java基础(五) JVM执行引擎02](https://zhouj000.github.io/2019/03/21/java-base-jvm5/)  
+[Java基础: JVM(一) JVM概述与字节码](https://zhouj000.github.io/2019/03/11/java-base-jvm1/)  
+[Java基础: JVM(二) 常量池](https://zhouj000.github.io/2019/03/12/java-base-jvm2/)  
+[Java基础: JVM(三) JVM执行引擎01](https://zhouj000.github.io/2019/03/14/java-base-jvm3/)  
+[Java基础: JVM(四) Java栈帧](https://zhouj000.github.io/2019/03/18/java-base-jvm4/)  
+[Java基础: JVM(五) JVM执行引擎02](https://zhouj000.github.io/2019/03/21/java-base-jvm5/)  
+[Java基础: JVM(六) 类变量和类方法解析](https://zhouj000.github.io/2019/03/27/java-base-jvm6/)  
 
 
 
@@ -303,9 +304,15 @@ HSDIS：
 `，生成的hsdis-amd64.dll文件放到JAVA_HOME/jre/bin下就可以了，例如使用命令`java -XX:+UnlockDiagnosticVMOptions -XX:+PrintAssembly Test`查看输出，或者`java -XX:+UnlockDiagnosticVMOptions -XX:+PrintAssembly -Xcomp -XX:CompileCommand=dontinline,*Test.add -XX:CompileComm
 and=compileonly,*Test.add Test`输出add相关
 
+OpenJDK在线查看源码：  
+(OpenJDK-projects)[http://hg.openjdk.java.net/]  
 OpenJDK 8下载：  
 [OpenJDK™ Source Releases](https://download.java.net/openjdk/jdk8)
 
 
 参考：  
-《解密JVM虚拟机》
+《解密JVM虚拟机》  
+扩展：  
+[Java之深入JVM(6) - 字节码执行引擎(转)](https://www.cnblogs.com/royi123/p/3569511.html)  
+[JIT编译器](https://blog.csdn.net/u010297957/article/details/50973785)  
+

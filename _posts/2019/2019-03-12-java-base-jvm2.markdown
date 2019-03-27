@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "Java基础(二) 常量池"
+title:      "Java基础: JVM(二) 常量池"
 date:       2019-03-12
 author:     "ZhouJ000"
 header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
@@ -10,11 +10,12 @@ tags:
     - jvm
 --- 
 
-[Java基础(一) JVM概述与字节码](https://zhouj000.github.io/2019/03/11/java-base-jvm1/)  
-[Java基础(二) 常量池](https://zhouj000.github.io/2019/03/12/java-base-jvm2/)  
-[Java基础(三) JVM执行引擎01](https://zhouj000.github.io/2019/03/14/java-base-jvm3/)  
-[Java基础(四) Java栈帧](https://zhouj000.github.io/2019/03/18/java-base-jvm4/)  
-[Java基础(五) JVM执行引擎02](https://zhouj000.github.io/2019/03/21/java-base-jvm5/)  
+[Java基础: JVM(一) JVM概述与字节码](https://zhouj000.github.io/2019/03/11/java-base-jvm1/)  
+[Java基础: JVM(二) 常量池](https://zhouj000.github.io/2019/03/12/java-base-jvm2/)  
+[Java基础: JVM(三) JVM执行引擎01](https://zhouj000.github.io/2019/03/14/java-base-jvm3/)  
+[Java基础: JVM(四) Java栈帧](https://zhouj000.github.io/2019/03/18/java-base-jvm4/)  
+[Java基础: JVM(五) JVM执行引擎02](https://zhouj000.github.io/2019/03/21/java-base-jvm5/)  
+[Java基础: JVM(六) 类变量和类方法解析](https://zhouj000.github.io/2019/03/27/java-base-jvm6/)  
 
 
 
