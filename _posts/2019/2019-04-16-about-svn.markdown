@@ -18,12 +18,12 @@ tags:
 # 概念
 
 SVN是一个开源的版本控制系統，存储的数据放置在一个中央资料档案库中：
-+ repository(源代码库)：存放源代码的地方
-+ Checkout(提取)：可以从repository拉一份代码下来
-+ Commit(提交)：修改了代码后，需要Commit到repository
-+ Update(更新)：Update可以和Repository上的源代码进行同步更新，手上的代码就会有最新的变更
++ **repository(源代码库)**：存放源代码的地方
++ **Checkout(提取)**：可以从repository拉一份代码下来
++ **Commit(提交)**：修改了代码后，需要Commit到repository
++ **Update(更新)**：Update可以和Repository上的源代码进行同步更新，手上的代码就会有最新的变更
 
-生命周期：
+**生命周期**：
 + 创建版本库
 + 检出
 + 更新
@@ -45,7 +45,7 @@ SVN是一个开源的版本控制系統，存储的数据放置在一个中央�
 
 3、在trunk文件夹中创建一个add.txt文件，然后点击`Add`添加，这时并没有真正提交到repository，只是告知SVN准备加入，即蓝色加号，类似于`git add`，但是SVN的add操作是针对没有版本号的新文件的添加，不是git中工作区加入暂存区的概念；然后在new.txt文件中添加内容，可以看到图标变为红色感叹
 
-4、这时在`Show log`中可以看到2条记录，第一条为Imported folder structure记录、第二条是之前的new文件提交记录，类似于`git log。在`Repo-browser`中查看目录，也是只有那三个文件夹和一个new文件。在`check for modffications`中可以看到新的两个修改记录，一条add，一条modified，类似于`git status`，点击`Revision graph`可以查看当前文件夹下继承关系图，感觉类似于`git log --graph`
+4、这时在`Show log`中可以看到2条记录，第一条为Imported folder structure记录、第二条是之前的new文件提交记录，类似于`git log`。在`Repo-browser`中查看目录，也是只有那三个文件夹和一个new文件。在`check for modffications`中可以看到新的两个修改记录，一条add，一条modified，类似于`git status`，点击`Revision graph`可以查看当前文件夹下继承关系图，感觉类似于`git log --graph`
 
 
 ## 第二部分
