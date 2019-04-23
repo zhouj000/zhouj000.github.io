@@ -11,6 +11,10 @@ tags:
 
 <font id="last-updated">最后更新于：2018-06-30</font>
 
+[about svn](https://zhouj000.github.io/2019/04/16/about-svn/)  
+
+
+
 周一参加了公司的GIT分享，对几个自己不太用到的命令有了些认识，练习了一波后，写一个关于git命令的自我总结。
 
 # GIT基础知识
