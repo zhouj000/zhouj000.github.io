@@ -11,6 +11,7 @@ tags:
 --- 
 
 [Java基础: GC(一) 介绍](https://zhouj000.github.io/2019/04/23/java-base-gc1/)  
+[Java基础: GC(二) G1垃圾收集器](https://zhouj000.github.io/2019/05/04/java-base-gc2/)  
 
 [Java性能优化03-JVM调优](https://zhouj000.github.io/2019/01/10/java-optimize-03/)
 

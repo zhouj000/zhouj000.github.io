@@ -19,6 +19,7 @@ catalog: true
 [Java基础: JVM(七) 类生命周期与类加载器](https://zhouj000.github.io/2019/03/31/java-base-jvm7/)  
 
 [Java基础: GC(一) 介绍](https://zhouj000.github.io/2019/04/23/java-base-gc1/)  
+[Java基础: GC(二) G1垃圾收集器](https://zhouj000.github.io/2019/05/04/java-base-gc2/)  
 
 
 
