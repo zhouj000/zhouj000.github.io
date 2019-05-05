@@ -681,3 +681,22 @@ public boolean supportsParameter(MethodParameter parameter) {
 由于在**GET请求**中没有HttpEntity，因此不能使用@RequestBody；在**POST请求**中，可以使用@RequestBody和@RequestParam，但是如果使用@RequestBody，对于参数转化的配置**必须统一**
 
 
+# 其他补充
+
+@InitBinder：被此注解的方法可以对WebDataBinder初始化，WebDataBinder是用于数据绑定和格式化的，可以用于解绑、注册已有的编辑器、按前缀绑定等，比如对Date类型的转换
+
+@ModelAttribute：在方法定义上使用，Spring MVC会在调用目标处理方法前，逐个调用在方法级上标注了@ModelAttribute的方法；在方法的入参前使用，可以从隐含对象中获取隐含的模型数据中获取对象，再将请求参数绑定到对象中，再传入入参将方法入参对象添加到模型中 
+
+@ExceptionHandler：注解到方法上，出现异常时会执行该方法
+
+@ControllerAdvice：使一个Contoller成为全局的异常处理类，类中用@ExceptionHandler方法注解的方法可以处理所有Controller发生的异常
+
+@PathVariable：绑定URL占位符到入参
+
+自定义拦截器：实现HandlerInterceptor接口，然后在`<mvc:interceptors>`或WebMvcConfigurer实现类中的addInterceptors方法中配置自定义的拦截器
+![interceptor](/img/in-post/2019/05/interceptor.png)
+
+JSR303验证器：数据验证的规范，比如使用hibernate-validator实现校验
+
+![mvc](/img/in-post/2019/05/mvc.png)
+
