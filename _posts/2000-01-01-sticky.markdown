@@ -43,6 +43,7 @@ catalog: true
 [SpringMVC(一) 初始化](https://zhouj000.github.io/2018/09/28/springmvc-1/)  
 [SpringMVC(二) 请求调度](https://zhouj000.github.io/2018/10/02/springmvc-2/)  
 [SpringMVC(三) 消息转换器](https://zhouj000.github.io/2018/10/09/springmvc-3/)  
+[SpringMVC(四) 文件上传与下载](https://zhouj000.github.io/2019/05/05/springmvc-4/)  
 
 [Mybatis源码探究](https://zhouj000.github.io/2019/03/02/mybatis/)  
 
