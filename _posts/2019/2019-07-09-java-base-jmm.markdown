@@ -7,7 +7,6 @@ header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
 catalog: true
 tags:
     - java
-    - jvm
 --- 
 
 [Java基础: JVM(一) JVM概述与字节码](https://zhouj000.github.io/2019/03/11/java-base-jvm1/)  
@@ -19,6 +18,7 @@ tags:
 [Java基础: JVM(七) 类生命周期与类加载器](https://zhouj000.github.io/2019/03/31/java-base-jvm7/)  
 [Java基础: JVM(八) 热加载](https://zhouj000.github.io/2019/05/26/java-base-jvm8/)  
 [Java基础: JVM(九) Java内存模型](https://zhouj000.github.io/2019/07/09/java-base-jmm/)  
+[Java基础: JVM(十) 编译相关](https://zhouj000.github.io/2019/07/11/java-base-compiler/)  
 
 
 
