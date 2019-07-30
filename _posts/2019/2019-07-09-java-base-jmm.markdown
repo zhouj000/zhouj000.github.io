@@ -1,7 +1,7 @@
 ---
 layout:     post
 title:      "Java基础: JVM(九) Java内存模型"
-date:       2019-06-09
+date:       2019-07-09
 author:     "ZhouJ000"
 header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
 catalog: true
