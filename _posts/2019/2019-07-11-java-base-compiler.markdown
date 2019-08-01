@@ -173,3 +173,4 @@ Server Compiler编译器可以充分利用某些**处理器架构**，如(RISC)�
 扩展：  
 [深入浅出 JIT 编译器](https://www.ibm.com/developerworks/cn/java/j-lo-just-in-time/index.html)  
 [第六章 字节码执行方式--解释执行和JIT](https://www.cnblogs.com/java-zhao/p/5203144.html)  
+[JVM参数：-XX:ReservedCodeCacheSize](https://blog.csdn.net/lidf1992/article/details/75050219)  
