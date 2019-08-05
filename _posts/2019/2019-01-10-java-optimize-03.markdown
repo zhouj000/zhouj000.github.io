@@ -16,6 +16,8 @@ tags:
 [Java性能优化04-调优工具](https://zhouj000.github.io/2019/01/11/java-optimize-04/)  
 
 [Java基础: GC(一) 介绍](https://zhouj000.github.io/2019/04/23/java-base-gc1/)  
+[Java基础: GC(三) G1垃圾收集器优化](https://zhouj000.github.io/2019/08/05/java-base-gc3/)  
+
 
 
 
