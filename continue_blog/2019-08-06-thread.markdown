@@ -11,10 +11,29 @@ tags:
 
 
 
+Thread / runnable / callable
+
+sleep / yield 
+wait / notify / join
+interrupted
+
+
+死锁
+
+守护线程
+
+threadlocal / inheritableThreadLocal
 
 
 
+# 
 
+共享变量 / 并发 并行
+
+cas   unsafe      /  同步（sync..   voliate  原子性操作）
+伪共享  （L1 L2）
+
+乐观锁 悲观锁  公平/非公平   独占/共享   可重入   自旋锁
 
 
 
