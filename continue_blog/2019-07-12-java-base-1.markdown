@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "Java基础SE(一) 基础类型与关键词"
+title:      "Java基础SE(一) 数据类型与关键字"
 date:       2019-05-05
 author:     "ZhouJ000"
 header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
@@ -10,7 +10,7 @@ tags:
 --- 
 
 
-# 基础类型
+# 类型
 
 ## String
 
@@ -30,7 +30,11 @@ private int hash;
 ```
 因此做一些length、isEmpty、charAt等操作时，只需要对数组进行操作就行，非常方便。而像equals、compareTo、indexOf、lastIndexOf等都是对数组的每一个字符进行一一比较的。由于String是不可变的(final数组)，所以像substring、concat等操作，是直接创建一个新的String对象返回，同时这样使得字符串池得以实现，节省了很多堆空间，并且没有安全性问题(final)
 
+> JDK 6的substring方法虽然创建了一个新的String对象，但是其value[]属性依然指向堆内存中原来的那个数组，区别只是它们的count和offset不同了，因此可能会有性能问题。而在JDK 7以后，substring方法真正的在堆内存创建了另外一个数组，this.value = Arrays.copyOfRange(value, offset, offset+count);
+
 replaceFirst可以使用正则匹配或字符串去替换第一个符合的内容。replace和replaceAll也都是使用Pattern.matcher的方式，但是replaceAll和replaceFirst一样可以使用正则也可以使用普通字符串，而replace是仅将字符串理解为字面意义上的字符串，不能使用正则语法匹配，所以这2个方法的区别在这里，而不是看起来字面意义上的替换单个和替换全部，它们都是替换全部的，这个需要注意，换个方式也就是如果不使用正则表达式，replace和replaceAll的结果是完全一致的
+
+在Java语言中，操作符重载是不被允许的，虽然提高了灵活性，但会提高复杂性和可读性，而且与Java设计思想相悖。但是对于String对象而言，它可以将2个String用"+"相加，看起来像是对"+"的重载，事实上从class文件可以看出，这是Java提供的语法糖，它在拼接的时候会使用StringBuilder.append()方法而不是"+"，因此如果在循环中使用会造成创建多个StringBuilder对象的资源浪费
 
 String中有许多方法会创建新的数组，其中就会使用Arrays.copyOf方法和System.arraycopy方法，而Arrays.copyOf方法底层也是用了System.arraycopy方法。需要注意的是，对于二维数组，新copy出的数组被复制的是引用，所以原数组和新数组都指向相同的一些数组，因此修改会影响到原数组。对于数组的复制，由于System.arraycopy使用native方法，因此贴近底层，使用了内存复制，省去了大量的数组寻址访问等时间，效率很高
 
@@ -114,7 +118,7 @@ Integer在很多方法中使用负数，很容易避免数据操作的溢出。�
 
 ## Float与Double
 
-float和double是java的基本类型，用于浮点数表示，Float与Double就是它们的包装类。不过它们都有精度问题，在将小数转为二进制时的表示时不能准确表示每一位小数，所以浮点数的运算不准确，应该避免浮点数的比较。因此这时应该使用BigDecimal，并且传入String类型参数进行初始化
+float和double是java的基本类型，用于浮点数表示，Float和Double就是它们的包装类。不过它们都有精度问题，浮点数采用"尾数+阶码"的编码方式，类似于科学计数法的"有效数字+指数"的表示方式，二进制无法精确表示大部分的十进制小数，所以浮点数间的运算不准确，应该避免浮点数的比较。因此Float和Double只能用来做科学计算和工程计算。商业运算中我们要使用BigDecimal
 
 *内部的与String相互转换的方法(parseXXX与toString)使用了FloatingDecimal
 
@@ -140,19 +144,93 @@ float和double是java的基本类型，用于浮点数表示，Float与Double就
 
 ## BigDecimal
 
+在使用BigDecimal解决精度问题的时候，只有使用BigDecimal(String)构造器创建对象，或者BigDecimal.valueOf去创建对象才有意义，否则使用double入参还是会发生精度丢失的问题
 
+BigDecimal由一个整数非标度值(`private final transient long intCompact`或`private final BigInteger intVal`)和一个小数点标度(`private final int scale`)和一个总标度(`private transient int precision`)组成，此外有一个`stringCache`存储对应的字符串，其创建主要就是将字符串拆为字符数组后进行循环判断，生成这几个变量值
+```
+scale = 7
+precision = 8
+stringCache = "3.1415926"
+intCompact = 31415926
+
+scale = 1
+precision = 4
+stringCache = "-100.0"
+intCompact = -1000
+
+
+// 定义了intVal，或者传的字符串长度大于等于18时才使用BigInteger表示数字
+BigDecimal bg = new BigDecimal(new BigInteger("12345"), 2);
+// The unscaled value of this BigDecimal
+intVal = {BigInteger@506} "12345"
+scale = 2
+precision = 0
+stringCache = "123.45"
+intCompact = 12345
+```
+
+此外BigDecimal缓存了0~10的数和标度在0~15的0，在一些地方可以直接使用。BigDecimal的计算主要就是加减乘除，即add、subtract、multiply、divide
+
+
+> 十进制转二进制方法：
+> 整数部分：除以2，取出余数，商继续除以2，直到得到0为止，将取出的余数逆序
+> 小数部分：乘以2，然后取出整数部分，将剩下的小数部分继续乘以2，然后再取整数部分，一直取到小数部分为零为止。如果永远不为零，则按要求保留足够位数的小数，最后一位做0舍1入。将取出的整数顺序排列
+
+
+## Enum
+
+枚举类型是Java5中新增特性的一部分，它是一种特殊的数据类型，并为基础基元类型的值提供备用名称，之所以特殊是因为它既是一种类(class)类型却又比类类型多了些特殊的约束，但是这些约束的存在也造就了枚举类型的简洁性、安全性以及便捷性
+
+在使用关键字enum创建枚举类型并编译后，编译器会为我们生成一个相关的类，这个类继承了JavaAPI中的java.lang.Enum类，事实上也是一个类类型
+
+它用于声明一组命名的常数，当一个变量有几种可能的取值时，可以将它定义为枚举类型，比如月份、季节等。也可以作为单例的实现
 
 
 
 
 # 关键字
 
+## Serializable与transient
+
+Serializable是序列化接口，实现了Serializable的接口拥有了序列化功能，可以设置一个serialVersionUID，用于标识这个类的序列化版本，如果序列化与反序列化的同一个类的版本不同，会抛出异常
+
+// TODO
+
+
+transient是服务于序列化的，被transient修饰的成员变量将不被序列化
 
 
 
- Enum    
+## instanceof
 
-transient  instanceof  volatile  synchronized  final  static  const 
+如果object是class的一个实例，则instanceof运算符返回true。如果object不是指定类的一个实例，或者object是null，则返回 false。
+
+但是instanceof在Java的编译状态和运行状态是有区别的：  
+1、在编译状态中，class可以是object对象的父类，自身类，子类。在这三种情况下Java编译时不会报错  
+2、在运行转态中，class可以是object对象的父类，自身类，不能是子类。在前两种情况下result的结果为true，最后一种为false。但是class为子类时编译不会报错，只是运行结果为false
+
+
+
+	 
+    volatile  synchronized  final  static   	 
+	 
+	 
+	 
+	 
+	 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
