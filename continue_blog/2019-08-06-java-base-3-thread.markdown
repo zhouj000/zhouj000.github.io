@@ -87,8 +87,29 @@ public static Unsafe getUnsafe() {
 扩展：  
 [Unsafe 相关整理](https://www.jianshu.com/p/2e5b92d0962e)  
 
+## 原子操作类
+
+。。
+JDK 8 新增的原子操作类LongAdder
+
+
+
+
+
+
+
+
+
 
 ## 锁
+
+
+
+
+
+
+
+
 
 按处理方式：乐观锁、悲观锁  
 按抢占方式：公平锁、非公平锁  
@@ -96,18 +117,14 @@ public static Unsafe getUnsafe() {
 
 
 
-## threadlocal
+## 其他
 
 
+### threadlocal
 
 threadlocal / inheritableThreadLocal  继承
 
 Random  next随机种子 原子变量 /   threadlocalRandom 
-
-
-
-
-
 
 https://blog.csdn.net/u011497638/article/details/93889173
 
@@ -115,6 +132,29 @@ https://blog.csdn.net/u011497638/article/details/93889173
 
 
 
+## 并发包中并发List 源码
+ 
+初始化   添加元素  获取指定位置元素  修改指定元素  删除元素  弱一致性的迭代器
+
+@@@ Java 并发包中并发队列
+
+LinkedBlockingQueue   ArrayBlockingQueue    PriorityBlockingQueue     DelayQueue 
+
+
+
+
+
+
+##  并发包中锁原理
+
+LockSupport工具类  抽象同步队列AQS(锁的底层支持/条件变量的支持/自定义同步器)
+独占锁ReentrantLock(类图结构/获取锁/释放锁)
+
+## 读写锁ReentrantReadWriteLock 
+
+类图结构   写锁的获取与释放   读锁的获取与释放
+
+## JDK 8 中新增的StampedLock 锁
 
 
 
@@ -124,3 +164,59 @@ https://blog.csdn.net/u011497638/article/details/93889173
 
 
 
+## 线程池ThreadPoolExecutor 
+
+ScheduledThreadPoolExecutor 
+
+## 线程同步器CountDownLatch    回环屏障CyclicBarrier   信号量Semaphore
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+11.1 ArrayBlockingQueue 的使用 284
+11.1.1 异步日志打印模型概述 284
+11.1.2 异步日志与具体实现 285
+
+11.2 Tomcat 的NioEndPoint 中ConcurrentLinkedQueue 的使用 293
+11.2.1 生产者——Acceptor 线程 294
+11.2.2 消费者——Poller 线程 298
+
+11.3 并发组件ConcurrentHashMap 使用注意事项 300
+
+11.4 SimpleDateFormat 是线程不安全的 304
+11.4.1 问题复现 304
+11.4.2 问题分析 305
+
+11.5 使用Timer 时需要注意的事情 309
+11.5.1 问题的产生 309
+11.5.2 Timer 实现原理分析 310
+
+11.6 对需要复用但是会被下游修改的参数要进行深复制 314
+11.6.1 问题的产生 314
+11.6.2 问题分析 316
+
+11.7 创建线程和线程池时要指定与业务相关的名称 319
+11.7.1 创建线程需要有线程名 319
+11.7.2 创建线程池时也需要指定线程池的名称 321
+
+11.8 使用线程池的情况下当程序结束时记得调用shutdown 关闭线程池 325
+11.8.1 问题复现 325
+11.8.2 问题分析 327
+
+11.9 线程池使用FutureTask 时需要注意的事情 329
+11.9.1 问题复现 329
+11.9.2 问题分析 332
+
+11.10 使用ThreadLocal 不当可能会导致内存泄漏 336
+11.10.1 为何会出现内存泄漏 336
+11.10.2 在线程池中使用ThreadLocal 导致的内存泄漏 339
+11.10.3 在Tomcat 的Servlet 中使用ThreadLocal 导致内存泄漏 341
