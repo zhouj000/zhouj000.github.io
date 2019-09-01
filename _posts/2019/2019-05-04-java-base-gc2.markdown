@@ -13,6 +13,7 @@ tags:
 [Java基础: GC(一) 介绍](https://zhouj000.github.io/2019/04/23/java-base-gc1/)  
 [Java基础: GC(二) G1垃圾收集器](https://zhouj000.github.io/2019/05/04/java-base-gc2/)  
 [Java基础: GC(三) G1垃圾收集器优化](https://zhouj000.github.io/2019/08/05/java-base-gc3/)  
+[Java基础: GC(四) SA调试工具](https://zhouj000.github.io/2019/09/01/java-base-gc4/)  
 
 
 
