@@ -147,8 +147,8 @@ catalog: true
 
 [亿级流量网站构架核心技术-读书笔记](https://zhouj000.github.io/2018/06/25/coreTechnologyOfWebArchitecture-kaitao/)  
 [深入浅出数据分析-读书笔记](https://zhouj000.github.io/2018/10/04/HeadFirst-DataAnalysis/)  
-[技术之瞳-读书笔记](https://zhouj000.github.io/2018/10/13/technology-eyes/)
-[企业IT架构转型之道——读书笔记](https://zhouj000.github.io/2018/11/24/company-mid-architecture/)
+[技术之瞳-读书笔记](https://zhouj000.github.io/2018/10/13/technology-eyes/)  
+[企业IT架构转型之道——读书笔记](https://zhouj000.github.io/2018/11/24/company-mid-architecture/)  
 
 
 
