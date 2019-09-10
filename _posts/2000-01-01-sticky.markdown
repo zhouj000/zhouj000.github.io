@@ -75,6 +75,10 @@ catalog: true
 [java项目 CPU占用100%问题](https://zhouj000.github.io/2018/06/24/investigate-cpu-100/)  
 [java项目 内存溢出问题](https://zhouj000.github.io/2018/07/14/investigate-out-memery/)  
 
+### >> 操作系统知识
+
+[操作系统(一) 分页机制](https://zhouj000.github.io/2019/09/10/os-1/)  
+
 ### >> 数据库知识
 
 [Redis(一) 基础与api](https://zhouj000.github.io/2018/10/23/redis-1)  
