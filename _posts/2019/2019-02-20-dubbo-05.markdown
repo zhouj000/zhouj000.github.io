@@ -271,7 +271,8 @@ ps 20880: 		显示端口上的连接信息
 ps -l 20880: 	显示端口上的连接详细信息
 
 invoke命令：
-invoke XxxService.xxxMethod({"prop": "value"}): 	调用服务的方法
+invoke xxxService.xxxMethod({"prop": "value"}): 	调用服务的方法
+invoke xxxService.xxxMethod({""name":"xx","version":"xx","class":"xx.xx.Xxx"})  调用服务方法
 invoke xxxMethod({"prop": "value"}): 				调用服务的方法(自动查找包含此方法的服务)
 
 trace命令：
