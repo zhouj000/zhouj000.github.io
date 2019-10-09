@@ -96,7 +96,7 @@ private ConfigurableEnvironment prepareEnvironment(SpringApplicationRunListeners
 	return environment;
 }
 ```
-1. 看一下getOrCreateEnvironment方法时怎么创建ConfigurableEnvironment的:
+1、看一下getOrCreateEnvironment方法时怎么创建ConfigurableEnvironment的:
 ```
 private ConfigurableEnvironment getOrCreateEnvironment() {
 	if (this.environment != null) {
@@ -113,7 +113,7 @@ private ConfigurableEnvironment getOrCreateEnvironment() {
 	}
 }
 ```
-2. 发布ConfigurableEnvironment准备完毕事件，这里用到了同步的EventBus，事件的监听者是ConfigFileApplicationListener，具体处理逻辑是onApplicationEnvironmentPreparedEvent方法
+2、发布ConfigurableEnvironment准备完毕事件，这里用到了同步的EventBus，事件的监听者是ConfigFileApplicationListener，具体处理逻辑是onApplicationEnvironmentPreparedEvent方法：
 ```
 // EventPublishingRunListener
 public void multicastEvent(ApplicationEvent event) {
