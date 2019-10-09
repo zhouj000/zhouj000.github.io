@@ -67,7 +67,7 @@ public abstract class PropertySource<T> {
 ```java
 private final ConfigurablePropertyResolver propertyResolver =
 			new PropertySourcesPropertyResolver(this.propertySources);
-···
+```
 PropertySourcesPropertyResolver是ConfigurablePropertyResolver的实现，默认的profile就是字符串default
 
 
