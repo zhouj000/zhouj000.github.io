@@ -251,7 +251,7 @@ private void load(String location, String name, Profile profile, DocumentFilterF
 }
 ```
 部分配置demo,[集成maven和Spring boot的profile](https://www.cnblogs.com/softidea/p/6063629.html):
-···
+```
 application.yml:
 spring:
   profiles:
@@ -270,7 +270,7 @@ spring:
 	</fileSet>
 	...
 </assembly>
-···
+```
 
 
 ## 获取属性
