@@ -28,6 +28,8 @@ LinkedList底层是通过**双向链表**实现的。所以LinkedList和ArrayLis
 
 Vector和ArrayList一样，都是通过**数组**实现的，但是Vector是**线程安全**的，其中的很多方法都通过同步(**synchronized**)处理来保证线程安全，因此相对而言性能会差一点。它们的扩容大小也不同，默认ArrayList是增长原来的50%，Vector则增长原来的100%
 
+### 
+
 
 
 

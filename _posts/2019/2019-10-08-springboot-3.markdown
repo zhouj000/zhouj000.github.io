@@ -6,7 +6,7 @@ author:     "ZhouJ000"
 header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
 catalog: true
 tags:
-    - spring
+    - springBoot
 --- 
 
 [SpringBoot(一) 启动与自动配置](https://zhouj000.github.io/2018/10/05/springboot-1/)  
