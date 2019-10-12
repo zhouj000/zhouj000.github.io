@@ -1,0 +1,82 @@
+---
+layout:     post
+title:      "HTML5"
+date:       2019-10-12
+author:     "ZhouJ000"
+header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
+catalog: true
+tags:
+    - html
+--- 
+
+
+
+# HTML5
+
+大部分开发对HTML还是比较熟悉的，而对于HTML5可能只是知道而没具体了解，这次来稍微看一下HTML5，首先什么是 HTML5？  
+1、HTML5成为HTML、XHTML以及HTML DOM的新标准  
+2、HTML5是专门为承载丰富的web内容而设计的，并且无需额外插件  
+3、HTML5拥有新的语义、图形以及多媒体元素  
+4、HTML5提供的新元素和新的API简化了web应用程序的搭建  
+5、HTML5是跨平台的，被设计为在不同类型的硬件之上运行  
+
+`<!DOCTYPE>`声明必须是HTML文档的第一行，该声明不是HTML标签；它是指示web浏览器关于页面使用哪个HTML版本进行编写的指令，因此在编写HTML时始终向HTML文档添加`<!DOCTYPE>`声明，这样浏览器才能获知文档类型。
+
+在HTML 4.01中，`<!DOCTYPE>`声明引用DTD，因为其基于SGML。DTD规定了标记语言的规则，这样浏览器才能正确地呈现内容。而HTML5不基于 SGML，所以不需要引用DTD，只需要非常简单的`<!DOCTYPE html>`就行，相比HTML 4.01中有三种声明简单了许多
+
+## 新特性
+
++ 新的语义元素
+	- HTML5定义了八个新的语义HTML元素，所有都是块级元素
+	- 比如header、section、footer、aside、nav、main、article、figure等
++ 新的表单控件
+	- 比如数字、日期、时间、日历、滑块(calendar、date、time、email、url、search)
++ 强大的图像支持
+	- 借由`<canvas>`和`<svg>`
++ 强大的多媒体支持
+	- 借由`<video>`和`<audio>`
++ 强大的新API
+	- 比如用本地存储取代cookie
+
+同样，H5也删除了一些HTML4元素：`<acronym>`、`<applet>`、`<basefont>`、`<big>`、`<center>`、`<dir>`、`<font>`、`<frame>`、`<frameset>`、`<noframes>`、`<strike>`、`<tt>`
+
+
+## 标签
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+参考：  
+[W3C School](https://www.w3school.com.cn/html/html5_intro.asp)  
+[W3C School](https://www.w3school.com.cn/html5/index.asp)
+
