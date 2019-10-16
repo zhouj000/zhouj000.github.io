@@ -12,6 +12,7 @@ tags:
 [SpringBoot(一) 启动与自动配置](https://zhouj000.github.io/2018/10/05/springboot-1/)  
 [SpringBoot(二) starter与servlet容器](https://zhouj000.github.io/2018/10/10/springboot-2/)  
 [SpringBoot(三) Environment](https://zhouj000.github.io/2019/10/08/springboot-3/)  
+[SpringBoot(四) 集成apollo遇到的事儿](https://zhouj000.github.io/2019/10/16/springboot-4/)  
 
 
 
