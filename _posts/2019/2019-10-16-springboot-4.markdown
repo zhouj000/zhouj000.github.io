@@ -205,7 +205,7 @@ public SpringApplication build(String... args) {
 
 答案很明显了，是spring-cloud-context包的原因导致的，然后我尝试从pom将封装的starter中exclusions这个引用，然后发现启动报错了，查看错误原因发现是创建类失败，点进去发现是封装的配置刷新类中依赖了Spring Cloud的RefreshScope类，导致了ClassNofFound
 
-逻辑是在刷新类的postProcessAfterInitialization方法中，当查询到ConfigurationProperties或RefreshScope这2个注解修饰的配置类时，从apollo.ConfigService.getAppConfig()中添加改变监听器addChangeListener，在发生改变时刷新这个配置bean：
+逻辑是在刷新类的postProcessAfterInitialization方法中，当查询到ConfigurationProperties与RefreshScope这2个注解修饰的配置类时，从apollo.ConfigService.getAppConfig()中添加改变监听器addChangeListener，在发生改变时刷新这个配置bean：
 ```
 // 写在postProcessAfterInitialization中，即实现了BeanPostProcessor
 ConfigService.getAppConfig().addChangeListener(new ConfigChangeListener() {
@@ -249,3 +249,5 @@ public boolean refresh(String name) {
 [@RefreshScope那些事](https://www.jianshu.com/p/188013dd3d02)  
 [Spring作用域 (Scope：Request,Session,Thread,Refresh) 的代理机制源码解析](https://blog.csdn.net/qq_27529917/article/details/82781067)  
 [spring cloud的RefreshScope注解进行热部署](https://blog.csdn.net/weixin_40318210/article/details/87954179)  
+
+[github Apollo Java客户端使用指南](https://github.com/ctripcorp/apollo/wiki/Java%E5%AE%A2%E6%88%B7%E7%AB%AF%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97)  
