@@ -22,19 +22,112 @@ tags:
 
 对于Log4j、JDK Logging、tinylog等工具需要一个适配层，将SLF4J的API转换为具体工具的调用接口实现，而Logback是直接实现了SLF4J的，因此不需要适配层，效率最高。因此SL4FJ(门面) + Logback的组合现在被广泛使用，大有超越Apache Common Logging(门面) + Log4j之势
 
+
+# 日志框架
+
+日志系统几乎是所有库都会用到的一个功能，每个库由于早期的技术选型和开发者喜好等原因，可能使用了不同的日志框架。我们在引入不同Maven库时，不知不觉间接引入了多种不同的日志框架。日志系统往往会尽可能早的进行初始化，并且由于日志桥接器和日志门面的存在，会尝试做一些绑定和劫持工作，一旦引入多个日志框架，轻则会导致程序中有好几套日志系统同时工作，日志输出混乱，重则会导致项目日志系统初始化死锁，项目无法启动。因此使用日志系统首先就要确定需要使用的框架
+
+常用的日志门面框架有slf4j和commons-logging，门面系统能很大程度缓解日志系统的混乱，而在很多日志库的开发者也意识到日志门面系统的重要性，不在库中直接使用具体的日志实现框架。slf4j作为现代的日志门面系统，已经成为事实的标准，并且为其他日志系统做了十足的兼容工作，其实很多库还都自己造一个类似slf4j的日志门面系统，只是绑定实现的优先级不一样
+
+如果我们直接暴力的排除其他日志框架，可能导致第三方库在调用日志接口时抛出ClassNotFound异常，这里就需要用到日志系统桥接器。比如log4j-over-slf4j，即log4j -> slf4j的桥接器，这个库定义了与log4j一致的接口(包名、类名、方法签名均一致)，但是接口的实现却是对slf4j日志接口的包装，即间接调用了slf4j日志接口，实现了对日志的转发。其中jul-to-slf4j是个例外，毕竟JDK自带的logging包排除不掉，该桥接器利用了JDK-logging的Handler机制，在root logger上install一个handler，将所有日志都劫持到slf4j上。要使jul-to-slf4j生效，除了spring boot日志模块初始化包含了该逻辑，使用其他框架时需要在入口处static执行逻辑，尽早初始化：
+```
+SLF4JBridgeHandler.removeHandlersForRootLogger();
+SLF4JBridgeHandler.install();
+```
+
+桥接器解决问题，也可能带来问题。有些第三方库作者在使用日志时也会遇到同样的问题，他通过日志系统桥接器解决了，但是如果恰巧和你桥接的目标不同，比如log4j -> slf4j，slf4j -> log4j两个桥接器同时存在，就会造成互相委托，无限循环，堆栈溢出；又比如slf4j -> logback，slf4j -> log4j两个桥接器同时存在，那么由于slf4j的优先顺序是logback在前，这只是报警；而如果一些框架自定义了日志门面，且对绑定日志实现定义的优先级顺序与slf4j不一致，这可能会使程序产生2套日志系统工作。因此为了达成统一日志框架的目的，假设选定slf4j与logback需要：  
+1、首先引入slf4j与logback日志包，slf4j -> logback桥接器  
+2、排除common-logging、log4j、log4j2等日志包  
+3、引入jdk-logging -> slf4j、common-logging -> slf4j、log4j -> slf4j、log4j2 -> slf4j桥接器  
+4、排除slf4j -> jdk-logging、slf4j -> common-logging、slf4j -> log4j、slf4j -> log4j2桥接器  
+PS.其中log4j2桥接器由log4j2提供，其他桥接器由slf4j提供。logback天生绑定slf4j，因此不需要桥接器  
+PS.Slf4j介于Maven没有Gradle的全局依赖排除机制，由maven的路径最短优先原则和优先声明原则，提供version99仓库排除其他的日志框架(虚包)
+![]()
+
+
+## log4j
+
+log4j由3个重要组件构成，分别是日志级别(从高到低ERROR、WARN、 INFO、DEBUG)、日志输出目的地、日志的输出格式。
+
+
+
+
+
+
+
+
+
+日志信息的优先级有，分别用来指定这条日志信息的重要程度；日志信息的输出目的地指定了日志将打印到控制台还是文件中；而输出格式则控制了日志信息的显 示内容。
+
+2.1、定义配置文件
+
+其实您也可以完全不使用配置文件，而是在代码中配置Log4j环境。但是，使用配置文件将使您的应用程序更加灵活。Log4j支持两种配置文件格式，一种是XML格式的文件，一种是Java特性文件（键=值）。下面我们介绍使用Java特性文件做为配置文件的方法：
+1.配置根Logger，其语法为：
+
+log4j.rootLogger = [ level ] , appenderName, appenderName, …
+其中，level 是日志记录的优先级，分为OFF、FATAL、ERROR、WARN、INFO、DEBUG、ALL或者您定义的级别。Log4j建议只使用四个级别，优 先级从高到低分别是ERROR、WARN、INFO、DEBUG。通过在这里定义的级别，您可以控制到应用程序中相应级别的日志信息的开关。比如在这里定 义了INFO级别，则应用程序中所有DEBUG级别的日志信息将不被打印出来。 appenderName就是指日志信息输出到哪个地方。您可以同时指定多个输出目的地。
+
+2.配置日志信息输出目的地Appender，其语法为：
+
+log4j.appender.appenderName = fully.qualified.name.of.appender.class
+log4j.appender.appenderName.option1 = value1
+…
+log4j.appender.appenderName.option = valueN
+其中，Log4j提供的appender有以下几种：
+
+org.apache.log4j.ConsoleAppender（控制台），
+org.apache.log4j.FileAppender（文件），
+org.apache.log4j.DailyRollingFileAppender（每天产生一个日志文件），
+org.apache.log4j.RollingFileAppender（文件大小到达指定尺寸的时候产生一个新的文件），
+org.apache.log4j.WriterAppender（将日志信息以流格式发送到任意指定的地方）
+3.配置日志信息的格式（布局），其语法为：
+
+log4j.appender.appenderName.layout = fully.qualified.name.of.layout.class
+log4j.appender.appenderName.layout.option1 = value1
+…
+log4j.appender.appenderName.layout.option = valueN
+其中，Log4j提供的layout有以e几种：
+
+org.apache.log4j.HTMLLayout（以HTML表格形式布局），
+org.apache.log4j.PatternLayout（可以灵活地指定布局模式），
+org.apache.log4j.SimpleLayout（包含日志信息的级别和信息字符串），
+org.apache.log4j.TTCCLayout（包含日志产生的时间、线程、类别等等信息）
+Log4J采用类似C语言中的printf函数的打印格式格式化日志信息，打印参数如下： %m 输出代码中指定的消息
+
+%p 输出优先级，即DEBUG，INFO，WARN，ERROR，FATAL
+%r 输出自应用启动到输出该log信息耗费的毫秒数
+%c 输出所属的类目，通常就是所在类的全名
+%t 输出产生该日志事件的线程名
+%n 输出一个回车换行符，Windows平台为“rn”，Unix平台为“n”
+%d 输出日志时间点的日期或时间，默认格式为ISO8601，也可以在其后指定格式，比如：%d{yyy MMM dd HH:mm:ss,SSS}，输出类似：2002年10月18日 22：10：28，921
+%l 输出日志事件的发生位置，包括类目名、发生的线程，以及在代码中的行数。举例：Testlog4.main(TestLog4.java:10)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # slf4j
-
-日志系统桥接器
-
-
-https://www.jianshu.com/p/7b5860be190f
-
 
 # logback
 
 # commons logging
 
-# log4j
 
 # log4j2
 
@@ -47,28 +140,6 @@ https://www.jianshu.com/p/7b5860be190f
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+参考：  
+[slf4j、jcl、jul、log4j1、log4j2、logback大总结](https://my.oschina.net/pingpangkuangmo/blog/410224)  
 
