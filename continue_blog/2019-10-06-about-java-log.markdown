@@ -47,7 +47,45 @@ PS.Slf4j介于Maven没有Gradle的全局依赖排除机制，由maven的路径�
 
 ## log4j
 
-log4j由3个重要组件构成，分别是日志级别(从高到低ERROR、WARN、 INFO、DEBUG)、日志输出目的地、日志的输出格式。
+log4j由3个重要组件构成，分别是日志级别(从高到低ERROR、WARN、 INFO、DEBUG)、日志输出目的地(控制台、文件..)、日志的输出格式。
+
+log4j可以使用配置文件，也可以使用JavaConfig，但是一般会使用配置文件.properties：
+```
+// 1、配置根Logger
+// 分别是日志记录优先级(推荐使用ERROR、WARN、INFO、DEBUG这4种) 和 日志输出目的地
+log4j.rootLogger = [level ... ],[appenderName ... ]
+
+
+// 2、定义日志输出目的地Appender
+/** log4j提供的Appender有：
+  * org.apache.log4j.ConsoleAppender：控制台
+  * org.apache.log4j.FileAppender：文件
+  * org.apache.log4j.DailyRollingFileAppender：每天产生一个日志文件
+  * org.apache.log4j.RollingFileAppender：滚动日志文件，文件大小到达指定大小时产生一个新的文件
+  * org.apache.log4j.WriterAppender：将日志信息以流格式发送到任意指定的地方
+  */
+log4j.appender.[yourAppenderName] = [fully.qualified.name.of.appender.class]
+log4j.appender.[yourAppenderName].[option0] = [value0]
+...
+log4j.appender.[yourAppenderName].[optionN] = [valueN]
+
+
+// 3、配置日志格式(布局)
+/** log4j提供的layout有：
+  * org.apache.log4j.HTMLLayout：以HTML表格形式布局
+  * org.apache.log4j.PatternLayout：可以灵活地指定布局模式
+  * org.apache.log4j.SimpleLayout：包含日志信息的级别和信息字符串
+  * org.apache.log4j.TTCCLayout：包含日志产生的时间、线程、类别等等信息
+  *
+  */
+log4j.appender.[yourAppenderName].layout = [fully.qualified.name.of.layout.class]
+log4j.appender.[yourAppenderName].layout.ConversionPattern = [your pattern]
+
+
+
+
+
+```
 
 
 
@@ -57,41 +95,7 @@ log4j由3个重要组件构成，分别是日志级别(从高到低ERROR、WARN�
 
 
 
-日志信息的优先级有，分别用来指定这条日志信息的重要程度；日志信息的输出目的地指定了日志将打印到控制台还是文件中；而输出格式则控制了日志信息的显 示内容。
 
-2.1、定义配置文件
-
-其实您也可以完全不使用配置文件，而是在代码中配置Log4j环境。但是，使用配置文件将使您的应用程序更加灵活。Log4j支持两种配置文件格式，一种是XML格式的文件，一种是Java特性文件（键=值）。下面我们介绍使用Java特性文件做为配置文件的方法：
-1.配置根Logger，其语法为：
-
-log4j.rootLogger = [ level ] , appenderName, appenderName, …
-其中，level 是日志记录的优先级，分为OFF、FATAL、ERROR、WARN、INFO、DEBUG、ALL或者您定义的级别。Log4j建议只使用四个级别，优 先级从高到低分别是ERROR、WARN、INFO、DEBUG。通过在这里定义的级别，您可以控制到应用程序中相应级别的日志信息的开关。比如在这里定 义了INFO级别，则应用程序中所有DEBUG级别的日志信息将不被打印出来。 appenderName就是指日志信息输出到哪个地方。您可以同时指定多个输出目的地。
-
-2.配置日志信息输出目的地Appender，其语法为：
-
-log4j.appender.appenderName = fully.qualified.name.of.appender.class
-log4j.appender.appenderName.option1 = value1
-…
-log4j.appender.appenderName.option = valueN
-其中，Log4j提供的appender有以下几种：
-
-org.apache.log4j.ConsoleAppender（控制台），
-org.apache.log4j.FileAppender（文件），
-org.apache.log4j.DailyRollingFileAppender（每天产生一个日志文件），
-org.apache.log4j.RollingFileAppender（文件大小到达指定尺寸的时候产生一个新的文件），
-org.apache.log4j.WriterAppender（将日志信息以流格式发送到任意指定的地方）
-3.配置日志信息的格式（布局），其语法为：
-
-log4j.appender.appenderName.layout = fully.qualified.name.of.layout.class
-log4j.appender.appenderName.layout.option1 = value1
-…
-log4j.appender.appenderName.layout.option = valueN
-其中，Log4j提供的layout有以e几种：
-
-org.apache.log4j.HTMLLayout（以HTML表格形式布局），
-org.apache.log4j.PatternLayout（可以灵活地指定布局模式），
-org.apache.log4j.SimpleLayout（包含日志信息的级别和信息字符串），
-org.apache.log4j.TTCCLayout（包含日志产生的时间、线程、类别等等信息）
 Log4J采用类似C语言中的printf函数的打印格式格式化日志信息，打印参数如下： %m 输出代码中指定的消息
 
 %p 输出优先级，即DEBUG，INFO，WARN，ERROR，FATAL
@@ -106,7 +110,7 @@ Log4J采用类似C语言中的printf函数的打印格式格式化日志信息�
 
 
 
-
+https://www.cnblogs.com/caozx/p/11585239.html
 
 
 
