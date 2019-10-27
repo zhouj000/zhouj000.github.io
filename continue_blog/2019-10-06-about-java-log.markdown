@@ -77,40 +77,37 @@ log4j.appender.[yourAppenderName].[optionN] = [valueN]
   * org.apache.log4j.SimpleLayout：包含日志信息的级别和信息字符串
   * org.apache.log4j.TTCCLayout：包含日志产生的时间、线程、类别等等信息
   *
+  * 打印格式：
+  * %m：输出代码中指定的消息
+  * %p：输出优先级，即DEBUG，INFO，WARN，ERROR，FATAL
+  * %d：输出日志时间点的日期或时间，比如：%d{yyy MMM dd HH:mm:ss,SSS}
+  * %r：输出自应用启动到输出该log信息耗费的毫秒数
+  * %l：输出日志事件的发生位置，包括类目名、发生的线程，以及在代码中的行数
+  * %c：输出所属的类目，通常就是所在类的全名
+  * %t：输出产生该日志事件的线程名
+  * %n：输出一个回车换行符，Windows平台为"rn"，Unix平台为"n"
   */
 log4j.appender.[yourAppenderName].layout = [fully.qualified.name.of.layout.class]
 log4j.appender.[yourAppenderName].layout.ConversionPattern = [your pattern]
+```
+在设置好log4j配置后，就要在代码中对它进行使用了：
+```
+// 0、初始化，读取配置，有3种方式：缺省的(Console)、读取Property配置、读取XML配置
+BasicConfigurator.configure();
+PropertyConfigurator.configure([configFilename]);
+DOMConfigurator.configure([filename]);
 
+// 1、获取日志记录器
+public static Logger logger = Logger.getLogger([yourClass.class])
 
-
-
-
+// 2、插入日志信息
+Logger.debug([msg]);
+Logger.info([msg]);
+Logger.error([msg]);
 ```
 
 
 
-
-
-
-
-
-
-
-Log4J采用类似C语言中的printf函数的打印格式格式化日志信息，打印参数如下： %m 输出代码中指定的消息
-
-%p 输出优先级，即DEBUG，INFO，WARN，ERROR，FATAL
-%r 输出自应用启动到输出该log信息耗费的毫秒数
-%c 输出所属的类目，通常就是所在类的全名
-%t 输出产生该日志事件的线程名
-%n 输出一个回车换行符，Windows平台为“rn”，Unix平台为“n”
-%d 输出日志时间点的日期或时间，默认格式为ISO8601，也可以在其后指定格式，比如：%d{yyy MMM dd HH:mm:ss,SSS}，输出类似：2002年10月18日 22：10：28，921
-%l 输出日志事件的发生位置，包括类目名、发生的线程，以及在代码中的行数。举例：Testlog4.main(TestLog4.java:10)
-
-
-
-
-
-https://www.cnblogs.com/caozx/p/11585239.html
 
 
 
