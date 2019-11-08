@@ -58,9 +58,9 @@ log4j.rootLogger = [level ... ],[appenderName ... ]
 
 // 2、定义日志输出目的地Appender
 /** log4j提供的Appender有：
-  * org.apache.log4j.ConsoleAppender：控制台
+  * org.apache.log4j.ConsoleAppender：控制台(测试用)
   * org.apache.log4j.FileAppender：文件
-  * org.apache.log4j.DailyRollingFileAppender：每天产生一个日志文件
+  * org.apache.log4j.DailyRollingFileAppender：每天产生一个日志文件(常用)
   * org.apache.log4j.RollingFileAppender：滚动日志文件，文件大小到达指定大小时产生一个新的文件
   * org.apache.log4j.WriterAppender：将日志信息以流格式发送到任意指定的地方
   */
@@ -92,11 +92,6 @@ log4j.appender.[yourAppenderName].layout.ConversionPattern = [your pattern]
 ```
 在设置好log4j配置后，就要在代码中对它进行使用了：
 ```
-// 0、初始化，读取配置，有3种方式：缺省的(Console)、读取Property配置、读取XML配置
-BasicConfigurator.configure();
-PropertyConfigurator.configure([configFilename]);
-DOMConfigurator.configure([filename]);
-
 // 1、获取日志记录器
 public static Logger logger = Logger.getLogger([yourClass.class])
 
@@ -105,19 +100,95 @@ Logger.debug([msg]);
 Logger.info([msg]);
 Logger.error([msg]);
 ```
+那么log4j是怎么获取配置的呢？我们从Logger.getLogger代码跟踪下去可以发现，它是委托给LogManager去获取Logger的，而LogManager的静态方法中做了读取配置的工作：
+```
+static public final String DEFAULT_CONFIGURATION_FILE = "log4j.properties";
+static final String DEFAULT_XML_CONFIGURATION_FILE = "log4j.xml";  
+static final public String DEFAULT_CONFIGURATION_KEY="log4j.configuration";
+static final public String CONFIGURATOR_CLASS_KEY="log4j.configuratorClass";
+public static final String DEFAULT_INIT_OVERRIDE_KEY = "log4j.defaultInitOverride";
+                                               
+static {
+	// By default we use a DefaultRepositorySelector which always returns 'h'.
+	Hierarchy h = new Hierarchy(new RootLogger((Level) Level.DEBUG));
+	repositorySelector = new DefaultRepositorySelector(h);
+
+	/** Search for the properties file log4j.properties in the CLASSPATH.  */
+	String override = OptionConverter.getSystemProperty(DEFAULT_INIT_OVERRIDE_KEY,
+			null);
+
+	// if there is no default init override, then get the resource
+	// specified by the user or the default config file.
+	if (override == null || "false".equalsIgnoreCase(override)) {
+
+		String configurationOptionStr = OptionConverter.getSystemProperty(
+				DEFAULT_CONFIGURATION_KEY,
+				null);
+
+		String configuratorClassName = OptionConverter.getSystemProperty(
+				CONFIGURATOR_CLASS_KEY,
+				null);
+
+		URL url = null;
+
+		// if the user has not specified the log4j.configuration
+		// property, we search first for the file "log4j.xml" and then
+		// "log4j.properties"
+		if (configurationOptionStr == null) {
+			url = Loader.getResource(DEFAULT_XML_CONFIGURATION_FILE);
+			if (url == null) {
+				url = Loader.getResource(DEFAULT_CONFIGURATION_FILE);
+			}
+		} else {
+			try {
+				url = new URL(configurationOptionStr);
+			} catch (MalformedURLException ex) {
+				// so, resource is not a URL:
+				// attempt to get the resource from the class path
+				url = Loader.getResource(configurationOptionStr);
+			}
+		}
+
+		// If we have a non-null url, then delegate the rest of the
+		// configuration to the OptionConverter.selectAndConfigure
+		// method.
+		if (url != null) {
+			LogLog.debug("Using URL [" + url + "] for automatic log4j configuration.");
+			try {
+				OptionConverter.selectAndConfigure(url, configuratorClassName,
+						LogManager.getLoggerRepository());
+			} catch (NoClassDefFoundError e) {
+				LogLog.warn("Error during default initialization", e);
+			}
+		} else {
+			LogLog.debug("Could not find resource: [" + configurationOptionStr + "].");
+		}
+	} else {
+		LogLog.debug("Default initialization of overridden by " +
+				DEFAULT_INIT_OVERRIDE_KEY + "property.");
+	}
+}
+```
+最后调用了Configurator的`void doConfigure(URL url, LoggerRepository repository)`方法。那么可以了解到，如果我们想自己定义配置文件，可以有两种做法：
+```
+// 1、代码自己初始化，关闭静态方法逻辑
+System.setProperty("log4j.defaultInitOverride", "true");
+// 有3种方式：缺省的(只有Console)、读取Property配置、读取XML配置
+BasicConfigurator.configure();
+PropertyConfigurator.configure([configFilename]);
+DOMConfigurator.configure([filename]);
+
+
+// 2、只是修改路径
+System.setProperty("log4j.configuration", [yourLogAllPath]);
+```
+
+ 
 
 
 
 
-
-
-
-
-
-
-
-
-
+https://www.jianshu.com/p/c8c609df1979?utm_campaign
 
 
 
