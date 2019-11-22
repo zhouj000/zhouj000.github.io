@@ -75,8 +75,30 @@ management.endpoints.web.exposure.exclude=env
 management.endpoints.web.base-path=/monitor
 ```
 
+|   类型   |     名称    | 作用 										 |
+| :------: | :----------:| :-------------------------------------------- |
+| Sensor   | autoconfig  | 提供一份SpringBoot的自动配置报告，告诉我们哪些自动配置模块生效了，哪些没有生效，原因是什么 |
+|          | beans       | 给出当前应用的容器中所有bean的信息 |
+|          | configprops | 对现有容器中的ConfigurationProperties提供的信息进行"消毒"处理后给出汇总信息 |
+|          | info	     | 提供当前SpringBoot应用的任意信息，可以通过Environment或application.properties等形式提供以info.为前缀的任何配置项，然后info这个endpoint就会将这些配置项的值作为信息的一部分展示出来 |
+|          | health      | 针对当前SpringBoot应用的健康检查用的endpoint	 |
+|          | env 		 | 关于当前SpringBoot应用对应的Environment信息 	 |
+|          | metrics 	 | 当前SprinBoot应用的metrics信息				 |
+|          | trace		 | 当前SpringBoot应用的trace信息				 |
+|          | mapping	 | 如果是基于SpringMVC的Web应用，将给出@RequestMapping相关信息 |
+| Actuator | shutdown	 | 用于关闭当前SpringBoot应用的endpoint 		 |
+|          | dump		 | 用于执行线程的dump操作 						 |
+
+
 
 # 源码解析
+
+
+
+## endpoints
+
+
+
 
 
 
@@ -90,8 +112,8 @@ HealthIndicatorAutoConfiguration
 
 ## HealthIndicator
 
-endpoints
 
+endpoints
 JmxEndpointExporter
 
 
