@@ -26,8 +26,16 @@ springBoot提供的健康检查只需要引入依赖即可：
 	<artifactId>spring-boot-starter-actuator</artifactId>
 </dependency>
 ```
-相关actuator其实还引入了`micrometer-core`、`spring-boot-actuator-autoconfigure`和`spring-boot-actuator`。而`spring-boot-starter-actuator`其实只是个空项目，作为一个统一的引用
-
+`spring-boot-starter-actuator`其实只是个空项目，统一管理的引入了：
+```
+// 自动配置
++ spring-boot-actuator-autoconfigure
+	// actuator
+	+ spring-boot-actuator
+// 提供了记录度量指标类
+// SpringBoot 2.X使用mircrometer进行统计数据和发布数据到监控系统，1.X是使用了dropwizard-metrics
++ micrometer-core
+```
 启动项目，可以看到打印了`Exposing 2 endpoint(s) beneath base path '/actuator'`，我们访问这个路径看到打印了：
 ```
 {
@@ -55,11 +63,11 @@ springBoot提供的健康检查只需要引入依赖即可：
 	}
 }
 ```
-在springBoot2.0以前，有许多监控端点是打开的，比如env、beans等。但是2.0以后：  
+其实在SpringBoot2.X以前，有许多监控端点是打开的，比如env、beans等。但是2.X以后有以下规则：  
 1、要通过actuator暴露端点，必须同时是**启用(enabled)**的和**暴露(exposed)**的  
 2、所有**除了**/health和/info的端点，默认都是不暴露的  
 3、所有**除了**/shutdown的端点，默认都是启用的(enabled)  
-4、生产环境由于安全性的问题，注意不要暴露敏感端点
+4、生产环境由于安全性的问题，注意不要暴露敏感端点(如果使用Spring Security，则可以使用Spring Security的内容协商策略保护端点)
 
 通过`application.properties`或`application.ymal`配置可以打开这些监控端点：
 ```
@@ -67,31 +75,139 @@ springBoot提供的健康检查只需要引入依赖即可：
 management.endpoint.shutdown.enabled=true
 
 // 只暴露/排除指定监控端点，可以使用*表示全部
-// 全部暴露，除了env
+// 全部暴露，除了env端点
 management.endpoints.web.exposure.include=*
 management.endpoints.web.exposure.exclude=env
 
 // 修改访问根路径
 management.endpoints.web.base-path=/monitor
 
-// JMX
+// JMX配置
 management.endpoints.jmx.exposure.include=
 management.endpoints.jmx.exposure.exclude=
 ```
+这样启动后就会看到`Exposing 12 endpoint(s) beneath base path '/monitor'`
 
 |   类型   |     名称    | 作用 										 |
 | :------: | :----------:| :-------------------------------------------- |
-| Sensor   | autoconfig  | 提供一份SpringBoot的自动配置报告，告诉我们哪些自动配置模块生效了，哪些没有生效，原因是什么 |
-|          | beans       | 给出当前应用的容器中所有bean的信息 |
-|          | configprops | 对现有容器中的ConfigurationProperties提供的信息进行"消毒"处理后给出汇总信息 |
+| Sensor   | auditevents | 显示当前应用程序的审计事件信息                |
+|          | beans       | 显示应用Spring Beans的完整列表                |
+|          | caches      | 显示可用缓存信息								 |
+|          | conditions  | 显示自动装配类的状态及及应用信息              | 
+|          | configprops | 显示所有 @ConfigurationProperties 列表        |
+|          | env		 | 显示 ConfigurableEnvironment 中的属性         |
 |          | info	     | 提供当前SpringBoot应用的任意信息，可以通过Environment或application.properties等形式提供以info.为前缀的任何配置项，然后info这个endpoint就会将这些配置项的值作为信息的一部分展示出来 |
-|          | health      | 针对当前SpringBoot应用的健康检查用的endpoint	 |
-|          | env 		 | 关于当前SpringBoot应用对应的Environment信息 	 |
+|          | health      | 显示应用的健康信息(未认证只显示status，认证显示全部信息详情) |
 |          | metrics 	 | 当前SprinBoot应用的metrics信息				 |
-|          | trace		 | 当前SpringBoot应用的trace信息				 |
-|          | mapping	 | 如果是基于SpringMVC的Web应用，将给出@RequestMapping相关信息 |
+|          | httptrace	 | 显示HTTP跟踪信息(默认显示最后100个HTTP请求 - 响应交换) |
+|          | mappings	 | 如果是基于SpringMVC的Web应用，显示所有 @RequestMapping 路径集列表 |
+|          | scheduledtasks | 显示应用程序中的计划任务                   |
+|          | sessions    | 允许从Spring会话支持的会话存储中检索和删除用户会话 |
 | Actuator | shutdown	 | 用于关闭当前SpringBoot应用的endpoint 		 |
-|          | dump		 | 用于执行线程的dump操作 						 |
+|          | dump		 | 用于执行线程的dump操作，heapdump和threaddump  |
+
+# autoconfigure包
+
+首先打开`spring-boot-actuator-autoconfigure`包，查看它的`spring.factories`，可以看到配置了许多配置类，都是其`org.springframework.boot.actuate.autoconfigure`路径下的文件
+
+总体而言，autoconfigure下可以分为3类：  
+1、自动配置XX端点
+2、endpoint包
+3、metrics包
+
+其中自动配置按照分类，定义了各种**XXXEndpointAutoConfiguration**，比如rabbitmq、cache、bean等。其中会根据某些类(依赖)是否存在来自动创建**XXXEndpoint**，这些类使用`@Endpoint`注解类，`@ReadOperation、@WriteOperation或@DeleteOperation`注解方法(自动地通过JMX公开，在web应用程序中会通过HTTP公开)。也可以使用`@JmxEndpoint`或`@WebEndpoint`来编写特定于技术的端点，这些端点仅限于各自的技术，分别通过JMX公开和  HTTP公开。此外，可以使用`@EndpointWebExtension`和`@EndpointJmxExtension`编写特定于技术的扩展，这些注解允许你提供特定于技术的操作，以增强现有的端点。最后，如果需要访问特定于web框架的功能，可以实现Servlet或Spring的@Controller和@RestController端点，代价是它们在JMX上不可用，或者在使用不同的web框架时不可用
+
+另一种是创建XXXHealthIndicator，这些类继承了AbstractHealthIndicator抽象类，实现了doHealthCheck方法
+
+暂时先不关注reactive
+
+与spring.factories同级下还有spring-autoconfigure-metadata.properties和spring-configuration-metadata.json配置文件，这2个只是格式不同，都是通过XXXProperties为部分XXXEndpointAutoConfiguration提供参数的
+   
+
+对于其中**endpoint**下主要有3部分组成：  
+1、判断是否启用Endpoint：OnEnabledEndpointCondition#getMatchOutcome  
+2、JMX导出：创建bean(JmxEndpointDiscoverer、JmxEndpointExporter、ExposeExcludePropertyEndpointFilter)  
+3、WEB导出：按依赖分别创建**Jersey、Reactive、Spring MVC**3种定义的XXXEndpointHandlerMapping。对SERVLET类型的ServletEndpointManagementContextConfiguration创建ServletEndpointRegistrar；对WEB项目的WebEndpointAutoConfiguration创建WebEndpointDiscoverer、ControllerEndpointDiscoverer、PathMappedEndpoints和ExposeExcludePropertyEndpointFilter
+
+回过来看一下上面配置是怎么生效的：
+```
+// AbstractEndpointCondition 判断指定配置
+protected ConditionOutcome getEnablementOutcome(ConditionContext context, AnnotatedTypeMetadata metadata,
+			Class<? extends Annotation> annotationClass) {
+	Environment environment = context.getEnvironment();
+	AnnotationAttributes attributes = getEndpointAttributes(annotationClass, context, metadata);
+	EndpointId id = EndpointId.of(environment, attributes.getString("id"));
+	String key = "management.endpoint." + id.toLowerCaseString() + ".enabled";
+	Boolean userDefinedEnabled = environment.getProperty(key, Boolean.class);
+	if (userDefinedEnabled != null) {
+		return new ConditionOutcome(userDefinedEnabled, ConditionMessage.forCondition(annotationClass)
+				.because("found property " + key + " with value " + userDefinedEnabled));
+	}
+	Boolean userDefinedDefault = isEnabledByDefault(environment);
+	if (userDefinedDefault != null) {
+		return new ConditionOutcome(userDefinedDefault, ConditionMessage.forCondition(annotationClass).because(
+				"no property " + key + " found so using user defined default from " + ENABLED_BY_DEFAULT_KEY));
+	}
+	boolean endpointDefault = attributes.getBoolean("enableByDefault");
+	return new ConditionOutcome(endpointDefault, ConditionMessage.forCondition(annotationClass)
+			.because("no property " + key + " found so using endpoint default"));
+}
+
+
+// OnAvailableEndpointCondition
+public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
+	ConditionOutcome enablementOutcome = getEnablementOutcome(context, metadata,
+			ConditionalOnAvailableEndpoint.class);
+	if (!enablementOutcome.isMatch()) {
+		return enablementOutcome;
+	}
+	ConditionMessage message = enablementOutcome.getConditionMessage();
+	Environment environment = context.getEnvironment();
+	if (CloudPlatform.CLOUD_FOUNDRY.isActive(environment)) {
+		return new ConditionOutcome(true, message.andCondition(ConditionalOnAvailableEndpoint.class)
+				.because("application is running on Cloud Foundry"));
+	}
+	AnnotationAttributes attributes = getEndpointAttributes(ConditionalOnAvailableEndpoint.class, context,
+			metadata);
+	EndpointId id = EndpointId.of(environment, attributes.getString("id"));
+	Set<ExposureInformation> exposureInformations = getExposureInformation(environment);
+	for (ExposureInformation exposureInformation : exposureInformations) {
+		// 判断是否导出
+		if (exposureInformation.isExposed(id)) {
+			return new ConditionOutcome(true,
+					message.andCondition(ConditionalOnAvailableEndpoint.class)
+							.because("marked as exposed by a 'management.endpoints."
+									+ exposureInformation.getPrefix() + ".exposure' property"));
+		}
+	}
+	return new ConditionOutcome(false, message.andCondition(ConditionalOnAvailableEndpoint.class)
+			.because("no 'management.endpoints' property marked it as exposed"));
+}
+
+boolean isExposed(EndpointId endpointId) {
+	String id = endpointId.toLowerCaseString();
+	// 这里有我们配的env，所以env在这里会返回false
+	if (!this.exclude.isEmpty()) {
+		if (this.exclude.contains("*") || this.exclude.contains(id)) {
+			return false;
+		}
+	}
+	// 这里有我们配置的*，因此跳过
+	if (this.include.isEmpty()) {
+		if (this.exposeDefaults.contains("*") || this.exposeDefaults.contains(id)) {
+			return true;
+		}
+	}
+	// 由于是*，返回true
+	return this.include.contains("*") || this.include.contains(id);
+}
+```
+这样在**ConfigurationClassParser类**中不会因为conditionEvaluator.shouldSkip跳出，最后会执行doProcessConfigurationClass方法
+
+
+最后看metrics，主要是做绑定数据到MeterRegistry
+
+// 待
 
 
 
@@ -99,6 +215,7 @@ management.endpoints.jmx.exposure.exclude=
 
 
 
+https://segmentfault.com/a/1190000015309478?utm_source=tag-newest
 
 
 
@@ -106,27 +223,29 @@ management.endpoints.jmx.exposure.exclude=
 
 
 
-## autoconfigure包
-
-首先打开`spring-boot-actuator-autoconfigure`包，查看它的`spring.factories`，可以看到配置了许多配置类，都是其`org.springframework.boot.actuate.autoconfigure`路径下的文件
-
-按照分类，定义了各种XXXEndpointAutoConfiguration，比如rabbitmq、cache、bean等。其中会根据某些类(依赖)是否存在来自动创建XXXEndpoint，这些类使用`@Endpoint或@EndpointWebExtension`注解类，`@ReadOperation`注解方法；另一种是创建XXXHealthIndicator，这些类继承了AbstractHealthIndicator抽象类，实现了doHealthCheck方法。暂时先不关注reactive
-
-与spring.factories同级下还有spring-autoconfigure-metadata.properties和spring-configuration-metadata.json，这2个只是格式不同，都是通过XXXProperties为部分XXXEndpointAutoConfiguration提供参数的
-
-除了这些以外，还有2个特殊的包，分别是endpoint、metrics
-
-其中endpoint下主要有3部分组成：  
-1、判断是否启用Endpoint：OnEnabledEndpointCondition#getMatchOutcome  
-2、JMX导出：创建bean(JmxEndpointDiscoverer、JmxEndpointExporter、ExposeExcludePropertyEndpointFilter)  
-3、WEB导出：按依赖分别创建Jersey、Reactive、Spring MVC3种定义的XXXEndpointHandlerMapping。对SERVLET类型的ServletEndpointManagementContextConfiguration创建ServletEndpointRegistrar；对WEB项目的WebEndpointAutoConfiguration创建WebEndpointDiscoverer、ControllerEndpointDiscoverer、PathMappedEndpoints和ExposeExcludePropertyEndpointFilter
-
-再看metrics，主要是做绑定数据到MeterRegistry
-
-// 待
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 接收输入
+端点上的操作通过它们的参数接收输入，当通过web公开时，这些参数的值取自URL的查询参数和JSON请求体，当通过JMX公开时，参数被映射到MBean操作的参数，默认情况下需要参数，可以使用@org.springframework.lang.Nullable对它们进行注解，从而使它们成为可选的
+
+### 输入类型转换
+如果需要，传递给端点操作方法的参数将自动转换为所需的类型，在调用操作方法之前，使用ApplicationConversionService实例将通过JMX或HTTP请求接收的输入转换为所需的类型
 
 
 # 源码解析
