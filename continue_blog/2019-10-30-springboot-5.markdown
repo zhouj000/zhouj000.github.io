@@ -88,16 +88,19 @@ management.endpoints.web.path-mapping.health=healthcheck
 // <name>端点缓存的生存时间设置为10秒
 management.endpoint.<name>.cache.time-to-live=10s
 
-// JMX配置
-management.endpoints.jmx.exposure.include=
-management.endpoints.jmx.exposure.exclude=
-
 // CORS跨源资源共享设置，指定授权的跨域请求
 management.endpoints.web.cors.allowed-origins=http://example.com
 management.endpoints.web.cors.allowed-methods=GET,POST
 // 使用不同的HTTP端口来公开端点
 management.server.port=8081
 management.server.XXX
+
+
+//激活所有的JMX方式请求
+management.endpoints.jmx.exposure.include=*
+#management.endpoints.jmx.exposure.exclude=
+// 不暴露JMX端点
+#endpoints.jmx.enabled=false
 ```
 这样启动后就会看到`Exposing 12 endpoint(s) beneath base path '/monitor'`
 
@@ -294,7 +297,7 @@ management.health.status.http-mapping.FATAL=503
 
 ## 例子
 
-实现HealthIndicator接口
+直接实现HealthIndicator接口
 ```
 @Component("my_health_indicator")
 public class MyHealthIndicator implements HealthIndicator {
@@ -307,24 +310,7 @@ public class MyHealthIndicator implements HealthIndicator {
 ```
 可以通过`http://127.0.0.1:8080/actuator/health`或直接`http://127.0.0.1:8080/actuator/health/my_health_indicator`查看
 
-
-
-
-
-
-
-
-
-
-# 源码解析
-
-## HealthIndicator
-
-SpringBoot通过HealthIndicatorAutoConfiguration提供了一些常见服务的监控检查支持，比如：DataSourceHealthIndicator、RedisHealthIndicator、SolrHealthIndicator等
-![]()
-除了SpringBoot提供的检查，还可以通过提供HealthIndicator的实现，注册到IOC容器，让SpringBoot自动发现并使用它们
-
-通常我们不直接实现HealthIndicator接口，而是继承AbstractHealthIndicator，然后只需要实现doHealthCheck方法就可以了。例如我们实现一个dubbo服务是否健康启用的检查，利用dubbo提供的EchoService直接检查dubbo的健康状态，如果没有异常就可以认为服务是健康状态的
+另一种方式就是继承AbstractHealthIndicator抽象类，这是通常的做法，只需要实现doHealthCheck方法，比如我们实现一个通用的dubbo依赖的健康检查，利用EchoService判断
 ```java
 public class DubboHealthIndicator extends AbstractHealthIndicator {
 
@@ -344,66 +330,73 @@ public class DubboHealthIndicator extends AbstractHealthIndicator {
 }
 ```
 实现了HealthIndicator后，就需要注册在IOC中了，我们可以为所有dubbo服务的ReferenceBean都注册了，这样就不必为每个服务单独注册了，还可以做成starter自动配置(写入META-INF/spring.factories)，这样就自动对当前应用引用的所有dubbo服务进行健康检查了
-```
+```java
 @Configuration
 @ConditionalOnClass(name = { "com.alibaba.dubbo.rpc.Exporter" })
 public class DubboHealthIndicatorConfiguration {
 
     @Autowired
-    HealthAggregator healthAggregator;
+    StatusAggregator healthAggregator;
 
     @Autowired(required = false)
     Map<String, ReferenceBean> references;
 
     @Bean
-    public HealthIndicator dubboHealthIndicator() {
+    public CompositeHealthContributor dubboHealthIndicator() {
         Map<String, HealthIndicator> indicators = new HashMap<>();
         for (String key : references.keySet()) {
             final ReferenceBean bean = references.get(key);
             indicators.put(key.startsWith("&") ? key.replaceFirst("&", "")
                     : key, new DubboHealthIndicator(bean));
         }
-        return new CompositeHealthIndicator(healthAggregator, indicators);
+        return CompositeHealthContributor.fromMap(indicators);
     }
+
 }
 ```
-其中对于references，Spring框架支持依赖注入Key的类型为String的Map，遇到这种类型的Map声明，Spring将扫描容器中所有类型为T(这里为ReferenceBean)的bean，然后以该bean的name作为Map的Key，以bean实例作为对应的Value，从而构建一个Map并注入到依赖处
+其中对于references，Spring框架支持**依赖注入Key的类型为String的Map**，遇到这种类型的Map声明，Spring将扫描容器中所有类型为T(这里为ReferenceBean)的bean，然后以该bean的name作为Map的Key，以bean实例作为对应的Value，从而构建一个Map并注入到依赖处
+
+我们也可以自定义一个端点
+```java
+@Component
+@Endpoint(id = "hello")
+public class MyEndpoint {
+
+    @ReadOperation
+    public String hello(@Selector String name) {
+        return "hello " + name;
+    }
+
+}
+```
+这样我们可以直接通过`http://127.0.0.1:8080/actuator/hello/{name}`来访问这个端点
 
 
+
+
+
+https://www.iteye.com/blog/shift-alt-ctrl-2404036
+
+
+# 源码解析
+
+## HealthIndicator
+
+SpringBoot通过HealthIndicatorAutoConfiguration提供了一些常见服务的监控检查支持，比如：DataSourceHealthIndicator、RedisHealthIndicator、SolrHealthIndicator等
+![]()
+除了SpringBoot提供的检查，还可以通过提供HealthIndicator的实现，注册到IOC容器，让SpringBoot自动发现并使用它们
 
 ## endpoints
 
 虽然我们定义了HealthIndicator，但它只是在应用内部，需要将它暴露出去访问才能实现出它的功效，这就需要将endpoints暴露给外部监控者，SpringBoot会议JmxEndpointExporter将所有Endpoint实例以JMX MBean的形式暴露，默认情况下这些Endpoint对应的JMX MBean会放在`org.springframework.boot`命名空间下面，不过可以通过`endpoints.jmx.domain`配置项进行更改，比如 `endpoints.jmx.domain=com.test.management`
 
-自定义一个Endpoint，然后将这个Endpoint注册到IOC容器内就可以扩展actuator的功能了
-```
-@Endpoint(id = "hello")
-public class HelloEndpoint {
-
-    public HelloEndpoint() {
-    }
-
-    @ReadOperation
-    public String hello() {
-        return "hello world";
-    }
-}
-
-
-@Bean
-public HelloEndpoint helloEndpoint(){
-	return new HelloEndpoint();
-}
-```
-这样就可以访问`http://127.0.0.1:8080/actuator/hello`获取这个Endpoint的监控输出结果了
 
 JMX和HTTP是endpoints对外开放访问最常用的方式，鉴于Java的序列化漏洞以及JMX的远程访问防火墙问题，因此建议用HTTP并配合安全防护将SpringBoot应用的endpoints开放给外部监控者使用
 
 
+MBean的名称通常是从端点的id生成的。 例如，health端点暴露为 org.springframework.boot/Endpoint/healthEndpoint。
 
-https://segmentfault.com/a/1190000015309478?utm_source=tag-newest
-https://blog.csdn.net/Message_lx/article/details/89524795
-
+如果应用程序包含多个Spring ApplicationContext，可能会发现名称发生冲突。 要解决此问题，可以将endpoints.jmx.unique-names属性设置为true，以便MBean名称始终是唯一的
 
 
 
