@@ -95,6 +95,9 @@ management.endpoints.jmx.exposure.exclude=
 // CORS跨源资源共享设置，指定授权的跨域请求
 management.endpoints.web.cors.allowed-origins=http://example.com
 management.endpoints.web.cors.allowed-methods=GET,POST
+// 使用不同的HTTP端口来公开端点
+management.server.port=8081
+management.server.XXX
 ```
 这样启动后就会看到`Exposing 12 endpoint(s) beneath base path '/monitor'`
 
@@ -291,9 +294,18 @@ management.health.status.http-mapping.FATAL=503
 
 ## 例子
 
+实现HealthIndicator接口
+```
+@Component("my_health_indicator")
+public class MyHealthIndicator implements HealthIndicator {
 
-
-
+    @Override
+    public Health health() {
+        return Health.up().withDetail("code", "0000").withDetail("msg","SUCCESS").up().build();
+    }
+}
+```
+可以通过`http://127.0.0.1:8080/actuator/health`或直接`http://127.0.0.1:8080/actuator/health/my_health_indicator`查看
 
 
 
