@@ -392,17 +392,25 @@ spring.jmx.enabled=true
 
 
 
+WebEndpointAutoConfiguration创建
+WebEndpointDiscoverer    PathMappedEndpoints    	
+
+
+WebMvcEndpointManagementContextConfiguration创建
+WebMvcEndpointHandlerMapping 
+
+AbstractWebMvcEndpointHandlerMapping#initHandlerMethods    《- afterPropertiesSet
 
 DispatcherServlet#doDispatch -> AbstractHandlerMethodAdapter#handle ->
 handleInternal -> RequestMappingHandlerAdapter#invokeHandlerMethod ->
-ServletInvocableHandlerMethod#invokeAndHandle ->
+ServletInvocableHandlerMethod#invokeAndHandle //->
 InvocableHandlerMethod#invokeForRequest -> #doInvoke ->
 AbstractWebMvcEndpointHandlerMapping.OperationHandler#handle ->
 AbstractWebMvcEndpointHandlerMapping.ServletWebOperationAdapter#handle ->
 AbstractDiscoveredOperation#invoke -> EnvironmentEndpoint#environment
 
 
-
+https://blog.csdn.net/songzehao/article/details/84979847
 
 # 源码解析
 
