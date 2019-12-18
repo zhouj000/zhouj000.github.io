@@ -371,11 +371,37 @@ public class MyEndpoint {
 ```
 这样我们可以直接通过`http://127.0.0.1:8080/actuator/hello/{name}`来访问这个端点
 
+在尝试JMX访问的时候遇到一个坑，因为我用的Spring Boot 2.2.2版本，在jconsole中并没有找到endpoint，在JmxEndpointDiscoverer中debug也没有进来，然后看到JmxEndpointAutoConfiguration上的注解ConditionalOnProperty发现原来需要打开JMX，默认是false的
+```
+spring.jmx.enabled=true
+```
+然后在jconsole中就能看到endpoint节点，并能查看端点信息和操作了
+![jmx](jmx.png)
+在此之外，配上jolokia，完全兼容并支撑JMX组件，它可以当做JMX-HTTP的桥梁可以让我们通过HTTP访问JMX
+```
+<dependency>
+	<groupId>org.jolokia</groupId>
+	<artifactId>jolokia-core</artifactId>
+	<version>1.6.2</version>
+</dependency>
+```
+于是就能通过`http://127.0.0.1:8080/actuator/jolokia/read/org.springframework.boot:name=Hello,type=Endpoint`访问了，也可以通过·http://127.0.0.1:8080/actuator/jolokia/list·查看列表
 
 
 
 
-https://www.iteye.com/blog/shift-alt-ctrl-2404036
+
+
+
+DispatcherServlet#doDispatch -> AbstractHandlerMethodAdapter#handle ->
+handleInternal -> RequestMappingHandlerAdapter#invokeHandlerMethod ->
+ServletInvocableHandlerMethod#invokeAndHandle ->
+InvocableHandlerMethod#invokeForRequest -> #doInvoke ->
+AbstractWebMvcEndpointHandlerMapping.OperationHandler#handle ->
+AbstractWebMvcEndpointHandlerMapping.ServletWebOperationAdapter#handle ->
+AbstractDiscoveredOperation#invoke -> EnvironmentEndpoint#environment
+
+
 
 
 # 源码解析
