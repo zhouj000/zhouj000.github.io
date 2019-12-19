@@ -433,18 +433,6 @@ MBean的名称通常是从端点的id生成的。 例如，health端点暴露为
 如果应用程序包含多个Spring ApplicationContext，可能会发现名称发生冲突。 要解决此问题，可以将endpoints.jmx.unique-names属性设置为true，以便MBean名称始终是唯一的
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 ## HealthIndicatorAutoConfiguration
 
 创建
@@ -636,8 +624,6 @@ public static HealthIndicatorRegistry get(ApplicationContext applicationContext)
 ## AbstractHealthIndicator
 
 
-
-
 endpoints
 JmxEndpointExporter
 
@@ -655,7 +641,15 @@ MetricsAutoConfiguration
 
 
 
+# SOFABoot
 
+SOFABoot在SpringBoot的Liveness检查能力的基础上，增加了Readiness检查能力
+
+
+
+Kubelet使用liveness probe（存活探针）来确定何时重启容器。例如，当应用程序处于运行状态但无法做进一步操作，liveness探针将捕获到deadlock，重启处于该状态下的容器，使应用程序在存在bug的情况下依然能够继续运行下去（谁的程序还没几个bug呢）。
+
+Kubelet使用readiness probe（就绪探针）来确定容器是否已经就绪可以接受流量。只有当Pod中的容器都处于就绪状态时kubelet才会认定该Pod处于就绪状态。该信号的作用是控制哪些Pod应该作为service的后端。如果Pod处于非就绪状态，那么它们将会被从service的load balancer中移除
 
 
 
