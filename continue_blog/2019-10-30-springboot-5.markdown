@@ -94,7 +94,7 @@ management.endpoints.web.cors.allowed-origins=http://example.com
 management.endpoints.web.cors.allowed-methods=GET,POST
 // 使用不同的HTTP端口来公开端点
 management.server.port=8081
-management.server.XXX
+management.server.XXX=xxx
 
 
 //激活所有的JMX方式请求
