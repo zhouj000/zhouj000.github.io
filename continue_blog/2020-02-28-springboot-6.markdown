@@ -18,7 +18,20 @@ tags:
 
 
 
-# 配置
+# Endpoint
+
+
+
+
+
+
+## 启动
+
+## 调用
+
+## HealthIndicator
+
+## m
 
 
 
@@ -30,7 +43,15 @@ tags:
 
 
 
-## Endpoint
+
+
+
+
+
+
+
+
+
 
 现在仔细看下autoconfigure第二部分-endpoint
 
