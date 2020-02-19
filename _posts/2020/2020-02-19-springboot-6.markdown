@@ -25,7 +25,7 @@ tags:
 
 首先看META-INF/spring.factories配置中的**WebEndpointAutoConfiguration**。排除创建EndpointFilter，先看**PathMapper**，实际创建的是MappingWebEndpointPathMapper，这个bean里存放的是配置中的endpoint路径映射，一般不配置就是空map，如果有配置路径比如`management.endpoints.web.path-mapping.health=healthcheck`那么里面会存放`health -> healthcheck`，当创建Endpoint时会从这里取得rootPath作为访问路径
 
-#### EndpointDiscoverer
+### EndpointDiscoverer
 
 而在创建**PathMappedEndpoints**时，会查找所有EndpointsSupplier的实现类
 ![pathmappededs](/img/in-post/2020/02/pathmappededs.png)  
@@ -73,7 +73,7 @@ private Collection<E> discoverEndpoints() {
 而**WebEndpointDiscoverer、ControllerEndpointDiscoverer**此时是第一次调用，因此会通过这个方法去创建EndpointExtension
 ![endpoints](/img/in-post/2020/02/endpoints.png)
 
-#### EndpointHandlerMapping
+### EndpointHandlerMapping
 
 那么知道PathMapper和各个Endpoint怎么创建后，就需要将他们联系在一起并注册，好让我们能在需要调用时通过地址找到他们。首先看下**WebMvcEndpointHandlerMapping**：
 ```java
@@ -215,7 +215,7 @@ public void register(T mapping, Object handler, Method method) {
 }
 ```
 
-#### EndpointRegistrar
+### EndpointRegistrar
 
 接下来看下**ServletEndpointRegistrar**，它是在ServletEndpointManagementContextConfiguration中被创建的：
 ```java
@@ -246,7 +246,7 @@ private void register(ServletContext servletContext, ExposableServletEndpoint en
 }
 ```
 
-#### EndpointExporter
+### EndpointExporter
 
 最后看**JmxEndpointExporter**，其在JmxEndpointAutoConfiguration中被创建:
 ```java
@@ -287,7 +287,7 @@ private ObjectName register(ExposableJmxEndpoint endpoint) {
 
 从上面的创建可以看出，主要就是使用SpringMVC的**HandlerMapping形式**调用和使用JMX的**MBeanServer**来管理和查询，那么分别用2个具体的例子来看一下这两种方式
 
-#### Endpoint
+### URL
 
 以上篇中创建的HelloEndpoint为例，通过`http://127.0.0.1:8080/actuator/hello/zz`访问endpoint，显然是SpringMVC方式，我们来回顾下流程：
 1. 通过**HttpServlet**的`service()`方法进入`doGet方法()`
@@ -304,6 +304,7 @@ return this.getBridgedMethod().invoke(this.getBean(), args);
 那么只要分析Method是哪个？参数getBean是什么？就可以了：
 + Method是**AbstractWebMvcEndpointHandlerMapping$OperationHandler#handle()**方法
 + getBean即创建ServletInvocableHandlerMethod的中bean参数，即入参handlerMethod.bean，为**AbstractWebMvcEndpointHandlerMapping$OperationHandler**
+
 ```java
 @ResponseBody
 Object handle(HttpServletRequest request, @RequestBody(required = false) Map<String, String> body) {
@@ -356,7 +357,7 @@ protected HandlerMethod getHandlerInternal(HttpServletRequest request) throws Ex
 ![getMatch](/img/in-post/2020/02/getMatch.png)
 这里`this.mappingRegistry.getMappings().get(mapping).getClass()`找到的就是**AbstractWebMvcEndpointHandlerMapping$WebMvcEndpointHandlerMethod**，也就是就是前面说的注册register方法里放到mappingLookup的HandlerMethod，即`HandlerMethod handlerMethod = createHandlerMethod(handler, method);`，其中handler就是**AbstractWebMvcEndpointHandlerMapping$OperationHandler**，这样我们通过上面的步骤一步步将注册到映射的操作进行调用，得到返回结果
 
-#### JMX与HealthEndpoint
+### JMX与HealthEndpoint
 
 前面在讲JmxEndpointExporter时，创建了**EndpointMBean**，其中构造方法会从endpoint中获取**JmxOperation**放到map中
 
@@ -517,7 +518,7 @@ HealthStatusHttpMapper healthStatusHttpMapper(HealthIndicatorProperties healthIn
 }
 ```
 
-#### metrics
+### MetricsEndpoint
 
 在**MetricsAutoConfiguration**中创建了**MeterRegistryPostProcessor**：
 ```
