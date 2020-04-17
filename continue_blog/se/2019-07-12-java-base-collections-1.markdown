@@ -109,22 +109,47 @@ public E remove(int index) {
 
 ## Set
 
-Set是类似于List，又相较有点特殊的集合。
+Set是类似于List，又相较有点特殊的集合，它里面存放的值是不重复的、且无序(按照哈希值来存的所以取数据也是按照哈希值获取)
+
+| List          | null值 | 稳定性(order) | 有序性(sort) | 线程安全(safe) |
+| :------------ | :----: | :-----------: | :----------: | :------------: |
+| HashSet       |  yes   |      no       |       no     |       no       |
+| LinkedHashSet |  yes   |     yes       |       no     |       no       |
+| TreeSet       |   no   |      no       |      yes     |       no       |
+
+HashSet内部维护了一个HashMap，将值传入其key，以传入值的hash值来保证唯一性。因此传入HashSet的对象需要实现hashcode和equals方法。putVal方法会使用对象的hashCode来判断对象加入的位置，即如果对象的hashCode值是不同的，那么就可以认为对象是不可能相等的。如果对象的hashCode相等，那么还会继续使用equals进行比较，如果为false那么依然认为新加入的对象没有重复，将以链状方式进行保存，否则即认为元素相同无法插入
+```java
+public boolean add(E e) {
+	// HashMap# return putVal(hash(key), key, value, false, true);
+	return map.put(e, PRESENT)==null;
+}
+```
+
+LinkedHashSet继承自HashSet，不同点在于其创建调用父类HashSet的特殊构造方法创建LinkedHashMap作为存储介质，因此它是稳定的，元素顺序是可以保证的，其他与HashSet一致。插入、删除操作相较HashSet会略慢，因为要维护链表，但相对有了链表的存在，遍历速度会更快
+
+TreeSet其内部存储介质为NavigableMap，构造方法中创建TreeMap(继承自NavigableMap)，是红黑树结构，每一个元素都是树中的一个节点，插入的元素都会进行排序，这保证了元素是有序的。它是SortedSet，其元素必须实现Comparable或继承Comparator，也具备了元素搜索功能。TreeSet判断元素重复并不是通过hashCode和equals，而是通过compare的结果来判断的。TreeSet支持两种排序方式：自然排序、定制排序。由于TreeSet需要额外的红黑树算法来维护集合元素的次序，因此性能不如HashSet
+```java
+public boolean add(E e) {
+	// TreeMap#put
+	return m.put(e, PRESENT)==null;
+}
+```
+![treeset](treeset.png)
+
+以上Set都是线程不安全的，通常可以通过Collections工具类的synchronizedSet、synchronizedSortedSet、synchronizedNavigableSet方法来包装Set集合
+
+> 由于Set是基于Map来实现的，因此详细在Map中讨论
+
+
+# Map
 
 
 
-hashset
-LinkedHashSet
-treeset
-
-
-
-
-
-
-
-
-
+| List          | null值 | 稳定性(order) | 有序性(sort) | 线程安全(safe) |
+| :------------ | :----: | :-----------: | :----------: | :------------: |
+| HashMap       |  yes   |      no       |       no     |       no       |
+| Hashtable 	|  yes   |     yes       |       no     |       no       |
+| TreeMap       |   no   |      no       |      yes     |       no       |
 
 
 
@@ -137,7 +162,9 @@ treeset
 ## Queue
 
 
-# Map
+
+
+
 
 
 
