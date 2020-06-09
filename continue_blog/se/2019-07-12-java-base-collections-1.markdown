@@ -109,7 +109,7 @@ public E remove(int index) {
 
 ## Set
 
-Set是类似于List，又相较有点特殊的集合，它里面存放的值是不重复的、且无序(按照哈希值来存的所以取数据也是按照哈希值获取)
+Set是类似于List，又相较有点特殊的集合，里面存放的值是不重复的、大部分是无序的(按照哈希值来存的所以取数据也是按照哈希值获取)
 
 | List          | null值 | 稳定性(order) | 有序性(sort) | 线程安全(safe) |
 | :------------ | :----: | :-----------: | :----------: | :------------: |
@@ -143,18 +143,29 @@ public boolean add(E e) {
 
 # Map
 
-
+Map里存放key与value的映射信息，元素是成对存在的，就像一个字典一样，通过目录key查询内容value。它体现了一组关系或分组
 
 | List          | null值 | 稳定性(order) | 有序性(sort) | 线程安全(safe) |
 | :------------ | :----: | :-----------: | :----------: | :------------: |
-| HashMap       |  yes   |      no       |       no     |       no       |
-| Hashtable 	|  yes   |     yes       |       no     |       no       |
-| TreeMap       |   no   |      no       |      yes     |       no       |
+| HashMap       |  all   |      no       |   no(hash)   |       no       |
+| LinkedHashMap |  all   |     yes       |       no     |       no       |
+| Hashtable 	|  none  |      no       |   no(hash)   |      yes       |
+| TreeMap       |  key   |      no       |      yes     |       no       |
 
+HashMap内部存储的是Node对象，存储结构是数组，由key的hash值决定存储的槽位，同槽位value按照链或树存储
 
+```java
+static class Node<K,V> implements Map.Entry<K,V> {
+	final int hash;
+	final K key;
+	V value;
+	Node<K,V> next;
+}
+```
+扩容：resize()
 
-
-
+get  put
+遍历
 
 
 
