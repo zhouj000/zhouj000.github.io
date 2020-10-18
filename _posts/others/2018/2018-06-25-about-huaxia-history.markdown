@@ -11,6 +11,9 @@ tags:
 
 <font id="last-updated">最后更新于：2018-10-24</font>
 
+**图片来源(侵删)：**[【史图馆】中国历代疆域变化 第十二版](https://www.bilibili.com/video/av19663012?from=search&seid=380421992424012998)  
+
+
 [中华历史(一) 上古夏商周-笔记](https://zhouj000.github.io/2018/06/25/about-huaxia-history/)  
 [中华历史(二) 秦汉三国-笔记](https://zhouj000.github.io/2018/10/27/about-huaxia-history2/)  
 
