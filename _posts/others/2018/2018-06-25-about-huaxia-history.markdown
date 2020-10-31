@@ -25,10 +25,10 @@ tags:
 # 新石器时代
 > 约公元前1万年
 
-![ys1](/img/in-post/2020/10/001仰韶文化-新时期时代晚期1-min.jpg)  
-![ys2](/img/in-post/2020/10/001仰韶文化-新时期时代晚期2-min.jpg)  
-![ys3](/img/in-post/2020/10/001仰韶文化-新时期时代晚期3-min.jpg)  
-![ys4](/img/in-post/2020/10/001仰韶文化-新时期时代晚期4-min.jpg)
+![ys1](/img/in-post/2020/10/001ysfw-wq1-min.jpg)  
+![ys2](/img/in-post/2020/10/001ysfw-wq2-min.jpg)  
+![ys3](/img/in-post/2020/10/001ysfw-wq3-min.jpg)  
+![ys4](/img/in-post/2020/10/001ysfw-wq4-min.jpg)
 
 
 # 三皇五帝
@@ -75,10 +75,10 @@ tags:
 # 夏朝
 > 约公元前2070 ~ 公元前1600年
 
-![xc1](/img/in-post/2020/10/002-夏朝1-min.jpg)  
-![xc2](/img/in-post/2020/10/002-夏朝2-min.jpg)  
-![xc3](/img/in-post/2020/10/002-夏朝3-min.jpg)  
-![xc4](/img/in-post/2020/10/002-夏朝4-min.jpg)
+![xc1](/img/in-post/2020/10/002-xc1-min.jpg)  
+![xc2](/img/in-post/2020/10/002-xc2-min.jpg)  
+![xc3](/img/in-post/2020/10/002-xc3-min.jpg)  
+![xc4](/img/in-post/2020/10/002-xc4-min.jpg)
 
 
 **大禹**: 鲧是大禹的父亲，大禹治水，讨伐三苗，也更倾向于禹逼舜政变成功，登帝后将十二州整合为九州，约定让位给伯益  
@@ -100,13 +100,13 @@ tags:
 # 商朝
 > 公元前1675年 ~ 公元前1029年
 
-![sc1](/img/in-post/2020/10/003-商朝1-min.jpg)  
-![sc2](/img/in-post/2020/10/003-商朝2-min.jpg)  
-![sc3](/img/in-post/2020/10/003-商朝3-min.jpg)  
-![sc4](/img/in-post/2020/10/003-商朝4-min.jpg)  
-![sc5](/img/in-post/2020/10/003-商朝5-min.jpg)  
-![sc6](/img/in-post/2020/10/003-商朝6-min.jpg)  
-![sc7](/img/in-post/2020/10/003-商朝7-min.jpg)  
+![sc1](/img/in-post/2020/10/003-sc1-min.jpg)  
+![sc2](/img/in-post/2020/10/003-sc2-min.jpg)  
+![sc3](/img/in-post/2020/10/003-sc3-min.jpg)  
+![sc4](/img/in-post/2020/10/003-sc4-min.jpg)  
+![sc5](/img/in-post/2020/10/003-sc5-min.jpg)  
+![sc6](/img/in-post/2020/10/003-sc6-min.jpg)  
+![sc7](/img/in-post/2020/10/003-sc7-min.jpg)  
 
 汤武革命：商汤击败夏桀，改朝换代，商以玄鸟为图腾。
 
@@ -131,11 +131,11 @@ tags:
 # 西周
 > 公元前1046年 ~ 公元前771年
 
-![zc1](/img/in-post/2020/10/004-周朝1-min.jpg)  
-![zc2](/img/in-post/2020/10/004-周朝2-min.jpg)  
-![zc3](/img/in-post/2020/10/004-周朝3-min.jpg)  
-![zc4](/img/in-post/2020/10/004-周朝4-min.jpg)  
-![zc5](/img/in-post/2020/10/004-周朝5-min.jpg)  
+![zc1](/img/in-post/2020/10/004-zc1-min.jpg)  
+![zc2](/img/in-post/2020/10/004-zc2-min.jpg)  
+![zc3](/img/in-post/2020/10/004-zc3-min.jpg)  
+![zc4](/img/in-post/2020/10/004-zc4-min.jpg)  
+![zc5](/img/in-post/2020/10/004-zc5-min.jpg)  
 
 
 **武王伐纣**：  武王的联军就在殷都的郊外牧野与纣王的军队摆开了决战之势。纣王也集合起了十几万人与武王相抗衡，可是，因为民心的归向，纣王的军队毫无战心，反而倒戈帮助武王。所以，没费太大的力气，武王就攻进了都城朝歌。纣王眼看大势已去，就登上花费巨资为自己建造的鹿台自焚身亡。殷商王朝也就这样灭在了纣王的手中
@@ -163,19 +163,19 @@ tags:
 ## 春秋
 > 公元前453年 ~ 公元前221年
 
-![cq1](/img/in-post/2020/10/005-春秋1-min.jpg)  
-![cq2](/img/in-post/2020/10/005-春秋2-min.jpg)  
-![cq3](/img/in-post/2020/10/005-春秋3-min.jpg)  
-![cq4](/img/in-post/2020/10/005-春秋4-min.jpg)  
-![cq5](/img/in-post/2020/10/005-春秋5-min.jpg)  
-![cq6](/img/in-post/2020/10/005-春秋6-min.jpg)  
-![cq7](/img/in-post/2020/10/005-春秋7-min.jpg)  
-![cq8](/img/in-post/2020/10/005-春秋8-min.jpg)  
-![cq9](/img/in-post/2020/10/005-春秋9-min.jpg)  
-![cq10](/img/in-post/2020/10/005-春秋10-min.jpg)  
-![cq11](/img/in-post/2020/10/005-春秋11-min.jpg)  
-![cq12](/img/in-post/2020/10/005-春秋12-min.jpg)  
-![cq13](/img/in-post/2020/10/005-春秋13-min.jpg)  
+![cq1](/img/in-post/2020/10/005-cq1-min.jpg)  
+![cq2](/img/in-post/2020/10/005-cq2-min.jpg)  
+![cq3](/img/in-post/2020/10/005-cq3-min.jpg)  
+![cq4](/img/in-post/2020/10/005-cq4-min.jpg)  
+![cq5](/img/in-post/2020/10/005-cq5-min.jpg)  
+![cq6](/img/in-post/2020/10/005-cq6-min.jpg)  
+![cq7](/img/in-post/2020/10/005-cq7-min.jpg)  
+![cq8](/img/in-post/2020/10/005-cq8-min.jpg)  
+![cq9](/img/in-post/2020/10/005-cq9-min.jpg)  
+![cq10](/img/in-post/2020/10/005-cq10-min.jpg)  
+![cq11](/img/in-post/2020/10/005-cq11-min.jpg)  
+![cq12](/img/in-post/2020/10/005-cq12-min.jpg)  
+![cq13](/img/in-post/2020/10/005-cq13-min.jpg)  
 
 
 春秋时期开始于公元前770年（周平王元年）周平王东迁东周开始的一年，止于公元前476年（周敬王四十四年），战国前夕，总共295年。一说止于公元前453年，韩赵魏灭智氏。又一说止于公元前403年，三家分晋。
@@ -231,33 +231,33 @@ tags:
 ## 战国(前453~前221年)
 > 公元前453年 ~ 公元前221年
 
-![zg1](/img/in-post/2020/10/006-战国1-min.jpg)  
-![zg2](/img/in-post/2020/10/006-战国2-min.jpg)  
-![zg3](/img/in-post/2020/10/006-战国3-min.jpg)  
-![zg4](/img/in-post/2020/10/006-战国4-min.jpg)  
-![zg5](/img/in-post/2020/10/006-战国5-min.jpg)  
-![zg6](/img/in-post/2020/10/006-战国6-min.jpg)  
-![zg7](/img/in-post/2020/10/006-战国7-min.jpg)  
-![zg8](/img/in-post/2020/10/006-战国8-min.jpg)  
-![zg9](/img/in-post/2020/10/006-战国9-min.jpg)  
-![zg10](/img/in-post/2020/10/006-战国10-min.jpg)  
-![zg11](/img/in-post/2020/10/006-战国11-min.jpg)  
-![zg12](/img/in-post/2020/10/006-战国12-min.jpg)  
-![zg13](/img/in-post/2020/10/006-战国13-min.jpg)  
-![zg14](/img/in-post/2020/10/006-战国14-min.jpg)  
-![zg15](/img/in-post/2020/10/006-战国15-min.jpg)  
-![zg16](/img/in-post/2020/10/006-战国16-min.jpg)  
-![zg17](/img/in-post/2020/10/006-战国17-min.jpg)  
-![zg18](/img/in-post/2020/10/006-战国18-min.jpg)  
-![zg19](/img/in-post/2020/10/006-战国19-min.jpg)  
-![zg20](/img/in-post/2020/10/006-战国20-min.jpg)  
-![zg21](/img/in-post/2020/10/006-战国21-min.jpg)  
-![zg22](/img/in-post/2020/10/006-战国22-min.jpg)  
-![zg23](/img/in-post/2020/10/006-战国23-min.jpg)  
-![zg24](/img/in-post/2020/10/006-战国24-min.jpg)  
-![zg25](/img/in-post/2020/10/006-战国25-min.jpg)  
-![zg26](/img/in-post/2020/10/006-战国26-min.jpg)  
-![zg27](/img/in-post/2020/10/006-战国27-min.jpg)  
+![zg1](/img/in-post/2020/10/006-zg1-min.jpg)  
+![zg2](/img/in-post/2020/10/006-zg2-min.jpg)  
+![zg3](/img/in-post/2020/10/006-zg3-min.jpg)  
+![zg4](/img/in-post/2020/10/006-zg4-min.jpg)  
+![zg5](/img/in-post/2020/10/006-zg5-min.jpg)  
+![zg6](/img/in-post/2020/10/006-zg6-min.jpg)  
+![zg7](/img/in-post/2020/10/006-zg7-min.jpg)  
+![zg8](/img/in-post/2020/10/006-zg8-min.jpg)  
+![zg9](/img/in-post/2020/10/006-zg9-min.jpg)  
+![zg10](/img/in-post/2020/10/006-zg10-min.jpg)  
+![zg11](/img/in-post/2020/10/006-zg11-min.jpg)  
+![zg12](/img/in-post/2020/10/006-zg12-min.jpg)  
+![zg13](/img/in-post/2020/10/006-zg13-min.jpg)  
+![zg14](/img/in-post/2020/10/006-zg14-min.jpg)  
+![zg15](/img/in-post/2020/10/006-zg15-min.jpg)  
+![zg16](/img/in-post/2020/10/006-zg16-min.jpg)  
+![zg17](/img/in-post/2020/10/006-zg17-min.jpg)  
+![zg18](/img/in-post/2020/10/006-zg18-min.jpg)  
+![zg19](/img/in-post/2020/10/006-zg19-min.jpg)  
+![zg20](/img/in-post/2020/10/006-zg20-min.jpg)  
+![zg21](/img/in-post/2020/10/006-zg21-min.jpg)  
+![zg22](/img/in-post/2020/10/006-zg22-min.jpg)  
+![zg23](/img/in-post/2020/10/006-zg23-min.jpg)  
+![zg24](/img/in-post/2020/10/006-zg24-min.jpg)  
+![zg25](/img/in-post/2020/10/006-zg25-min.jpg)  
+![zg26](/img/in-post/2020/10/006-zg26-min.jpg)  
+![zg27](/img/in-post/2020/10/006-zg27-min.jpg)  
 
 
 #### 历史事件
