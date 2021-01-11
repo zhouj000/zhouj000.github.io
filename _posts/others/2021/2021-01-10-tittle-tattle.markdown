@@ -7,6 +7,7 @@ header-img: "img/in-post/2021/post-bg-2021-headbg.jpg"
 catalog: true
 tags:
     - 杂谈
+    - 人文
 --- 
 
 
