@@ -6,7 +6,7 @@ author:     "ZhouJ000"
 header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
 catalog: true
 tags:
-    - svn
+    - 命令
 --- 
 
 [about git](https://zhouj000.github.io/2018/06/30/about-git/)  

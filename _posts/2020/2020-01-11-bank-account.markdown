@@ -6,7 +6,7 @@ author:     "ZhouJ000"
 header-img: "img/in-post/2020/post-bg-2020-headbg.jpg"
 catalog: true
 tags:
-    - 银行技术架构
+    - 支付架构
 --- 
 
 [银行技术架构(一) 支付清算体系](https://zhouj000.github.io/2020/01/05/pay-audit/)   

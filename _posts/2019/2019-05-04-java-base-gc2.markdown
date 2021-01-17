@@ -6,8 +6,7 @@ author:     "ZhouJ000"
 header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
 catalog: true
 tags:
-    - java
-    - gc
+    - jvm
 --- 
 
 [Java基础: GC(一) 介绍](https://zhouj000.github.io/2019/04/23/java-base-gc1/)  
