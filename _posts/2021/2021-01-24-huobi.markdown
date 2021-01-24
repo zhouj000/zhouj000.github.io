@@ -12,6 +12,7 @@ tags:
 [银行技术架构(一) 支付清算体系](https://zhouj000.github.io/2020/01/05/pay-audit/)   
 [银行技术架构(二) 业务模式与银行账户](https://zhouj000.github.io/2020/01/11/bank-account/)   
 [银行技术架构(三) 货币](https://zhouj000.github.io/2021/01/24/huobi/)   
+[支付系统(一) 架构样例](https://zhouj000.github.io/2021/01/25/pay-system1/)   
 
 
 
