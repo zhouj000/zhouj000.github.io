@@ -96,6 +96,11 @@ tags:
 ![pay16](/img/in-post/2021/01/pay16.png)
 
 
+## 充值
+
+![chongzhi](/img/in-post/2021/01/chongzhi.jpg)
+
+
 ## 对账
 
 ![pay17](/img/in-post/2021/01/pay17.png)
@@ -120,3 +125,5 @@ tags:
 
 
 
+参考：  
+[支付系统设计](http://doc.cocolian.cn/essay/)  
