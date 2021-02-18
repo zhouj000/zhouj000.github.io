@@ -32,7 +32,7 @@ Vector和ArrayList一样，都是通过**数组**实现的，但是Vector是**�
 
 ### 扩容
 
-\ArrayList扩容:
+ArrayList扩容:
 ```java
 // add时候传入最小扩容长度为size + 1，空列表时为10
 private void ensureExplicitCapacity(int minCapacity) {
@@ -90,10 +90,10 @@ ArrayList删除：
 ```java
 public E remove(int index) {
 	rangeCheck(index);
-
+	
+	// transient 修改版本号
 	modCount++;
 	E oldValue = elementData(index);
-	// 删除位后一位
 	int numMoved = size - index - 1;
 	if (numMoved > 0)
 		// 拷贝后面的到前面
@@ -105,6 +105,8 @@ public E remove(int index) {
 	return oldValue;
 }
 ```
+
+
 
 
 ## Set
@@ -122,6 +124,10 @@ HashSet内部维护了一个HashMap，将值传入其key，以传入值的hash�
 public boolean add(E e) {
 	// HashMap# return putVal(hash(key), key, value, false, true);
 	return map.put(e, PRESENT)==null;
+}
+
+public V put(K key, V value) {
+	return putVal(hash(key), key, value, false, true);
 }
 ```
 
@@ -141,19 +147,18 @@ public boolean add(E e) {
 > 由于Set是基于Map来实现的，因此详细在Map中讨论
 
 
-# Map
+## Map
 
 Map里存放key与value的映射信息，元素是成对存在的，就像一个字典一样，通过目录key查询内容value。它体现了一组关系或分组
 
-| List          | null值 | 稳定性(order) | 有序性(sort) | 线程安全(safe) |
-| :------------ | :----: | :-----------: | :----------: | :------------: |
-| HashMap       |  all   |      no       |   no(hash)   |       no       |
-| LinkedHashMap |  all   |     yes       |       no     |       no       |
-| Hashtable 	|  none  |      no       |   no(hash)   |      yes       |
-| TreeMap       |  key   |      no       |      yes     |       no       |
+| List          |   null值   | 稳定性(order) | 有序性(sort) | 线程安全(safe) |
+| :------------ | :--------: | :-----------: | :----------: | :------------: |
+| HashMap       |  All       |      no       |   no(hash)   |       no       |
+| LinkedHashMap |  All       |     yes       |       no     |       no       |
+| Hashtable 	|  None      |      no       |   no(hash)   |      yes       |
+| TreeMap       |  Key only  |      no       |      yes     |       no       |
 
 HashMap内部存储的是Node对象，存储结构是数组，由key的hash值决定存储的槽位，同槽位value按照链或树存储
-
 ```java
 static class Node<K,V> implements Map.Entry<K,V> {
 	final int hash;
@@ -161,11 +166,31 @@ static class Node<K,V> implements Map.Entry<K,V> {
 	V value;
 	Node<K,V> next;
 }
-```
-扩容：resize()
 
-get  put
-遍历
+transient Node<K,V>[] table;
+
+
+static final int hash(Object key) {
+	int h;
+	return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+}
+
+public V put(K key, V value) {
+	return putVal(hash(key), key, value, false, true);
+}
+```
+当元素容量大于threshold或第一次新增时，就会进行扩容resize方法，确认容量(范围内2倍增长)后创建新的Node数组，遍历老数组后放入新数组(重新hash)
+
+> h是hashcode，h >>> 16是用来取出h的高16（>>>是无符号右移） 
+> 由于和（length-1）运算，length 绝大多数情况小于2的16次方。所以始终是hashcode 的低16位（甚至更低）参与运算。要是高16位也参与运算，会让得到的下标更加散列  
+> 为了让高16也参与运算，h = key.hashCode()) 与 (h >>> 16) 进行异或运算  
+> 如果使用 & 和 | 运算都会使得结果偏向0或者1，并不是均匀的概念，所以用 ^ 进行计算
+
+java8还新增了compute、merge、forEach等方法，可以使用runnable对KV进行操作
+
+
+
+
 
 
 
@@ -174,7 +199,7 @@ get  put
 
 
 
-
+## Stack
 
 
 
