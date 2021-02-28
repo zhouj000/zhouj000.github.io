@@ -12,7 +12,7 @@ tags:
 [Java基础SE(二) 集合](https://zhouj000.github.io/2021/02/26/java-base-collections/)   
 
 
-# Collection
+# 集合
 
 ## List
 
@@ -25,10 +25,10 @@ List是Java中最常用的集合类(容器)，List本身是一个接口，其继
 | Vector     |  yes   |      yes      |      no      |      yes       |
 
 **ArrayList**底层是用**数组**实现的，可以认为ArrayList是一个可改变大小的数组。随着越来越多的元素被添加到ArrayList中，其规模是**动态增加**的。ArrayList还实现了RandomAccess接口，获得了快速随机访问存储元素的功能
-![arraylist](arraylist.png)
+![arraylist](/img/in-post/2021/02/arraylist.png)
 
 **LinkedList**底层是通过**双向链表**实现的。所以LinkedList和ArrayList之前的区别主要就是数组和链表的区别。数组中**查询和赋值**比较快，因为可以直接通过数组**下标**访问指定位置；链表中删除和增加比较快(数组的动态扩容会比较慢，然而随着JDK发展，已经差不多了)，因为可以直接通过修改链表的**指针(引用)**进行元素的增删。LinkedList还实现了**Queue(Deque)**接口，是一个双向队列，所以他还提供了offer()、peek()、poll()等方法
-![linkedlist](linkedlist.png)
+![linkedlist](/img/in-post/2021/02/linkedlist.png)
 
 **Vector**和ArrayList一样，都是通过**数组**实现的，但是Vector是**线程安全**的，其中的很多方法都通过同步(**synchronized**)处理来保证线程安全，因此相对而言性能会差一点。它们的扩容大小也不同，默认ArrayList是增长原来的50%，Vector则增长原来的100%
 
@@ -121,7 +121,7 @@ Set是类似于List，又相较有点特殊的集合，里面存放的值是不�
 | LinkedHashSet |  yes   |     yes       |       no     |       no       |
 | TreeSet       |   no   |      no       |      yes     |       no       |
 
-**HashSet**内部维护了一个HashMap，将值传入其key，以传入值的hash值来保证唯一性。因此传入HashSet的对象需要实现hashcode和equals方法。putVal方法会使用对象的hashCode来判断对象加入的位置，即如果对象的hashCode值是不同的，那么就可以认为对象是不可能相等的。如果对象的hashCode相等，那么还会继续使用equals进行比较，如果为false那么依然认为新加入的对象没有重复，将以链状方式进行保存，否则即认为元素相同无法插入
+**HashSet**内部维护了一个HashMap，将值传入其key，以传入值的hash值来保证唯一性。因此传入HashSet的对象需要实现hashcode和equals方法。putVal方法会使用对象的hashCode来判断对象加入的位置，即如果对象的**hashCode**值是不同的，那么就可以认为对象是不可能相等的。如果对象的hashCode相等，那么还会继续使用**equals**进行比较，如果为false那么依然认为新加入的对象没有重复，将以链状方式进行保存，否则即认为元素相同无法插入
 ```java
 public boolean add(E e) {
 	// HashMap# return putVal(hash(key), key, value, false, true);
@@ -133,20 +133,22 @@ public V put(K key, V value) {
 }
 ```
 
-**LinkedHashSet**继承自HashSet，不同点在于其创建调用父类HashSet的特殊构造方法创建LinkedHashMap作为存储介质，因此它是稳定的，元素顺序是可以保证的，其他与HashSet一致。插入、删除操作相较HashSet会略慢，因为要维护链表，但相对有了链表的存在，遍历速度会更快
+**LinkedHashSet**继承自HashSet，不同点在于其创建调用父类HashSet的特殊构造方法时创建**LinkedHashMap作为存储介质**，因此它是稳定的，元素顺序是可以保证的，其他与HashSet一致。插入、删除操作相较HashSet会略慢，因为要维护链表，但相对有了链表的存在，遍历速度会更快
 
-**TreeSet**其内部存储介质为NavigableMap，构造方法中创建TreeMap(继承自NavigableMap)，是红黑树结构，每一个元素都是树中的一个节点，插入的元素都会进行排序，这保证了元素是有序的。它是SortedSet，其元素必须实现Comparable或继承Comparator，也具备了元素搜索功能。TreeSet判断元素重复并不是通过hashCode和equals，而是通过compare的结果来判断的。TreeSet支持两种排序方式：自然排序、定制排序。由于TreeSet需要额外的红黑树算法来维护集合元素的次序，因此性能不如HashSet
+**TreeSet**其内部存储介质为NavigableMap，构造方法中创建**TreeMap**(继承自NavigableMap)，是**红黑树**结构，每一个元素都是树中的一个节点，插入的元素都会进行排序，这保证了元素是有序的。它是SortedSet，其元素**必须**实现Comparable或继承Comparator，也具备了元素搜索功能。TreeSet判断元素重复并不是通过hashCode和equals，而是通过**compare**的结果来判断的。TreeSet支持两种排序方式：自然排序、定制排序。由于TreeSet需要额外的红黑树算法来维护集合元素的次序，因此性能不如HashSet
 ```java
 public boolean add(E e) {
 	// TreeMap#put
 	return m.put(e, PRESENT)==null;
 }
 ```
-![treeset](treeset.png)
+![treeset](/img/in-post/2021/02/treeset.png)
 
 以上Set都是线程不安全的，通常可以通过Collections工具类的synchronizedSet、synchronizedSortedSet、synchronizedNavigableSet方法来包装Set集合
 
 > 由于Set是基于Map来实现的，因此详细在Map中讨论
+
+
 
 
 ## Map
@@ -160,7 +162,7 @@ Map里存放key与value的映射信息，元素是成对存在的，就像一个
 | Hashtable 	|  None      |      no       |   no(hash)   |      yes       |
 | TreeMap       |  Key only  |      no       |      yes     |       no       |
 
-**HashMap**内部存储的是Node对象，存储结构是数组，由key的hash值决定存储的槽位，同槽位value按照链或红黑树存储
+**HashMap**内部存储的是Node对象，存储结构是**数组**，由key的hash值决定存储的槽位，同槽位value按照链或红黑树(8)存储
 ```java
 static class Node<K,V> implements Map.Entry<K,V> {
 	final int hash;
@@ -181,18 +183,18 @@ public V put(K key, V value) {
 	return putVal(hash(key), key, value, false, true);
 }
 ```
-当元素容量大于threshold或第一次新增时，就会进行扩容resize方法，确认容量(范围内2倍增长)后创建新的Node数组，遍历老数组后放入新数组(重新hash)
+当元素容量大于threshold(默认0.75)或第一次新增时，就会进行扩容resize方法，确认容量(范围内2倍增长)后创建新的Node数组，遍历老数组后放入新数组(重新hash)
 
-> h是hashcode，h >>> 16是用来取出h的高16（>>>是无符号右移） 
+> h是hashcode，h `>>>` 16是用来取出h的高16（`>>>`是无符号右移） 
 > 由于和（length-1）运算，length 绝大多数情况小于2的16次方。所以始终是hashcode 的低16位（甚至更低）参与运算。要是高16位也参与运算，会让得到的下标更加散列  
-> 为了让高16也参与运算，h = key.hashCode()) 与 (h >>> 16) 进行异或运算  
+> 为了让高16也参与运算，h = key.hashCode()) 与 (h `>>>` 16) 进行异或运算  
 > 如果使用 & 和 | 运算都会使得结果偏向0或者1，并不是均匀的概念，所以用 ^ 进行计算
 
 java8还新增了compute、merge、forEach等方法，可以使用runnable方法对KV进行操作
 
 #### HashMap高并发问题
 
-HashMap在ReSize时，会进行两个步骤：1)扩容：创建一个新的Entry空数组，长度是原数组的2倍；2)ReHash：遍历原Entry数组，把所有的Entry重新Hash到新数组。在高并发时，循环处理链条的next可能会形成循环链表，因此当get操作时会发生**死循环**
+HashMap在ReSize时，会进行两个步骤：1)**扩容**：创建一个新的Entry空数组，长度是原数组的2倍；2)**ReHash**：遍历原Entry数组，把所有的Entry重新Hash到新数组。在高并发时，循环处理链条的next可能会形成循环链表，因此当get操作时会发生**死循环**
 
 同样，在多线程下put操作时，执行addEntry(hash, key, value, i)，如果有产生哈希碰撞，导致两个线程得到同样的bucketIndex去存储，就可能会出现覆盖的情况，导致**元素丢失**
 ```java
@@ -201,21 +203,27 @@ final Node<K,V>[] resize() {
 	int oldCap = (oldTab == null) ? 0 : oldTab.length;
 	int oldThr = threshold;
 	int newCap, newThr = 0;
+	// 原数组有元素，则是扩容，而非初始化
 	if (oldCap > 0) {
+		// 超过最大值不再扩充
 		if (oldCap >= MAXIMUM_CAPACITY) {
 			threshold = Integer.MAX_VALUE;
 			return oldTab;
 		}
+		// 扩充为原来的2倍
 		else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
 				 oldCap >= DEFAULT_INITIAL_CAPACITY)
 			newThr = oldThr << 1; // double threshold
 	}
+	// 旧阈值大于0
 	else if (oldThr > 0) // initial capacity was placed in threshold
 		newCap = oldThr;
 	else {               // zero initial threshold signifies using defaults
 		newCap = DEFAULT_INITIAL_CAPACITY;
+		// 负载因子0.75 * 数组长度16 = 12，新阈值为12
 		newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
 	}
+	// 如果新阈值为0，根据负载因子设置新阈值
 	if (newThr == 0) {
 		float ft = (float)newCap * loadFactor;
 		newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
@@ -224,28 +232,49 @@ final Node<K,V>[] resize() {
 	threshold = newThr;
 	Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
 	table = newTab;
+	// 旧数组有数据，复制到新数组
 	if (oldTab != null) {
 		for (int j = 0; j < oldCap; ++j) {
 			Node<K,V> e;
+			// 有元素的节点
 			if ((e = oldTab[j]) != null) {
 				oldTab[j] = null;
+				// 数组
 				if (e.next == null)
 					newTab[e.hash & (newCap - 1)] = e;
+				// 红黑树
 				else if (e instanceof TreeNode)
+					// 将原本的二叉树结构拆分组成新的红黑树
 					((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+				// 链表	
 				else { // preserve order
+					// jdk1.8中，旧链表迁移新链表，链表元素相对位置没有变化，实际是对对象的内存地址进行操作 
+                    // jdk1.7中，旧链表迁移新链表，如果在新表的数组索引位置相同，则链表元素会倒置
 					Node<K,V> loHead = null, loTail = null;
 					Node<K,V> hiHead = null, hiTail = null;
 					Node<K,V> next;
 					do {
 						next = e.next;
+						/**
+						   hash值与旧的长度做与运算，判断元素在数组中的位置是否需要移动
+						
+						   数组的长度为 2^N，即高位为1，其余为0，计算 e.hash & oldCap 只需看oldCap最高位1所对应的hash位
+						   因为 newCap 进行了双倍扩容，即将 oldCap 左移一位，那么 oldCap-1 相当于 newCap-1 右移一位，右移后高位补0，与运算只能得到0
+						   如果 (e.hash & oldCap) == 0，hash值需要与运算的那一位为0，那么 oldCap - 1 与 newCap - 1 的高位都是0，其余位又是相同的
+						   表明旧元素与新元素计算出的位置相同
+						   同理，当其 == 1 时，oldCap-1 高位为0，newCap-1 高位为1，其余位相同，计算出的新元素的位置比旧元素位置多了 2^N
+						   即得出【新元素的下标 = 旧下标 + oldCap】
+						**/
+						// 如果为0，元素位置在扩容后数组中的位置没有发生改变
 						if ((e.hash & oldCap) == 0) {
 							if (loTail == null)
+								// 首位
 								loHead = e;
 							else
 								loTail.next = e;
 							loTail = e;
 						}
+						// 不为0，元素位置在扩容后数组中的位置发生了改变，新的下标位置是 原下标位置 + 原数组长度
 						else {
 							if (hiTail == null)
 								hiHead = e;
@@ -254,6 +283,7 @@ final Node<K,V>[] resize() {
 							hiTail = e;
 						}
 					} while ((e = next) != null);
+					// 存入新数组
 					if (loTail != null) {
 						loTail.next = null;
 						newTab[j] = loHead;
@@ -270,7 +300,6 @@ final Node<K,V>[] resize() {
 }
 ```
 
-
 **LinkedHashMap**继承自HashMap，其Entry继承自HashMap.Node
 ```java
 static class Entry<K,V> extends HashMap.Node<K,V> {
@@ -280,11 +309,11 @@ static class Entry<K,V> extends HashMap.Node<K,V> {
 	}
 }
 ```
-显然Linked就说明了这些元素以链表形式存在，而非HashMap的数组。并且LinkedHashMap本身记录了head和tail。总体和HashMap类似，其中对数组的操作变为了对链表的操作(before、after)。并且链表的结构确定了存储的顺序与插入顺序一致，即有稳定性，相反也意味着不会和HashMap一样有元素的hash值的排序
+显然Linked就说明了这些元素以**链表**形式存在，而非HashMap的数组。并且LinkedHashMap本身记录了head和tail。总体和HashMap类似，其中对数组的操作变为了对链表的操作(before、after)。并且链表的结构确定了存储的顺序与插入顺序一致，即有稳定性，相反也意味着不会和HashMap一样有元素的hash值的排序
 
 **Hashtable**是HashMap的安全版本，即synchronized修饰方法，牺牲性能保证线程安全性
 
-**TreeMap**会保证插入元素存储的顺序性，内部维护这root节点和Comparator比较器，确保构建的树是有序的。TreeMap维护的树是一颗红黑树(更高效的二叉搜索树)，因此保证了当前节点的左子树都小于自己，而右子树都大于自己，这样就可以通过Comparator比较来确定向左还是向右查找，且是按key有序的。但是这也为新增/修改元素增加了复杂度，因为可能需要重新构建红黑树：
+**TreeMap**会保证插入元素存储的顺序性，内部维护这root节点和Comparator比较器，确保构建的树是有序的。TreeMap维护的树是一颗**红黑树**(更高效的二叉搜索树)，因此保证了当前节点的左子树都小于自己，而右子树都大于自己，这样就可以通过Comparator比较来确定向左还是向右查找，且是按key有序的。但是这也为新增/修改元素增加了复杂度，因为可能需要重新构建红黑树：
 ```java
 static final class Entry<K,V> implements Map.Entry<K,V> {
 	K key;
@@ -352,6 +381,9 @@ public V put(K key, V value) {
 }
 ```
 
+
+
+
 ## Queue
 
 java的Queue常用子接口有AbstractQueue(非阻塞队列)，BlockingQueue(阻塞队列), Deque(双端队列)
@@ -363,17 +395,17 @@ java的Queue常用子接口有AbstractQueue(非阻塞队列)，BlockingQueue(阻
 | ArrayBlockingQueue  |  no    |      yes      |      no      |       yes      |
 | LinkedBlockingQueue |  no    |      yes      |      no      |       yes      |
 
-其中add(e)与offer(e)类似，区别是前者插入队尾失败会抛出异常。element()与peek()类似，会获取队首元素，区别也是前者失败会抛出异常。remove()与poll()也类似，会移除并获取队首元素，区别同上，失败时前者抛出异常，后者返回null
+其中add(e)与**offer(e)**类似，区别是前者插入队尾失败会抛出异常。element()与**peek()**类似，会获取队首元素，区别也是前者失败会抛出异常。remove()与**poll()**也类似，会移除并获取队首元素，区别同上，失败时前者抛出异常，后者返回null
 
-**LinkedList**在前面讲过，它其实除了做链表使用，还可以当做堆栈、队列、双端队列进行操作
+**LinkedList**在前面讲过，它其实除了做链表使用，还可以当做**堆栈、队列、双端队列**进行操作
 
-**PriorityQueue**里有Comparator比较器，是一个**基于优先堆**的一个无界队列，不允许null和无法比较的对象存入。这个队列是非安全的，因此还有PriorityBlockingQueue解决多线程安全问题。PriorityQueue通过**二叉小顶堆**实现，可以用一棵完全二叉树表示，即任意一个非叶子节点的权值都不大于其左右子节点的权值，因此可以通过**数组**来作为PriorityQueue的底层实现，且位置满足以下规则：
+**PriorityQueue**里有Comparator比较器，是一个**基于优先堆**的一个无界队列，不允许null和无法比较的对象存入。这个队列是非安全的，因此还有**PriorityBlockingQueue**解决多线程安全问题。PriorityQueue通过**二叉小顶堆**实现，可以用一棵完全二叉树表示，即任意一个非叶子节点的权值都不大于其左右子节点的权值，因此可以通过**数组**来作为PriorityQueue的底层实现，且位置满足以下规则：
 ```
 leftNo   = parentNo * 2 + 1
 rightNo  = parentNo * 2 + 2
 parentNo = (nodeNo - 1) / 2
 ```
-这也意味着如果加入新的元素，可能会破坏小顶堆的性质，因此需要进行必要的调整：
+这也意味着如果改变元素，可能会破坏小顶堆的性质，因此需要进行必要的调整：
 ```java
 transient Object[] queue;
 
@@ -449,8 +481,8 @@ private void siftDownUsingComparator(int k, E x) {
 
 除了基本的Queue操作，BlockingQueue有阻塞方法和阻塞超时方法，分别是插入put(e)、offer(e, time, unit)，移除tak()、poll(time, unit)，实现主要用于生产者消费者队列。都是线程安全的，使用ReentrantLock锁的方式保证
 
-**ArrayBlockingQueue**是一个由**数组**结构组成的**有界阻塞队列**，内部为循环数组。是一个典型的有界缓存区，一旦创建就不能增加容量。试图向已满队列中放入元素会导致操作阻塞；试图从空队列中提取元素将同样阻塞。使用独占锁lock用来对出入队操作加锁，默认是非公平锁，支持公平策略，打开后构造的队列允许按照FIFO顺序访问线程。但会降低吞吐量。notEmpty，notFull条件变量用于入队出队时take和put的阻塞
-···java
+**ArrayBlockingQueue**是一个由**数组**结构组成的**有界阻塞队列**，内部为循环数组。是一个典型的有界缓存区，一旦创建就不能增加容量。试图向已满队列中放入元素会导致操作阻塞；试图从空队列中提取元素将同样阻塞。使用**独占锁lock**用来对出入队操作加锁，默认是**非公平锁**，支持公平策略，打开后构造的队列允许按照FIFO顺序访问线程。但会降低吞吐量。notEmpty，notFull条件变量用于入队出队时take和put的阻塞
+```java
 /** Main lock guarding all access */
 final ReentrantLock lock;
 
@@ -459,8 +491,8 @@ private final Condition notEmpty;
 
 /** Condition for waiting puts */
 private final Condition notFull;
-···
-看一下put方法，全局独占锁粒度很大，类似于方法上加synchronized
+```
+看一下put方法，全局独占锁**粒度很大**，类似于方法上加synchronized
 ```java
 public void put(E e) throws InterruptedException {
 	checkNotNull(e);
@@ -487,7 +519,7 @@ private void enqueue(E x) {
 }
 ```
 
-**LinkedBlockingQueue**是基于Node链条的任意容量范围的队列。链表队列的吞吐量通常要高于基于数组的队列，但通常性能要低。如果指定容量，则可以防止队列过度扩展，未指定容量则等于Integer.MAX_VALUE。队列内部维护了head节点和last节点。与ArrayBlockingQueue不同的是，LinkedBlockingQueue具有两个非公平独占锁ReentrantLock，分别用来控制元素入队和出队加锁，可以由一个线程入队和一个线程出队，是一个生产者-消费者模型
+**LinkedBlockingQueue**是基于Node**链表**的任意容量范围的队列。链表队列的吞吐量通常要高于基于数组的队列，但通常性能要低。如果指定容量，则可以防止队列过度扩展，未指定容量则等于Integer.MAX_VALUE。队列内部维护了head节点和last节点。与ArrayBlockingQueue不同的是，LinkedBlockingQueue具有**两个**非公平独占锁ReentrantLock，分别用来控制元素入队和出队加锁，可以由一个线程入队和一个线程出队，是一个生产者-消费者模型
 ```java
 /** Current number of elements */
 private final AtomicInteger count = new AtomicInteger();
@@ -500,13 +532,15 @@ private final ReentrantLock putLock = new ReentrantLock();
 ```
 
 
+
+
 ## Stack
 
 | Stack       | null值 | 稳定性(order) | 有序性(sort) | 线程安全(safe) |
 | :---------- | :----: | :-----------: | :----------: | :------------: |
 | Stack	      |  yes   |      yes      |      no      |       yes      |
 
-Stack继承Vector，是一个基于数组的安全栈，很简单
+**Stack**继承Vector，是一个基于**数组**的安全栈，很简单
 ```java
 public synchronized E pop() {
 	E       obj;
@@ -521,18 +555,20 @@ public synchronized E pop() {
 ```
 
 
+
+
 ## 其他安全容器
 
 对于List容器，除了Vector外，还提供了2类安全队列，分别是CopyOnWriteArrayList和Collections.synchronizedList，它们都是可存null、稳定、无序的线程安全队列。
 
-**CopyOnWriteArrayList**内部基于数组存储，
+**CopyOnWriteArrayList**内部基于**数组**存储，
 ```java
 final transient ReentrantLock lock = new ReentrantLock();
 
 /** The array, accessed only via getArray/setArray. */
 private transient volatile Object[] array;
 ```
-在添加、删除元素时会加锁，并且拷贝一个新的数组作为自身的array，写数组的拷贝，读操作无锁的，线程安全，另外与ArrayList差不多。因此适合读多写少的场景，不适合写多和需要实时读的场景
+在添加、删除元素时会加锁，并且拷贝一个新的数组作为自身的array，写数组的拷贝，**读操作无锁**的，线程安全，另外与ArrayList差不多。因此**适合读多写少**的场景，不适合写多和需要实时读的场景
 ```java
 public boolean add(E e) {
 	final ReentrantLock lock = this.lock;
@@ -554,7 +590,7 @@ public boolean add(E e) {
 
 **CopyOnWriteArraySet**与**Collections.synchronizedSet**是Set容器的安全版本，与上面的一样。其中CopyOnWriteArraySet内部使用CopyOnWriteArrayList作为存储容器
 
-**ConcurrentHashMap**是一个基于Node数组的，不可存null，稳定无序的、安全的Map容器。采用了CAS + synchronized的方案保证线程安全。和HashMap一样，从1.7的Segment(继承ReentrantLock)数组 + HashEntry并采用分段锁的方案优化为1.8的这样，提升了查询遍历链表效率
+**ConcurrentHashMap**是一个基于**Node数组**的，不可存null，稳定无序的、安全的Map容器。采用了**CAS +synchronized**的方案保证线程安全。和HashMap一样，从1.7的Segment(继承ReentrantLock)数组 +HashEntry并采用分段锁的方案优化为1.8的这样，提升了查询遍历链表**效率**
 ```java
 final V putVal(K key, V value, boolean onlyIfAbsent) {
 	if (key == null || value == null) throw new NullPointerException();
@@ -634,7 +670,7 @@ final V putVal(K key, V value, boolean onlyIfAbsent) {
 
 **Collections.synchronizedMap**和之前的一样，只是个装饰器模式包了一个Map
 
-**ConcurrentLinkedQueue**是一个**基于链接节点**的无界线程安全队列，不允许使用null，有序稳定。ConcurrentLinkedQueue中有两个volatile类型的Node节点分别用来存储列表的首尾节点，Node节点链接为一个单向无界列表。ConcurrentLinkedQueue使用CAS非阻塞算法解决线程安全问题，而没有使用锁，因此并发情况下size()并不准确。为了保证head、tail这2个Node操作的可见性和原子性就是使用了**volatile + CAS**
+**ConcurrentLinkedQueue**是一个**基于链接节点**的无界线程安全队列，不允许使用null，有序稳定。ConcurrentLinkedQueue中有两个volatile类型的Node节点分别用来存储列表的首尾节点，Node节点**链接**为一个单向无界链表。ConcurrentLinkedQueue使用**CAS**非阻塞算法解决线程安全问题，而没有使用锁，因此并发情况下size()并不准确。为了保证head、tail这2个Node操作的可见性和原子性是使用了**volatile + CAS**
 ```java
 public boolean offer(E e) {
 	checkNotNull(e);
@@ -677,7 +713,10 @@ public int size() {
 }
 ```
 
-## 其他 
+
+
+
+# 其他 
 
 #### Arrays.copyOf 与 System.arraycopy
 
@@ -699,6 +738,6 @@ public static <T,U> T[] copyOf(U[] original, int newLength, Class<? extends T[]>
 	return copy;
 }
 ```
-由上面Arrays.copyOf方法最终还是调用了System.arraycopy本地方法，方法返回的副本都是一个新数组，其长度选择参数值与原数组长度中的最小值
+由上面Arrays.copyOf方法最终还是调用了System.arraycopy本地方法，方法返回的副本都是一个**新数组**，其长度选择参数值与原数组长度中的最小值
 
 
