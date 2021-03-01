@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "Java基础 线程与并发"
+title:      "Java基础SE(三)  线程与并发"
 date:       2019-05-05
 author:     "ZhouJ000"
 header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
@@ -10,10 +10,12 @@ tags:
 --- 
 
 
+[Java基础SE(二) 集合](https://zhouj000.github.io/2021/02/26/java-base-collections/)  
 
-[Java性能优化02-并行优化](https://zhouj000.github.io/2019/01/08/java-optimize-02/)  
 
 [Java基础: JVM(九) Java内存模型](https://zhouj000.github.io/2019/07/09/java-base-jmm/)  
+[Java性能优化02-并行优化](https://zhouj000.github.io/2019/01/08/java-optimize-02/)  
+
 
 
 

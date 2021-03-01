@@ -249,21 +249,21 @@ final Node<K,V>[] resize() {
 				// 链表	
 				else { // preserve order
 					// jdk1.8中，旧链表迁移新链表，链表元素相对位置没有变化，实际是对对象的内存地址进行操作 
-                    // jdk1.7中，旧链表迁移新链表，如果在新表的数组索引位置相同，则链表元素会倒置
+					// jdk1.7中，旧链表迁移新链表，如果在新表的数组索引位置相同，则链表元素会倒置
 					Node<K,V> loHead = null, loTail = null;
 					Node<K,V> hiHead = null, hiTail = null;
 					Node<K,V> next;
 					do {
 						next = e.next;
 						/**
-						   hash值与旧的长度做与运算，判断元素在数组中的位置是否需要移动
-						
-						   数组的长度为 2^N，即高位为1，其余为0，计算 e.hash & oldCap 只需看oldCap最高位1所对应的hash位
-						   因为 newCap 进行了双倍扩容，即将 oldCap 左移一位，那么 oldCap-1 相当于 newCap-1 右移一位，右移后高位补0，与运算只能得到0
-						   如果 (e.hash & oldCap) == 0，hash值需要与运算的那一位为0，那么 oldCap - 1 与 newCap - 1 的高位都是0，其余位又是相同的
-						   表明旧元素与新元素计算出的位置相同
-						   同理，当其 == 1 时，oldCap-1 高位为0，newCap-1 高位为1，其余位相同，计算出的新元素的位置比旧元素位置多了 2^N
-						   即得出【新元素的下标 = 旧下标 + oldCap】
+							hash值与旧的长度做与运算，判断元素在数组中的位置是否需要移动  
+							
+							数组的长度为 2^N，即高位为1，其余为0，计算 e.hash & oldCap 只需看oldCap最高位1所对应的hash位  
+							因为 newCap 进行了双倍扩容，即将 oldCap 左移一位，那么 oldCap-1 相当于 newCap-1 右移一位，右移后高位补0，与运算只能得到0  
+							如果 (e.hash & oldCap) == 0，hash值需要与运算的那一位为0，那么 oldCap - 1 与 newCap - 1 的高位都是0，其余位又是相同的  
+							表明旧元素与新元素计算出的位置相同  
+							同理，当其 == 1 时，oldCap-1 高位为0，newCap-1 高位为1，其余位相同，计算出的新元素的位置比旧元素位置多了 2^N  
+							即得出【新元素的下标 = 旧下标 + oldCap】
 						**/
 						// 如果为0，元素位置在扩容后数组中的位置没有发生改变
 						if ((e.hash & oldCap) == 0) {
