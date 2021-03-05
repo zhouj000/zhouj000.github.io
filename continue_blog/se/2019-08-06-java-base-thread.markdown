@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "Java基础SE(三)  线程与并发"
+title:      "Java基础SE(三) 线程与并发"
 date:       2019-05-05
 author:     "ZhouJ000"
 header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
