@@ -9,7 +9,10 @@ tags:
     - java
 --- 
 
+[Java基础SE(一) 数据类型与关键字](https://zhouj000.github.io/2021/04/11/java-base-base/)   
 [Java基础SE(二) 集合](https://zhouj000.github.io/2021/02/26/java-base-collections/)   
+
+
 
 
 # 集合
