@@ -106,6 +106,12 @@ writer.close();
 
 Java NIO引入了选择器的概念，选择器用于监听多个通道的事件(比如：连接打开，数据到达)。因此单个的线程可以监听多个数据通道
 
+与IO的区别：
++ IO是面向流的，NIO是面向缓冲区的
++ IO流是阻塞的，NIO是不阻塞的
++ NIO选择器允许一个单独线程来监视多个输入通道
+
+
 ## Channels与Buffers
 
 ![buffer1](buffer1.png)
@@ -451,9 +457,20 @@ Path pathToBasePath = path.relativize(basePath);
 
 
 
+# 操作系统IO
 
+用户态-系统态；阻塞-非阻塞；同步-异步
 
+IO模型：
++ 阻塞式IO
++ 非阻塞式IO
++ IO复用
++ 事件/信号驱动IO
++ 异步IO
 
+Reactor模型
+
+Proactor模型
 
 
 
