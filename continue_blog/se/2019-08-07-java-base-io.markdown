@@ -95,10 +95,6 @@ writer.write("Hello World");
 writer.close();
 ```
 
-## 绝对路径与相对路径
-
-
-
 
 
 
@@ -427,6 +423,47 @@ Pipe.SourceChannel sourceChannel = pipe.source();
 ByteBuffer buf = ByteBuffer.allocate(48);
 int bytesRead = sourceChannel.read(buf);
 ```
+
+## Path
+
+一个Path实例代表文件系统的路径，路径可以指向文件或目录。路径可以是绝对路径，也可以是相对路径。`java.nio.file.Path`与`java.io.File`类在很多方面类似
+
+```java
+// Windows 绝对路径
+Path path = Paths.get("c:\\xxx\\xxx.txt");
+// Unix 绝对路径，在Windows中/开头会被解释为相对于当前驱动器
+Path path = Paths.get("/home/xxx/xxx.txt");
+
+// 相对路径
+Path file = Paths.get("d:\\xxx", "xx\\xx\\xxx.txt");
+```
+
+relativize创建一个新路径：
+```java
+Path basePath = Paths.get("/a");
+Path path = Paths.get("/a/b/c/file.txt");
+
+// b/c/file.txt
+Path basePathToPath = basePath.relativize(path);
+// ../../..
+Path pathToBasePath = path.relativize(basePath);
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
