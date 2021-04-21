@@ -37,40 +37,39 @@ tags:
 
 ## 线程状态
 
-![]()
+![thread_status](thread_status.jpg)
+
 线程状态可以分为：  
-1、新建(new)  
-2、就绪状态/可运行状态(Runnable)  
-3、运行状态(Running)  
-4、阻塞状态(Blocked)：等待阻塞、同步阻塞、其他阻塞  
-5、死亡状态(Dead)
+1、**新建**(new)  
+2、**就绪状态**/可运行状态(Runnable)  
+3、**运行状态**(Running)  
+4、**阻塞状态**(Blocked)：等待阻塞(wait进入等待队列)、同步阻塞(同步锁被占用进入锁池)、其他阻塞(sleep/join/IO阻塞)  
+5、**死亡状态**(Dead)
 
-其中sleep方法会休眠一段时间(进入阻塞)，到时间后进入就绪状态，并不保证能马上运行。yield方法类似让出资源，让优先级更高的线程执行，自己不会阻塞而是进入就绪状态，让系统的线程调度器重新调度器重新调度一次，因此也有可能之后还是自己执行。wait方法则会让线程进入阻塞状态，直到有线程notify/notifyAll唤醒。而当一个线程需要等另一个(或多个)线程先执行完再继续执行时可以使用join方法。使用interrupt方法可以中断线程，将"中断标记"设置为true，如果该线程正处于阻塞状态则将"中断标记"立即清除为“false”并抛出InterruptedException异常。interrupted方法判断当前线程是否处于中断状态，返回后会清除中断状态，而isInterrupted方法则只是判断中断状态并不会清除
+其中sleep方法会休眠一段时间(进入阻塞)，但**不释放**对象锁，到时间后进入就绪状态，并不保证能马上运行。`yield`方法类似让出资源(cpu时间片)，让优先级更高的线程执行，自己不会阻塞而是进入**就绪**状态，让系统的线程调度器重新调度器重新调度一次，因此也有可能之后还是自己执行。`wait`方法则会让线程进入阻塞状态，当前线程释放对象锁，进入等待队列，直到有线程`notify/notifyAll`唤醒。而当一个线程需要等另一个(或多个)线程先执行完再继续执行时可以使用join方法，当前线程阻塞，但不释放对象锁。使用interrupt方法可以中断线程，将"中断标记"设置为true，如果该线程正处于阻塞状态则将"中断标记"立即清除为"false"并抛出InterruptedException异常。`interrupted`方法判断当前线程是否处于中断状态，返回后会清除中断状态，而`isInterrupted`方法则只是判断中断状态并不会清除
 
-守护线程，可以在创建线程后将其setDaemon(true)即可。比如JVM的垃圾回收。内存管理都是守护线程等，当所有线程退出后，守护线程也将结束
+守护线程，可以在创建线程后将其`setDaemon(true)`即可。比如JVM的垃圾回收。内存管理都是守护线程等，当所有线程退出后，守护线程也将结束
 
 
 
 # 多线程
 
 并发(concurrency)和并行(parallellism)都是完成多任务更加有效率的方式，但还是有一些区别的：  
-1、并发：交替做不同事情的能力，CPU时间片执行，体现在不同的代码块交替执行，强调在一个时间段内同时执行  
-2、并行：同时做不同事情的能力，多核执行，体现在不同的代码块同时执行
+1、并发：**交替**做不同事情的能力，**CPU时间片**执行，体现在不同的代码块交替执行，强调在一个时间段内同时执行  
+2、并行：**同时**做不同事情的能力，**多核**执行，体现在不同的代码块同时执行
 
-对于多线程执行，如果没有共享变量，那大家都相安无事，相当于各个单线程执行，线程安全。而如果多个线程间有共享变量，又由于Java内存模型的通信机制，就会发生数据不同步、死锁等问题，这2个问题在之前的博客中讲过了(synchronized、volatile、原子性操作、CAS、顺序获取资源、锁分离等)
+对于多线程执行，如果没有共享变量，那大家都相安无事，相当于各个单线程执行，线程安全。而如果多个线程间有共享变量，又由于Java内存模型的通信机制，就会发生数据不同步、死锁等问题
 
 #### 伪共享
 
-为了解决计算器中主内存与CPU之间运行速度差的问题，会再CPU与主内存中添加一级或多级高速缓冲存储器(cache)(L1/L2)，这个cache是集成在CPU内部的，所以也叫CPU Cache。在Cache内部是按行存储的，其中一行成为一个Cache行，其是Cache与主内存进行交换数据的单位，Cache行的大小一般为2的幂次数字节。当CPU访问某个变量时，会先去CPU Cache查看，如果没有再到主内存获取，并将该变量所在内存区域的一个Cache行大小的内存复制进Cache中，由于存放在Cache行的是内存块而不是变量，所以可能有多个变量存储到一个Cache行中。如果多个线程同时修改一个缓存行里的多个变量时，由于同时只能有一个线程操作缓存行，所以相比将每个变量放到一个缓存行，性能就会有所下降，这就是伪共享
-
-比如x，y同时存在一个缓存行，线程1修改了x，首先会修改CPU1的一级缓存x所在行，在一致性协议下，CPU2的变量x所在的缓存行失效，你们线程2在写入x时就回去二级缓存中查找，破坏了一级缓存，如果只有一级缓存则会导致频繁地访问主内存
+为了解决计算器中主内存与CPU之间运行速度差的问题，会在CPU与主内存中添加一级或多级高速缓冲存储器(cache)(L1/L2)，这个cache是集成在CPU内部的，所以也叫CPU Cache。在Cache内部是按行存储的，其中一行成为一个Cache行，其是Cache与主内存进行交换数据的单位，Cache行的大小一般为2的幂次数字节。当CPU访问某个变量时，会先去CPU Cache查看，如果没有再到主内存获取，并将该变量所在内存区域的一个Cache行大小的内存复制进Cache中，由于存放在Cache行的是内存块而不是变量，所以可能有多个变量存储到一个Cache行中。如果多个线程同时修改一个缓存行里的多个变量时，由于同时只能有一个线程操作缓存行，所以相比将每个变量放到一个缓存行，性能就会有所下降，这就是伪共享
 
 伪共享的产生原因是多个变量放在一个缓存行，这在单线程下对代码执行是更有利的，执行更快，多线程下相反。JDK 8之前是通过字节填充的方式解决的，创建一个变量时使用填充字段填充其缓存行，避免同一个缓存行中有多个变量。在JDK 8提供了一个sun.misc.Contended注解来解决伪共享问题，需要注意的是这个注解默认只使用于Java核心类，比如rt包下的类，我们自己创建的类要使用则需要`-XX:-RestrictContended`自定义宽度
 
 
 ## CAS
 
-CAS即compare and swap，是JDK提供的非阻塞原子性操作，它通过硬件保证了比较 —— 更新操作的原子性。Unsafe类中有3个compareAndSwap*方法。JDK的rt.jar包的Unsafe类提供了硬件级别的原子性操作，其中的方法都是native方法，使用JNI的方式访问本地C++实现库，提供的这些功能包括裸内存的申请/释放/访问，低层硬件的atomic/volatile支持，创建未初始化对象等。扩展了Java语言表达能力，便于在高层Java代码里实现原本在更底层C中实现的核心库功能。许多广泛使用的高性能开发库都是基于Unsafe类开发，比如 Netty、Hadoop、Kafka 等
+CAS即compare and swap，是JDK提供的非阻塞原子性操作，它通过硬件保证了比较 —— 更新操作的原子性。Unsafe类中有3个`compareAndSwap*`方法。JDK的rt.jar包的Unsafe类提供了硬件级别的原子性操作，其中的方法都是native方法，使用JNI的方式访问本地C++实现库，提供的这些功能包括裸内存的申请/释放/访问，低层硬件的atomic/volatile支持，创建未初始化对象等。扩展了Java语言表达能力，便于在高层Java代码里实现原本在更底层C中实现的核心库功能。许多广泛使用的高性能开发库都是基于Unsafe类开发，比如 Netty、Hadoop、Kafka 等
 
 虽然Unsafe很强大，可以直接操作内存，但是由于安全性考虑无法直接获取，但是可以通过反射拿到
 ```java
@@ -89,11 +88,76 @@ public static Unsafe getUnsafe() {
 扩展：  
 [Unsafe 相关整理](https://www.jianshu.com/p/2e5b92d0962e)  
 
+CAS操作是乐观锁，每次不加锁而是假设没有冲突去完成某项操作，如果因为冲突失败就重试，直到成功为止。而synchronized就是悲观锁，线程一旦得到锁，其他需要锁的线程会挂起。尽管JDK 1.6为Synchronized做了优化，增加了从偏向锁到轻量级锁再到重量级锁的过度，但是在最终转变为重量级锁之后，性能仍然较低
+
+CAS机制当中使用了3个基本操作数：内存地址V，旧的预期值A，要修改的新值B。更新一个变量的时候，只有当变量的预期值A和内存地址V当中的实际值相同时，才会将内存地址V对应的值修改为B。无论哪种情况，都会在CAS指令之前返回该位置的值(一些特殊情况下将仅返回CAS是否成功)
+
+CAS的问题：  
+1、在并发量比较高的情况下，如果许多线程反复尝试更新某一个变量，却又一直更新不成功，循环往复，会给CPU带来很大的压力  
+2、只保证一个共享变量的原子性操作，不能保证代码块/多个共享变量的原子性  
+3、ABA问题(解决思路：使用版本号)
+
+
 ## 原子操作类
 
-。。
-JDK 8 新增的原子操作类LongAdder
+原子操作，有针对CPU指令级别的，和针对高级语言级别的。原子操作实质并不是不可分割，本质在于多个资源之间有一致性的要求，操作的中间态对外不可见
 
+concurrent包中提供了一些原子类，在其atomic包下，例如AtomicInteger、AtomicLong、AtomicIntegerArray、AtomicReference、LongAdder等
+
+```java
+// AtomicInteger
+private static final Unsafe unsafe = Unsafe.getUnsafe();
+private static final long valueOffset;
+private volatile int value;
+
+static {
+	try {
+		valueOffset = unsafe.objectFieldOffset
+			(AtomicInteger.class.getDeclaredField("value"));
+	} catch (Exception ex) { throw new Error(ex); }
+}
+
+public final int getAndSet(int newValue) {
+	return unsafe.getAndSetInt(this, valueOffset, newValue);
+}
+
+public final boolean compareAndSet(int expect, int update) {
+	return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
+}
+```
+由此可见，内部就是使用了volatile + CAS保证的。根据对象和偏移量获取当前值，与希望的值比较，相等的话进行更新操作
+
+```java
+// AtomicIntegerArray
+private static final Unsafe unsafe = Unsafe.getUnsafe();
+private static final int base = unsafe.arrayBaseOffset(int[].class);
+private static final int shift;
+private final int[] array;
+
+static {
+	int scale = unsafe.arrayIndexScale(int[].class);
+	if ((scale & (scale - 1)) != 0)
+		throw new Error("data type scale not a power of two");
+	shift = 31 - Integer.numberOfLeadingZeros(scale);
+}
+
+private long checkedByteOffset(int i) {
+	if (i < 0 || i >= array.length)
+		throw new IndexOutOfBoundsException("index " + i);
+	return byteOffset(i);
+}
+
+private static long byteOffset(int i) {
+	return ((long) i << shift) + base;
+}
+
+public final int getAndSet(int i, int newValue) {
+	return unsafe.getAndSetInt(array, checkedByteOffset(i), newValue);
+}
+```
+数组的略有不同，因为要计算出每个元素正确的偏移量
+
+JDK 8新增的原子操作类LongAdder等。对于以前非阻塞的原子性操作类(AtomicLong等)在高并发下大量线程竞争更新同一个原子变量，不断循环尝试CAS，浪费CPU性能。新增的原子性递增或者递减类LongAdder用来克服在高并发下使用AtomicLong的缺点
 
 
 
@@ -176,6 +240,11 @@ https://blog.csdn.net/qq_34093116/article/details/105902510
 
 
 
+
+
+
+
+锁分离
 
 按处理方式：乐观锁、悲观锁  
 按抢占方式：公平锁、非公平锁  
