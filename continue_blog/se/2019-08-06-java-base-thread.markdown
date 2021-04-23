@@ -159,51 +159,101 @@ public final int getAndSet(int i, int newValue) {
 
 JDK 8新增的原子操作类LongAdder等。对于以前非阻塞的原子性操作类(AtomicLong等)在高并发下大量线程竞争更新同一个原子变量，不断循环尝试CAS，浪费CPU性能。新增的原子性递增或者递减类LongAdder用来克服在高并发下使用AtomicLong的缺点
 
+LongAdder类与AtomicLong类的区别在于高并发时前者将对单一变量的CAS操作分散为对数组cells中多个元素的CAS操作，取值时进行求和；而在并发较低时仅对base变量进行CAS操作，与AtomicLong类原理相同
 
+```java
+transient volatile Cell[] cells;
+transient volatile long base;
 
+// Contended解决伪共享
+@sun.misc.Contended static final class Cell {
+	volatile long value;
+	Cell(long x) { value = x; }
+	final boolean cas(long cmp, long val) {
+		return UNSAFE.compareAndSwapLong(this, valueOffset, cmp, val);
+	}
 
+	// Unsafe mechanics
+	private static final sun.misc.Unsafe UNSAFE;
+	private static final long valueOffset;
+	static {
+		try {
+			UNSAFE = sun.misc.Unsafe.getUnsafe();
+			Class<?> ak = Cell.class;
+			valueOffset = UNSAFE.objectFieldOffset
+				(ak.getDeclaredField("value"));
+		} catch (Exception e) {
+			throw new Error(e);
+		}
+	}
+}
+```
 
+修改值：
+```java
+public void add(long x) {
+	Cell[] as; long b, v; int m; Cell a;
+	// 并发量不大时，直接CAS，与AtomicLong一样
+	if ((as = cells) != null || !casBase(b = base, b + x)) {
+		boolean uncontended = true;
+		// 当竞争激烈到一定程度无法对base进行累加操作时，会对cells数组中某个元素进行更新
+		if (as == null || (m = as.length - 1) < 0 ||
+			(a = as[getProbe() & m]) == null ||
+			!(uncontended = a.cas(v = a.value, v + x)))
+			// 用一个死循环对cells数组中的元素进行操作：
+			// 当要更新的位置的元素为空时插入新的cell元素，否则在该位置进行CAS的累加操作
+			// 如果CAS操作失败并且数组大小没有超过核数就扩容cells数组当要更新的位置的元素为空时插入新的cell元素
+			// 否则在该位置进行CAS的累加操作，如果CAS操作失败并且数组大小没有超过核数就扩容cells数组
+			longAccumulate(x, null, uncontended);
+	}
+}
 
+// 对Striped64的BASE的值(base值所对应的内存偏移量)进行累加并返回是否成功，
+final boolean casBase(long cmp, long val) {
+	return UNSAFE.compareAndSwapLong(this, BASE, cmp, val);
+}
+```
+取值：
+```java
+public long longValue() {
+	return sum();
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 返回的是base和cells数组中所有元素的和
+public long sum() {
+	Cell[] as = cells; Cell a;
+	long sum = base;
+	if (as != null) {
+		for (int i = 0; i < as.length; ++i) {
+			if ((a = as[i]) != null)
+				sum += a.value;
+		}
+	}
+	return sum;
+}
+```
 
 ## 锁
-
-
-
-
 
 java虚拟机的实现中每个对象都有一个对象头，用于保存对象的系统信息。对象头中有一个mark word的部分，它是实现锁的关键。在32位系统中，它为32位的数据；在64位系统中，它为64位的数据。它是一个多功能的数据区，可以存放对象的哈希值、对象年龄、锁的指针等信息。一个对象是否占用锁，占有哪个锁，就记录在这个mark word中
 
 以32位系统为例，普通对象的对象头比如：  
 `hash:25 ------------>| age:4 biased_lock:1 lock:2`  
-它表示mark word中有25位比特表示对象的哈希值，4位比特表示对象的年龄，1位比特表示是否偏向锁，2位比特表示锁的信息
+它表示mark word中有25位比特表示对象的哈希值，4位比特表示对象的年龄，1位比特表示**是否偏向锁**，2位比特表示**锁的信息**
 
-当对象处于普通的未锁定状态时，格式为:  
+当对象处于普通的**未锁定**状态时，格式为:  
 `[header      |0|01] unlocked`  
-前29位表示对象的哈希值、年龄等信息。倒数第3位位为0，最后两位为01，表示未锁定，与偏向锁最后2位相同，因此虚拟机通过倒数第三位比特来区分是否为偏向锁
+前29位表示对象的哈希值、年龄等信息。倒数第3位位为0，最后两位为01，表示未锁定，与偏向锁最后2位相同，因此虚拟机通过**倒数第3位**比特来区分是否为偏向锁
 
-偏向锁是程序没有竞争时、取消之前已经获得锁的线程同步操作，即某一锁被线程获取后，进入偏向模式，CAS操作在对象头存储锁偏向的线程 ID，该线程再次请求这个锁时，无需进行相关同步操作(CAS操作来加锁和解锁)，只需简单的测试一下对象头的Mark Word里是否存储着指向当前线程的偏向锁。对于偏向锁的对象，其对象头记录获得锁的线程：  
+**偏向锁**是程序没有竞争时、取消之前已经获得锁的线程同步操作，即某一锁被线程获取后，进入偏向模式，CAS操作在对象头存储锁偏向的**线程ID**，该线程再次请求这个锁时，无需进行相关同步操作(CAS操作来加锁和解锁)，只需简单的测试一下对象头的Mark Word里是否存储着指向当前线程的偏向锁。对于偏向锁的对象，其对象头记录获得锁的线程：  
 `[javaThread* | epoch | age |1|01]`  
 前23位表示持有偏向锁的线程，后续2位表示偏向锁的时间戳，4位比特表示对象年龄，年龄后1位为1表示偏向锁，最后2位位01表示可偏向/未锁定。当获得锁的线程再次尝试获取锁时，通过mark word的线程信息可以判断当前线程是否持有偏向锁。当然在锁竞争激烈的场景下反而得不到优化，可以使用`-XX:-UseBiasedLocking`禁用偏向锁
 
-偏向锁失败后，java虚拟机让线程申请轻量级锁。轻量级锁在虚拟机内部使用一个称为BasicObjectLock的对象实现，这个对象内部由一个BasicLock对象和一个持有该锁的Java对象指针组成。BaseicObjectLock对象放置在Java栈的栈帧中，在BasicLock对象内部还维护着displaced_header字段，它用于备份对象头部的mark word。当对象处于轻量级锁定时其头部mark word为:  
+![basicObjectLock](basicObjectLock.png)
+
+偏向锁失败后，java虚拟机让线程申请**轻量级锁**。轻量级锁在虚拟机内部使用一个称为**BasicObjectLock**的对象实现，这个对象内部由一个**BasicLock对象**和一个**持有该锁的Java对象指针**组成。BaseicObjectLock对象放置在Java栈的栈帧中，在BasicLock对象内部还维护着**displaced_header**字段，它用于备份对象头部的**mark word**。当对象处于轻量级锁定时其头部mark word为:  
 `[ptr         |00] locked`  
-末尾2位为00。此时整个mark word为指向BasicLock对象的指针，由于BasicObjectLock对象在线程栈中，因此该指针必然指向持有该锁的线程栈空间，即存放在获得锁的线程栈中的该对象真实对象头。当需要判断某一线程是否持有该对象锁时，也只需简单判断对象头的指针是否在当前线程的栈地址范围即可。同时BasicLock对象的displaced_header备份了原对象的mark word内容。BasicObjectLock对象的obj字段则指向该对象
+末尾2位为00。此时整个mark word为指向BasicLock对象的**指针**，由于BasicObjectLock对象在线程栈中，因此该指针必然**指向持有该锁的线程栈空间**，即存放在获得锁的线程栈中的该对象真实对象头。当需要判断某一线程是否持有该对象锁时，也只需简单判断**对象头的指针**是否在当前线程的栈地址范围即可。同时BasicLock对象的displaced_header备份了原对象的mark word内容。BasicObjectLock对象的obj字段则指向该对象
 ```
 markOop mark = obj -> mark();
 lock -> set_displaced_header(mark);
@@ -213,17 +263,62 @@ if (mark == (markOop)Atomic::cmpxchg_ptr(lock, ojb()->mark_addr(), mark)) {
 }
 ```
 首先BasicLock通过set_displaced_header方法备份原对象的mark word。然后使用CAS操作尝试将BasicLock的地址复制到对象头的mark word，如果复制成功则枷锁成功，如果失败则认为加锁失败，那么轻量级锁有可能膨胀为重量级锁
-![]()
 
-当轻量级锁失败，虚拟机就会使用重量级锁，当对象处于重量级锁定时对象的mark word为：  
+![weight-lock](weight-lock.jpg)
+
++ Mark Word：默认存储对象的HashCode，分代年龄和锁标志位信息。它会根据对象的状态复用自己的存储空间
++ Klass Point：对象指向它的类元数据的指针，虚拟机通过这个指针来确定这个对象是哪个类的实例
+
+当轻量级锁失败，虚拟机就会使用**重量级锁**，当对象处于重量级锁定时对象的mark word为：  
 `[ptr         |10] monitor`  
-末尾2位为10。整个mark word表示指向monitor对象的指针，在轻量级锁处理失败后，虚拟机会执行以下操作：  
+末尾2位为10。整个mark word表示**指向monitor对象的指针**，在轻量级锁处理失败后，虚拟机会执行以下操作：  
 ```
 lock -> set_displaced_header(markOopDesc::unused_mark());
 ObjectSynchronizer::inflate(THREAD, obj())-> enter(THREAD);
 ```
-首先废弃前面BasicLock备份的对象头信息，然后正式启用重量级锁。启用过程分为两步：首先通过inflate()方法进行锁膨胀，其目的是获得对象的ObjectMonitor，然后使用enter()方法尝试进入该锁。在enter()方法调用中，线程很可能会在操作系统层面被挂起，如果这样，线程间切换和调度的成本会比较高。因此锁膨胀后虚拟机会做最后的争取，希望线程可以快速进入临界区而避免被操作系统挂起，一种较为有效的方式就是使用自旋锁。自旋锁可以使线程在没有获得锁时不被挂起，而转去执行一个空循环，在若干空循环后线程如果可以获得锁则继续执行，如果依旧不能获取才会挂起。JDK1.7以后不用设置参数，默认启用，且自选次数由虚拟机自行调整
+首先**废弃**前面BasicLock备份的对象头信息，然后正式启用重量级锁。启用过程分为两步：首先通过`inflate()`方法进行**锁膨胀**，其目的是获得对象的**ObjectMonitor**，然后使用`enter()`方法尝试**进入该锁**。在`enter()`方法调用中，线程很可能会在操作系统层面被挂起，如果这样，线程间切换和调度的成本会比较高。因此锁膨胀后虚拟机会做最后的争取，希望线程可以快速进入**临界区**而避免被操作系统挂起，一种较为有效的方式就是使用**自旋锁**。自旋锁可以使线程在没有获得锁时不被挂起，而转去执行一个空循环，在若干空循环后线程如果可以获得锁则继续执行，如果依旧不能获取才会挂起。JDK1.7以后不用设置参数，默认启用，且自选次数由虚拟机自行调整
 
+
+
+锁分类：
++ 按处理方式
+	- 乐观锁：相对于悲观锁而言，采取了更加宽松的加锁机制
+		+ CAS
+		+ 版本号控制
+	- 悲观锁：具有强烈的独占和排他特性
+		+ 关系型数据库的行锁，表锁，读锁，写锁
+		+ synchronized
++ 按抢占方式
+	- 公平锁
+	- 非公平锁
++ 按持有
+	- 独占锁：排他锁，写锁，不能与其他锁并存
+	- 共享锁：读锁，可共享一把锁访问数据，但是不能修改
+
+选择因素：
++ 响应效率
++ 冲突频率
++ 重试代价
+
+
+#### 锁分离
+
+在某些情况下，可以对一组独立对象上的锁进行分解，这种情况称为锁分段。例如JDK 7的ConcurrencyHashMap是有一个包含16个锁的数组实现，每个锁保护所有散列桶的1/16，其中第N个散列桶由第(N mod 16)个锁来保护。假设所有关键字都均匀分布，那么相当于把锁的请求减少到原来的1/16
+
+锁分段的劣势在于，与采用单个锁来实现独占访问相比，要获取多个锁来实现独占访问将更加困难并且开销更高，比如计算size、重hash
+
+
+
+
+
+
+
+
+https://www.lagou.com/lgeduarticle/63370.html
+
+
+
+https://www.cnblogs.com/duanxz/p/3509423.html
 
 
 ## synchronized
@@ -236,6 +331,7 @@ https://blog.csdn.net/qq_34093116/article/details/105902510
 
 
 
+http://www.liuhaihua.cn/archives/561521.html
 
 
 
@@ -244,11 +340,6 @@ https://blog.csdn.net/qq_34093116/article/details/105902510
 
 
 
-锁分离
-
-按处理方式：乐观锁、悲观锁  
-按抢占方式：公平锁、非公平锁  
-按持有：独占锁、共享锁  
 
 
 
