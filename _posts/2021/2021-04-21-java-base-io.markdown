@@ -529,7 +529,7 @@ select，poll每次调用都要把fd集合从用户态往内核态拷贝一次�
 
 #### 事件驱动：Reactor模型
 
-![reactor](/img/in-post/2021/04/reactor.jpg)
+![reactor](/img/in-post/2021/04/reactor.png)
 
 + 事件驱动
 + 可以处理一个或多个输入源
@@ -539,7 +539,7 @@ select，poll每次调用都要把fd集合从用户态往内核态拷贝一次�
 	- 分解的事件以及对应的事件服务应用从分派服务中分离出去(handler)
 
 多Reactor多线程模型：
-![reactor2](/img/in-post/2021/04/reactor2.jpg)
+![reactor2](/img/in-post/2021/04/reactor2.png)
 
 + Reactor
 	- 负责监听和分配事件，将I/O事件分派给对应的Handler。新的事件包含连接建立就绪、读就绪、写就绪等
