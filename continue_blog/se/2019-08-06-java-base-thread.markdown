@@ -60,6 +60,13 @@ tags:
 
 对于多线程执行，如果没有共享变量，那大家都相安无事，相当于各个单线程执行，线程安全。而如果多个线程间有共享变量，又由于Java内存模型的通信机制，就会发生数据不同步、死锁等问题
 
++ 上下文切换
+	- 线程从运行状态切换到阻塞状态或者等待状态的时候需要将线程的运行状态保存，线程从阻塞状态或者等待状态切换到运行状态的时候需要加载线程上次运行的状态
+	- 线程的运行状态从保存到再加载就是一次上下文切换，而上下文切换的开销是非常大的，而我们知道CPU给每个线程分配的时间片很短，通常是几十毫秒(ms)，那么线程的切换就会很频繁
++ 死锁
++ 资源限制的挑战
+	- 计算机硬件资源或软件资源限制了多线程的运行速度
+
 #### 伪共享
 
 为了解决计算器中主内存与CPU之间运行速度差的问题，会在CPU与主内存中添加一级或多级高速缓冲存储器(cache)(L1/L2)，这个cache是集成在CPU内部的，所以也叫CPU Cache。在Cache内部是按行存储的，其中一行成为一个Cache行，其是Cache与主内存进行交换数据的单位，Cache行的大小一般为2的幂次数字节。当CPU访问某个变量时，会先去CPU Cache查看，如果没有再到主内存获取，并将该变量所在内存区域的一个Cache行大小的内存复制进Cache中，由于存放在Cache行的是内存块而不是变量，所以可能有多个变量存储到一个Cache行中。如果多个线程同时修改一个缓存行里的多个变量时，由于同时只能有一个线程操作缓存行，所以相比将每个变量放到一个缓存行，性能就会有所下降，这就是伪共享
@@ -235,6 +242,51 @@ public long sum() {
 
 ## 锁
 
+锁分类：
++ 按处理方式
+	- 乐观锁：相对于悲观锁而言，采取了更加宽松的加锁机制
+		+ CAS
+		+ 版本号控制
+	- 悲观锁：具有强烈的独占和排他特性
+		+ 关系型数据库的行锁，表锁，读锁，写锁
+		+ synchronized
++ 按抢占方式
+	- 公平锁
+		+ 队列FIFO
+	- 非公平锁
+		+ 默认ReentrantLock对象
++ 按持有
+	- 独占锁：排他锁，写锁，不能与其他锁并存
+	- 共享锁：读锁，可共享一把锁访问数据，但是不能修改
+
+选择因素：
++ 响应效率
++ 冲突频率
++ 重试代价
+
+### synchronized
+
++ 可见性：语义保证了共享变量的可见性
+	- 线程加锁前：需要将工作内存清空，从而保证了工作区的变量副本都是从主存中获取的最新值
+	- 线程解锁前；需要将工作内存的变量副本写回到主存中
++ 有序性：保证了有序性
+	- 使用阻塞的同步机制，共享变量只能同时被一个线程操作，所以JMM不用像volatile那样考虑加内存屏障去保证synchronized多线程情况下的有序性，因为CPU在单线程情况下是保证了有序性的
++ 原子性：保证了原子性
+	- 使用阻塞的同步机制，共享变量加锁了，在对共享变量进行读/写操作的时候是原子性的
+
+**synchronized同步代码块**是通过加`monitorenter`和`monitorexit`指令实现的
+	
+> 每个对象都有个监视器锁(monitor)，当monitor被占用的时候就代表对象处于锁定状态，而monitorenter指令的作用就是获取 monitor的所有权(计数为1，锁重入+1)，monitorexit的作用是释放monitor的所有权(计数-1直到0)
+	
+**synchronized同步方法**，常量池中比普通的方法多了个`ACC_SYNCHRONIZED`标识，JVM就是根据这个标识来实现方法的同步。当调用方法的时候，调用指令会检查方法是否有ACC_SYNCHRONIZED标识，有的话线程需要先获取monitor，获取成功才能继续执行方法，方法执行完毕之后，线程再释放monitor，同一个monitor同一时刻只能被一个线程拥有
+
+所以，synchronized同步代码块是需要JVM通过字节码显式的去获取和释放monitor实现同步；而synchronized同步方法只是检查ACC_SYNCHRONIZED标志是否被设置，不需要JVM去显式的实现。实际上这两个同步方式实际都是通过获取monitor和释放monitor来实现同步的，而monitor的实现依赖于底层操作系统的**mutex**互斥原语，而操作系统实现线程之间的切换的时候需要从用户态转到内核态，这个转成过程开销比较大
+	
+
+	
+	
+
+
 java虚拟机的实现中每个对象都有一个对象头，用于保存对象的系统信息。对象头中有一个mark word的部分，它是实现锁的关键。在32位系统中，它为32位的数据；在64位系统中，它为64位的数据。它是一个多功能的数据区，可以存放对象的哈希值、对象年龄、锁的指针等信息。一个对象是否占用锁，占有哪个锁，就记录在这个mark word中
 
 以32位系统为例，普通对象的对象头比如：  
@@ -279,28 +331,6 @@ ObjectSynchronizer::inflate(THREAD, obj())-> enter(THREAD);
 首先**废弃**前面BasicLock备份的对象头信息，然后正式启用重量级锁。启用过程分为两步：首先通过`inflate()`方法进行**锁膨胀**，其目的是获得对象的**ObjectMonitor**，然后使用`enter()`方法尝试**进入该锁**。在`enter()`方法调用中，线程很可能会在操作系统层面被挂起，如果这样，线程间切换和调度的成本会比较高。因此锁膨胀后虚拟机会做最后的争取，希望线程可以快速进入**临界区**而避免被操作系统挂起，一种较为有效的方式就是使用**自旋锁**。自旋锁可以使线程在没有获得锁时不被挂起，而转去执行一个空循环，在若干空循环后线程如果可以获得锁则继续执行，如果依旧不能获取才会挂起。JDK1.7以后不用设置参数，默认启用，且自选次数由虚拟机自行调整
 
 
-
-锁分类：
-+ 按处理方式
-	- 乐观锁：相对于悲观锁而言，采取了更加宽松的加锁机制
-		+ CAS
-		+ 版本号控制
-	- 悲观锁：具有强烈的独占和排他特性
-		+ 关系型数据库的行锁，表锁，读锁，写锁
-		+ synchronized
-+ 按抢占方式
-	- 公平锁
-	- 非公平锁
-+ 按持有
-	- 独占锁：排他锁，写锁，不能与其他锁并存
-	- 共享锁：读锁，可共享一把锁访问数据，但是不能修改
-
-选择因素：
-+ 响应效率
-+ 冲突频率
-+ 重试代价
-
-
 #### 锁分离
 
 在某些情况下，可以对一组独立对象上的锁进行分解，这种情况称为锁分段。例如JDK 7的ConcurrencyHashMap是有一个包含16个锁的数组实现，每个锁保护所有散列桶的1/16，其中第N个散列桶由第(N mod 16)个锁来保护。假设所有关键字都均匀分布，那么相当于把锁的请求减少到原来的1/16
@@ -314,32 +344,43 @@ ObjectSynchronizer::inflate(THREAD, obj())-> enter(THREAD);
 
 
 
+
+
+### AQS
+
+
+
+
+
+
+
+深入分析synchronized原理(二)
+http://www.liuhaihua.cn/archives/561521.html
+
+深入分析Synchronized原理(阿里面试题)
+https://www.cnblogs.com/aspirant/p/11470858.html
+
+
+深入分析synchronized原理和锁膨胀过程(二)
 https://www.lagou.com/lgeduarticle/63370.html
 
+https://ddnd.cn/2019/03/22/java-synchronized-2/
 
-
+分布式锁实现：数据库、redis、zookeeper
 https://www.cnblogs.com/duanxz/p/3509423.html
 
 
-## synchronized
-
-TODO
-
-https://blog.csdn.net/qq_34093116/article/details/105902510
 
 
-
-
-
-http://www.liuhaihua.cn/archives/561521.html
+## 线程池
 
 
 
 
 
 
-
-
+Java 并发编程之 ReentrantLock 源码分析
+http://www.liuhaihua.cn/archives/707946.html
 
 
 
@@ -352,9 +393,10 @@ threadlocal / inheritableThreadLocal  继承
 
 Random  next随机种子 原子变量 /   threadlocalRandom 
 
+ThreadLocal源码分析
 https://blog.csdn.net/u011497638/article/details/93889173
 
-
+使用ThreadLocal 不当可能会导致内存泄漏
 
 
 
@@ -398,51 +440,30 @@ ScheduledThreadPoolExecutor
 
  
 
+## AQS
+
+ArrayBlockingQueue
+https://www.infoq.cn/article/jdk1.8-abstractqueuedsynchronizer
+https://www.infoq.cn/article/java8-abstractqueuedsynchronizer/
 
 
 
 
 
+## 使用
+
+并发编程实战（一） logback 异步日志打印模型中ArrayBlockingQueue 的使用、Tomcat 的 NIOEndPoint 中 ConcurrentLinkedQueue 的使用
+https://blog.csdn.net/weixin_41750142/article/details/110221334
+
+
+SimpleDateFormat 是线程不安全的
+使用Timer 时需要注意的事情
+
+对需要复用但是会被下游修改的参数要进行深复制
+创建线程和线程池时要指定与业务相关的名称
+使用线程池的情况下当程序结束时记得调用shutdown 关闭线程池
+线程池使用FutureTask 时需要注意的事情
 
 
 
 
-
-11.1 ArrayBlockingQueue 的使用 284
-11.1.1 异步日志打印模型概述 284
-11.1.2 异步日志与具体实现 285
-
-11.2 Tomcat 的NioEndPoint 中ConcurrentLinkedQueue 的使用 293
-11.2.1 生产者——Acceptor 线程 294
-11.2.2 消费者——Poller 线程 298
-
-11.3 并发组件ConcurrentHashMap 使用注意事项 300
-
-11.4 SimpleDateFormat 是线程不安全的 304
-11.4.1 问题复现 304
-11.4.2 问题分析 305
-
-11.5 使用Timer 时需要注意的事情 309
-11.5.1 问题的产生 309
-11.5.2 Timer 实现原理分析 310
-
-11.6 对需要复用但是会被下游修改的参数要进行深复制 314
-11.6.1 问题的产生 314
-11.6.2 问题分析 316
-
-11.7 创建线程和线程池时要指定与业务相关的名称 319
-11.7.1 创建线程需要有线程名 319
-11.7.2 创建线程池时也需要指定线程池的名称 321
-
-11.8 使用线程池的情况下当程序结束时记得调用shutdown 关闭线程池 325
-11.8.1 问题复现 325
-11.8.2 问题分析 327
-
-11.9 线程池使用FutureTask 时需要注意的事情 329
-11.9.1 问题复现 329
-11.9.2 问题分析 332
-
-11.10 使用ThreadLocal 不当可能会导致内存泄漏 336
-11.10.1 为何会出现内存泄漏 336
-11.10.2 在线程池中使用ThreadLocal 导致的内存泄漏 339
-11.10.3 在Tomcat 的Servlet 中使用ThreadLocal 导致内存泄漏 341
