@@ -422,7 +422,7 @@ http://www.liuhaihua.cn/archives/707946.html
 独占锁ReentrantLock(类图结构/获取锁/释放锁)
 
 
-#### 读写锁ReentrantReadWriteLock 
+#### ReentrantReadWriteLock 
 
 #### StampedLock锁
 
@@ -436,7 +436,7 @@ http://www.liuhaihua.cn/archives/707946.html
 
 
 
-## #线程池ThreadPoolExecutor 
+线程池ThreadPoolExecutor 
 
 ScheduledThreadPoolExecutor 
 
@@ -455,12 +455,15 @@ ScheduledThreadPoolExecutor
 
 ### Threadlocal
 
-每个线程都有`ThreadLocal.ThreadLocalMap threadLocals`(当前线程的ThreadLocalMap，主要存储该线程自身的ThreadLocal)和`ThreadLocal.ThreadLocalMap inheritableThreadLocals`(自父线程集成而来的ThreadLocalMap，主要用于父子线程间ThreadLocal变量的传递)，ThreadLocalMap是类Map结构，是ThreadLocal的内部静态类，采用线性探测的开放地址法解决hash冲突。当线程第一次调用ThreadLocal的set或者get方法的时候才会创建他们
+ThreadLocal的作用是提供线程内的局部变量，这种变量在线程的生命周期内起作用，减少同一个线程多个方法或组件间一些公共变量的传递的复杂度
+
+每个线程都有`ThreadLocal.ThreadLocalMap threadLocals`(当前线程的ThreadLocalMap，主要存储该线程自身的ThreadLocal)和`ThreadLocal.ThreadLocalMap inheritableThreadLocals`(自父线程集成而来的ThreadLocalMap，主要用于父子线程间ThreadLocal变量的传递)映射表，ThreadLocalMap是类Map结构，是ThreadLocal的内部静态类，采用线性探测的开放地址法解决hash冲突。当线程第一次调用ThreadLocal的set或者get方法的时候才会创建他们。这个映射表的key是ThreadLocal实例本身，value是真正需要存储的object。这样设计的好处是让Map的Entry数量变少了，否则要存Thread的数量之和，现在只要存ThreadLocal的数量之和即可
 
 ```java
 // ThreadLocalMap
 private Entry[] table;
 
+// 是用ThreadLocal的弱引用为key
 static class Entry extends WeakReference<ThreadLocal<?>> {
 	/** The value associated with this ThreadLocal. */
 	Object value;
@@ -480,6 +483,8 @@ ThreadLocalMap(ThreadLocal<?> firstKey, Object firstValue) {
 ```
 
 每个线程的本地变量不是存放在ThreadLocal实例中，而是放在调用线程的ThreadLocals变量里面。也就是说，ThreadLocal类型的本地变量是存放在**具体的线程空间**上，其本身相当于一个装载本地变量的工具壳，通过set方法将value添加到调用线程的threadLocals中，当调用线程调用get方法时候能够从它的threadLocals中取出变量。如果调用线程一直不终止，那么这个本地变量将会一直存放在他的threadLocals中，所以不使用本地变量的时候需要调用**remove方法**将threadLocals中删除不用的本地变量
+
+![trl](trl.jpg)
 
 接下来看Threadlocal的set方法：
 ```java
@@ -528,13 +533,10 @@ private Entry getEntry(ThreadLocal<?> key) {
 }
 ```
 
-使用ThreadLocal不当可能会导致内存泄漏
 
-// TODO
+使用ThreadLocal不当可能会导致内存泄漏。ThreadLocalMap使用ThreadLocal的弱引用作为key，如果一个ThreadLocal没有外部强引用引用它，Key就会在GC时被回收。这样就会导致ThreadLocalMap中出现key为null的Entry，而value还存在着强引用，只有thead线程退出以后，value的强引用链条才会断掉。如果当前线程迟迟不结束，这些key为null的Entry的value就会有一条一直存在的强引用，让它永远不会被回收：`ThreadLocalRef -》Thread -》ThreadLocalMap -》Entry -》Value`
 
-
-
-
+JDK在处理上有加入保护措施，get方法时会擦除null位置的Entry，在向下个位置查询过程中会擦除所有遇到key为null的value，set方法也会这样，但是必须手动调用。因此，一些时候需要主动调用remove方法手动删除不再需要的ThreadLocal。JDK建议将ThreadLocal变量定义为`private static`的，让其生命周期更长，由于一直存在ThreadLocal的强引用，就不会被回收ThreadLocal，就可以在任何时候根据ThreadLocal的弱引用访问到Entry的value，并remove它，防止内存泄露
 
 
 InheritableThreadLocal继承自ThreadLocal。由于ThreadLocal设计之初就是为了绑定当前线程，如果希望当前线程的ThreadLocal能够被子线程使用，InheritableThreadLocal就应运而生
