@@ -280,12 +280,39 @@ public long sum() {
 	
 **synchronized同步方法**，常量池中比普通的方法多了个`ACC_SYNCHRONIZED`标识，JVM就是根据这个标识来实现方法的同步。当调用方法的时候，调用指令会检查方法是否有ACC_SYNCHRONIZED标识，有的话线程需要先获取monitor，获取成功才能继续执行方法，方法执行完毕之后，线程再释放monitor，同一个monitor同一时刻只能被一个线程拥有
 
-所以，synchronized同步代码块是需要JVM通过字节码显式的去获取和释放monitor实现同步；而synchronized同步方法只是检查ACC_SYNCHRONIZED标志是否被设置，不需要JVM去显式的实现。实际上这两个同步方式实际都是通过获取monitor和释放monitor来实现同步的，而monitor的实现依赖于底层操作系统的**mutex**互斥原语，而操作系统实现线程之间的切换的时候需要从用户态转到内核态，这个转成过程开销比较大
-	
+所以，synchronized同步代码块是需要JVM通过字节码显式的去**获取和释放monitor**实现同步；而synchronized同步方法只是检查`ACC_SYNCHRONIZED`标志是否被设置，不需要JVM去显式的实现。实际上这两个同步方式实际都是通过获取monitor和释放monitor来实现同步的，而monitor的实现依赖于底层操作系统的**mutex**互斥原语，而操作系统实现线程之间的切换的时候需要从用户态转到内核态，这个转成过程开销比较大
 
-	
-	
+![monitorout](monitorout.jpg)
 
+线程尝试获取monitor的所有权，如果获取失败说明monitor被其他线程占用，则将线程加入到的同步队列中，等待其他线程释放monitor，当其他线程释放monitor后，有可能刚好有线程来获取monitor的所有权，那么系统会将monitor的所有权给这个线程，而不会去唤醒同步队列的第一个节点去获取，所以synchronized是**非公平锁**。如果线程获取monitor成功则进入到monitor中，并且将其进入数+1
+
+
+### 锁膨胀
+
++ 对象
+	- 对象头
+		+ Mark Word(存储对象自身的运行时数据)：结构不是固定的
+			- 哈希吗
+			- GC分代年龄
+			- 对象分代年龄
+			- 锁状态标志
+			- 线程持有的锁
+			- 偏向线程ID
+			- 偏向时间戳
+		+ 类型指针
+		+ 数组长度(只有数组对象才有)
+	- 实例数据：对象的实际数据，即程序中定义的各种类型的字段内容
+	- 对齐填充：对齐方式为8字节整数倍对齐
+
+![markword](markword.jpg)
+
+在32位虚拟机下，`Mark Word`的结构和数据可能为以下5种中的一种：
+![mw32](mw32.jpg)
+
+在64位虚拟机下，`Mark Word`的结构和数据可能为以下2种中的一种：
+![mw64](mw64.jpg)
+
+总结：是否偏向锁和锁标志位这两个标识和synchronized的锁膨胀息息相关
 
 java虚拟机的实现中每个对象都有一个对象头，用于保存对象的系统信息。对象头中有一个mark word的部分，它是实现锁的关键。在32位系统中，它为32位的数据；在64位系统中，它为64位的数据。它是一个多功能的数据区，可以存放对象的哈希值、对象年龄、锁的指针等信息。一个对象是否占用锁，占有哪个锁，就记录在这个mark word中
 
@@ -330,6 +357,19 @@ ObjectSynchronizer::inflate(THREAD, obj())-> enter(THREAD);
 ```
 首先**废弃**前面BasicLock备份的对象头信息，然后正式启用重量级锁。启用过程分为两步：首先通过`inflate()`方法进行**锁膨胀**，其目的是获得对象的**ObjectMonitor**，然后使用`enter()`方法尝试**进入该锁**。在`enter()`方法调用中，线程很可能会在操作系统层面被挂起，如果这样，线程间切换和调度的成本会比较高。因此锁膨胀后虚拟机会做最后的争取，希望线程可以快速进入**临界区**而避免被操作系统挂起，一种较为有效的方式就是使用**自旋锁**。自旋锁可以使线程在没有获得锁时不被挂起，而转去执行一个空循环，在若干空循环后线程如果可以获得锁则继续执行，如果依旧不能获取才会挂起。JDK1.7以后不用设置参数，默认启用，且自选次数由虚拟机自行调整
 
+![spz](spz.jpg)
+
+重量级锁的实现是基于底层操作系统的mutex互斥原语的，这个开销是很大的。所以JVM对synchronized做了优化，JVM先利用对象头实现锁的功能，如果线程的竞争过大则会将锁升级(膨胀)为重量级锁，也就是使用monitor对象
+
+![sch2](sch2.jpg)
+![sch3](sch3.jpg)
+
+![sdb](sdb.jpg)
+
+扩展：  
+[深入分析synchronized原理和锁膨胀过程(二)](https://ddnd.cn/2019/03/22/java-synchronized-2/)  
+[深入分析Synchronized原理](https://www.cnblogs.com/aspirant/p/11470858.html)
+
 
 #### 锁分离
 
@@ -338,109 +378,9 @@ ObjectSynchronizer::inflate(THREAD, obj())-> enter(THREAD);
 锁分段的劣势在于，与采用单个锁来实现独占访问相比，要获取多个锁来实现独占访问将更加困难并且开销更高，比如计算size、重hash
 
 
-
-
-
-
-
-
-
-
 ### AQS
 
-
-
-
-
-
-
-深入分析synchronized原理(二)
-http://www.liuhaihua.cn/archives/561521.html
-
-深入分析Synchronized原理(阿里面试题)
-https://www.cnblogs.com/aspirant/p/11470858.html
-
-
-深入分析synchronized原理和锁膨胀过程(二)
-https://www.lagou.com/lgeduarticle/63370.html
-
-https://ddnd.cn/2019/03/22/java-synchronized-2/
-
-分布式锁实现：数据库、redis、zookeeper
-https://www.cnblogs.com/duanxz/p/3509423.html
-
-
-
-
-## 线程池
-
-
-
-
-
-
-Java 并发编程之 ReentrantLock 源码分析
-http://www.liuhaihua.cn/archives/707946.html
-
-
-
-## 其他
-
-
-### threadlocal
-
-threadlocal / inheritableThreadLocal  继承
-
-Random  next随机种子 原子变量 /   threadlocalRandom 
-
-ThreadLocal源码分析
-https://blog.csdn.net/u011497638/article/details/93889173
-
-使用ThreadLocal 不当可能会导致内存泄漏
-
-
-
-## 并发包中并发List 源码
- 
-初始化   添加元素  获取指定位置元素  修改指定元素  删除元素  弱一致性的迭代器
-
-@@@ Java 并发包中并发队列
-
-LinkedBlockingQueue   ArrayBlockingQueue    PriorityBlockingQueue     DelayQueue 
-
-
-
-
-
-
-##  并发包中锁原理
-
-LockSupport工具类  抽象同步队列AQS(锁的底层支持/条件变量的支持/自定义同步器)
-独占锁ReentrantLock(类图结构/获取锁/释放锁)
-
-## 读写锁ReentrantReadWriteLock 
-
-类图结构   写锁的获取与释放   读锁的获取与释放
-
-## JDK 8 中新增的StampedLock 锁
-
-
-
-
-
-
-
-
-
-## 线程池ThreadPoolExecutor 
-
-ScheduledThreadPoolExecutor 
-
-## 线程同步器CountDownLatch    回环屏障CyclicBarrier   信号量Semaphore
-
- 
-
-## AQS
+// TODO
 
 ArrayBlockingQueue
 https://www.infoq.cn/article/jdk1.8-abstractqueuedsynchronizer
@@ -448,22 +388,214 @@ https://www.infoq.cn/article/java8-abstractqueuedsynchronizer/
 
 
 
+抽象同步队列AQS(锁的底层支持/条件变量的支持/自定义同步器)
 
 
-## 使用
-
-并发编程实战（一） logback 异步日志打印模型中ArrayBlockingQueue 的使用、Tomcat 的 NIOEndPoint 中 ConcurrentLinkedQueue 的使用
-https://blog.csdn.net/weixin_41750142/article/details/110221334
 
 
-SimpleDateFormat 是线程不安全的
-使用Timer 时需要注意的事情
+
+### ReentrantLock
+
+ReentrantLock类实现了Lock接口，并提供了与synchronized相同的互斥性和内存可见性，它的底层是通过AQS来实现多线程同步的。与内置锁相比ReentrantLock不仅提供了更丰富的加锁机制，而且在性能上也不逊色于内置锁。提供了定时的锁等待，可中断的锁等待，公平锁，以及实现非块结构的加锁。而synchronized可以执行一些优化，例如对线程封闭的锁对象的锁消除优化，通过增加锁的粒度来消除内置锁的同步，因此当需要一些高级功能时才应该使用ReentrantLock
+
+```java
+public class ReentrantLock implements Lock, java.io.Serializable {
+    private final Sync sync;
+    public ReentrantLock(boolean fair) {
+        sync = fair ? new FairSync() : new NonfairSync();
+    }
+    public void lock() {
+		// FairSync或NonfairSync重写的lock方法
+        sync.lock();
+    }
+	public void unlock() {
+		// 实际执行AQS的release方法
+        sync.release(1);
+    }
+}
+```
+
+// TODO
+
+http://www.liuhaihua.cn/archives/707946.html
+
+独占锁ReentrantLock(类图结构/获取锁/释放锁)
+
+
+#### 读写锁ReentrantReadWriteLock 
+
+#### StampedLock锁
+
+
+
+### 线程池
+
+// TODO
+
+
+
+
+
+## #线程池ThreadPoolExecutor 
+
+ScheduledThreadPoolExecutor 
+
+线程同步器CountDownLatch    回环屏障CyclicBarrier   信号量Semaphore
+
+
+
+> 创建线程和线程池时要指定与业务相关的名称
+
+使用线程池的情况下当程序结束时，需要记得调用shutdown关闭线程池
+
+
+
+
+## 其他
+
+### Threadlocal
+
+每个线程都有`ThreadLocal.ThreadLocalMap threadLocals`(当前线程的ThreadLocalMap，主要存储该线程自身的ThreadLocal)和`ThreadLocal.ThreadLocalMap inheritableThreadLocals`(自父线程集成而来的ThreadLocalMap，主要用于父子线程间ThreadLocal变量的传递)，ThreadLocalMap是类Map结构，是ThreadLocal的内部静态类，采用线性探测的开放地址法解决hash冲突。当线程第一次调用ThreadLocal的set或者get方法的时候才会创建他们
+
+```java
+// ThreadLocalMap
+private Entry[] table;
+
+static class Entry extends WeakReference<ThreadLocal<?>> {
+	/** The value associated with this ThreadLocal. */
+	Object value;
+	Entry(ThreadLocal<?> k, Object v) {
+		super(k);
+		value = v;
+	}
+}
+
+ThreadLocalMap(ThreadLocal<?> firstKey, Object firstValue) {
+	table = new Entry[INITIAL_CAPACITY];
+	int i = firstKey.threadLocalHashCode & (INITIAL_CAPACITY - 1);
+	table[i] = new Entry(firstKey, firstValue);
+	size = 1;
+	setThreshold(INITIAL_CAPACITY);
+}
+```
+
+每个线程的本地变量不是存放在ThreadLocal实例中，而是放在调用线程的ThreadLocals变量里面。也就是说，ThreadLocal类型的本地变量是存放在**具体的线程空间**上，其本身相当于一个装载本地变量的工具壳，通过set方法将value添加到调用线程的threadLocals中，当调用线程调用get方法时候能够从它的threadLocals中取出变量。如果调用线程一直不终止，那么这个本地变量将会一直存放在他的threadLocals中，所以不使用本地变量的时候需要调用**remove方法**将threadLocals中删除不用的本地变量
+
+接下来看Threadlocal的set方法：
+```java
+public void set(T value) {
+	// 获取当前线程（调用者线程）
+	Thread t = Thread.currentThread();
+	// 以当前线程作为key值，去查找对应的线程变量，找到对应的map
+	ThreadLocalMap map = getMap(t);
+	if (map != null)
+		map.set(this, value);
+	else
+		createMap(t, value);
+}
+
+ThreadLocalMap getMap(Thread t) {
+	return t.threadLocals;
+}
+
+void createMap(Thread t, T firstValue) {
+	t.threadLocals = new ThreadLocalMap(this, firstValue);
+}
+```
+然后看下get方法：
+```java
+public T get() {
+	Thread t = Thread.currentThread();
+	ThreadLocalMap map = getMap(t);
+	if (map != null) {
+		ThreadLocalMap.Entry e = map.getEntry(this);
+		if (e != null) {
+			T result = (T)e.value;
+			return result;
+		}
+	}
+	// 执行到此处，threadLocals为null，初始化当前线程的threadLocals变量
+	return setInitialValue();
+}
+
+private Entry getEntry(ThreadLocal<?> key) {
+	int i = key.threadLocalHashCode & (table.length - 1);
+	Entry e = table[i];
+	if (e != null && e.get() == key)
+		return e;
+	else
+		return getEntryAfterMiss(key, i, e);
+}
+```
+
+使用ThreadLocal不当可能会导致内存泄漏
+
+// TODO
+
+
+
+
+
+
+InheritableThreadLocal继承自ThreadLocal。由于ThreadLocal设计之初就是为了绑定当前线程，如果希望当前线程的ThreadLocal能够被子线程使用，InheritableThreadLocal就应运而生
+
+InheritableThreadLocal类重写了ThreadLocal的3个函数：
+```java
+ /**
+ * 该函数在父线程创建子线程，向子线程复制InheritableThreadLocal变量时使用
+ */
+protected T childValue(T parentValue) {
+	return parentValue;
+}
+
+/**
+ * 由于重写了getMap，操作InheritableThreadLocal时，
+ * 将只影响Thread类中的inheritableThreadLocals变量，
+ * 与threadLocals变量不再有关系
+ */
+ThreadLocalMap getMap(Thread t) {
+   return t.inheritableThreadLocals;
+}
+
+/**
+ * 类似于getMap，操作InheritableThreadLocal时，
+ * 将只影响Thread类中的inheritableThreadLocals变量，
+ * 与threadLocals变量不再有关系
+ */
+void createMap(Thread t, T firstValue) {
+	t.inheritableThreadLocals = new ThreadLocalMap(this, firstValue);
+}
+```
+创建子线程
+```java
+/**
+ * 初始化一个线程.
+ * 此函数有两处调用，
+ * 1、init()，不传AccessControlContext，inheritThreadLocals=true
+ * 2、		  传递AccessControlContext，inheritThreadLocals=false
+ */
+private void init(ThreadGroup g, Runnable target, String name,
+				  long stackSize, AccessControlContext acc,
+				  boolean inheritThreadLocals) {
+	// ...
+	// 采用默认方式产生子线程时，inheritThreadLocals=true；若此时父线程inheritableThreadLocals不为空，则将父线程inheritableThreadLocals传递至子线程，子线程将parentMap中的所有记录逐一复制至自身线程
+	if (inheritThreadLocals && parent.inheritableThreadLocals != null)
+            this.inheritableThreadLocals =
+                ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
+	// ...
+}
+```
+
+#### ThreadLocalRandom
+
+ThreadLocalRandom:是JDK 7之后提供并发产生随机数，能够解决多个线程发生的竞争争夺。ThreadLocalRandom不是直接用new实例化，而是第一次使用其静态方法current()。`Math.random()`改变到ThreadLocalRandom，我们不再有从多个线程访问同一个随机数生成器实例的争夺，取代以前每个随机变量实例化一个随机数生成器实例，我们可以每个线程实例化一个
+
+
+### 使用中
+
+在高并发、高流量、响应时间要求比较小的系统中，同步打印日志已经满足不了需求了。将日志写入磁盘的操作是业务线程同步调用完成的，那么把日志任务放入一个队列后直接返回，然后使用一个线程专门负责从队列中获取日志任务，并将其写入磁盘。这就是logback提供的异步日志打印模型。logback的异步日志打印模型是一个多生产者、单消费者模型，提供队列把同步日志打印转换成了异步
+
+每个SimpleDateFormat实例里面都有一个Calendar对象。SimpleDateFormat之所以是线程不安全的，是因为Calendar线程不安全。后者之所以是线程不安全的，是因为其中存放日期数据的变量都是线程不安全的，比如fields、time等
 
 对需要复用但是会被下游修改的参数要进行深复制
-创建线程和线程池时要指定与业务相关的名称
-使用线程池的情况下当程序结束时记得调用shutdown 关闭线程池
-线程池使用FutureTask 时需要注意的事情
-
-
-
 
