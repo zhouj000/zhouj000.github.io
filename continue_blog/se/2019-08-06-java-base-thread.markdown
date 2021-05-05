@@ -34,6 +34,7 @@ tags:
 2、实现Runnable接口  
 3、实现Callable接口
 
+守护线程，可以在创建线程后将其`setDaemon(true)`即可。比如JVM的垃圾回收。内存管理都是守护线程等，当所有线程退出后，守护线程也将结束
 
 ## 线程状态
 
@@ -48,8 +49,14 @@ tags:
 
 其中sleep方法会休眠一段时间(进入阻塞)，但**不释放**对象锁，到时间后进入就绪状态，并不保证能马上运行。`yield`方法类似让出资源(cpu时间片)，让优先级更高的线程执行，自己不会阻塞而是进入**就绪**状态，让系统的线程调度器重新调度器重新调度一次，因此也有可能之后还是自己执行。`wait`方法则会让线程进入阻塞状态，当前线程释放对象锁，进入等待队列，直到有线程`notify/notifyAll`唤醒。而当一个线程需要等另一个(或多个)线程先执行完再继续执行时可以使用join方法，当前线程阻塞，但不释放对象锁。使用interrupt方法可以中断线程，将"中断标记"设置为true，如果该线程正处于阻塞状态则将"中断标记"立即清除为"false"并抛出InterruptedException异常。`interrupted`方法判断当前线程是否处于中断状态，返回后会清除中断状态，而`isInterrupted`方法则只是判断中断状态并不会清除
 
-守护线程，可以在创建线程后将其`setDaemon(true)`即可。比如JVM的垃圾回收。内存管理都是守护线程等，当所有线程退出后，守护线程也将结束
 
+java调度算法：  
+1、选择当前可运行线程中优先级最高的线程运行(机会大)  
+2、拥有同样优先级的线程：采用round-robin的方式  
+PS、java是preemptive抢占式的，但不同平台的实现并不一定保证这点  
+3、sleep休眠/wait/notify/notifyAll  
+4、让步yield：当前运行线程让出CPU资源  
+5、合并join
 
 
 # 多线程
@@ -66,6 +73,19 @@ tags:
 + 死锁
 + 资源限制的挑战
 	- 计算机硬件资源或软件资源限制了多线程的运行速度
+
+同步方式：
++ synchronized方法/代码块
++ ReentrantLock
++ ThreadLocal
++ volatile关键字
++ concurrent.atomic包下原子变量
++ wait/notifyAll
+
+并发的2个关键问题：线程间如何通信和线程间如何同步：  
+1、命令式编程中通信有2种：共享内存和消息传递。Java的并发采用共享内存，线程间通信总是隐式进行  
+2、同步指程序中用于控制不同线程间操作发生相对顺序的机制，在共享内存并发模型中，同步是显式进行的，必须显式指定某个方法或代码需要在线程之间互斥执行
+
 
 #### 伪共享
 
@@ -239,6 +259,8 @@ public long sum() {
 	return sum;
 }
 ```
+
+总结：底层就是volatile(内存可见性)和CAS(原子性)共同作用的结果
 
 ## 锁
 
@@ -426,11 +448,26 @@ http://www.liuhaihua.cn/archives/707946.html
 
 #### StampedLock锁
 
+### 分布式锁
+
+C(一致性)、A(可用性)、P(分区容错性)
+
+为保证最终一致性，需要很多技术方案支持，比如分布式事务、分布式锁
+
+针对分布式锁：
++ 保证集群中，同一方法/资源在同一时间只能被一台机器上的一个线程执行
++ 锁最好是可重入锁(避免死锁)
++ 锁最好是阻塞锁(根据业务需要考虑)
++ 有高可用的获取和释放锁功能(原子的，网络或宕机时清除锁)
++ 获取/释放锁的性能要好
++ 基于数据库：锁表。依赖数据库(多库)、锁无失效时间(定时任务)、非阻塞(自旋/for update)、非可重入(记录)
++ 基于put方法：memcached的add，redis的setnx(不能设超时，需要额外EXPIRE设置，或lua脚本)(推荐redlock)
++ 基于ZooKeeper：某方法加锁，在对应节点目录下生成一个唯一的瞬时有序节点，只需判断最小节点访问。释放时删除节点(监听器)
 
 
 ### 线程池
 
-// TODO
+
 
 
 
@@ -447,6 +484,12 @@ ScheduledThreadPoolExecutor
 > 创建线程和线程池时要指定与业务相关的名称
 
 使用线程池的情况下当程序结束时，需要记得调用shutdown关闭线程池
+
+### FutureTask
+
+
+
+
 
 
 
@@ -600,4 +643,26 @@ ThreadLocalRandom:是JDK 7之后提供并发产生随机数，能够解决多个
 每个SimpleDateFormat实例里面都有一个Calendar对象。SimpleDateFormat之所以是线程不安全的，是因为Calendar线程不安全。后者之所以是线程不安全的，是因为其中存放日期数据的变量都是线程不安全的，比如fields、time等
 
 对需要复用但是会被下游修改的参数要进行深复制
+
+
+### Quartz
+
+Job+Trigger+Scheduler
+
+Scheduler任务调度器：ThreadPool+Jobstore  
+Trigger触发器：定义任务调度的时间规则
+
+QuartzSchedulerThread：一个协调的thread，起来后`while(true)`，去线程池拿当前可用的线程(workerThread)，如果没拿到`wait(500)`，如果拿到，就从JobStore里获取可以执行的JOB，让workerThread去`run`
+
+workerThread：`run`完后通知QuartzSchedulerThread，继续去找可用线程，然后再找trigger和Job，让这个thread去执行它们
+
+
+
+### concurrent其他
+
+Semaphore信号量：控制特定资源同一时间被访问个数
+
+CountDownLatch计数器
+
+CyclieBarrier：阻塞调用的线程，直到条件满足，阻塞线程同时被打开
 

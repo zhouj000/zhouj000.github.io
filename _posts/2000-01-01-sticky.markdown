@@ -90,6 +90,11 @@ catalog: true
 [Redis(七) 哨兵](https://zhouj000.github.io/2018/11/16/redis-7)  
 [Redis(八) 集群](https://zhouj000.github.io/2018/11/17/redis-8)  
 
+**Mongodb**：  
+聚合(管道)//aggregate(OPERATION)：unwind，match，project，limit，skip，group  
+Map Reduce
+
+
 ### >> 大数据知识
 
 [简明Lucene](https://zhouj000.github.io/2019/02/26/lucene/)  
