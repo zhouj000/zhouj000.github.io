@@ -402,21 +402,273 @@ ObjectSynchronizer::inflate(THREAD, obj())-> enter(THREAD);
 
 ### AQS
 
-// TODO
+抽象同步队列AQS(锁的底层支持/条件变量的支持/自定义同步器)。AbstractQueuedSynchronizer主要功能分为两类：独占功能和共享功能
 
-ArrayBlockingQueue
-https://www.infoq.cn/article/jdk1.8-abstractqueuedsynchronizer
-https://www.infoq.cn/article/java8-abstractqueuedsynchronizer/
+Node为AQS维护的一个双向链表队列，存储了当前线程，节点类型，队列中前后元素的变量，还有个waitStatus的变量描述节点的状态
+```java
+// 内部类Node
+static final class Node {
+	/** Marker to indicate a node is waiting in shared mode */
+	static final Node SHARED = new Node();
+	/** Marker to indicate a node is waiting in exclusive mode */
+	static final Node EXCLUSIVE = null;
+
+	volatile int waitStatus;
+	volatile Node prev;
+	volatile Node next;
+	volatile Thread thread;
+	Node nextWaiter;
+}
+```
+并发时，会有许多Node节点，每个节点代表了一个线程的状态，有的线程放弃了竞争，有的线程在等待条件满足后才恢复执行。一共有4种状态：  
+1、节点取消(CANCELLED:1)  
+2、节点等待触发(SIGNAL:-1，只有这个状态当前节点才能被挂起)  
+3、节点等待条件满足(CONDITION:-2)  
+4、节点状态需要向后传播(PROPAGATE:-3)
+
+获取：
+```java
+/**
+ * The synchronization state.
+ */
+private volatile int state;
+
+public final void acquire(int arg) {
+	// 尝试获取
+	if (!tryAcquire(arg) &&
+		// 1. addWaiter创建独占锁节点(线程+节点类型)，加入到队列尾部，如果有并发则自旋去修改
+		// 2. acquireQueued将线程挂起
+		acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
+		// 中断
+		selfInterrupt();
+}
+
+// 留给子类实现，由于有两类功能，因此非抽象方法让所有子类都去实现
+// 子类可通过state判断
+protected boolean tryAcquire(int arg) {
+	throw new UnsupportedOperationException();
+}
+
+final boolean acquireQueued(final Node node, int arg) {
+	boolean failed = true;
+	try {
+		boolean interrupted = false;
+		for (;;) {
+			// 获取node的前一个节点p
+			final Node p = node.predecessor();
+			// 如果节点p是头节点，说明是队列中第一个"有效的"节点，因此尝试获取tryAcquire
+			if (p == head && tryAcquire(arg)) {
+				// 成功后将自己设为头节点，清空thread和prev
+				setHead(node);
+				p.next = null; // help GC
+				failed = false;
+				return interrupted;
+			}
+			// 确认/更新获取失败节点的状态，是否被取消(跳过)，是否已准备好挂起(返回true)
+			if (shouldParkAfterFailedAcquire(p, node) &&
+				// 借助JUC包下的LockSopport类的静态方法Park挂起当前线程
+				parkAndCheckInterrupt())
+				interrupted = true;
+		}
+	} finally {
+		if (failed)
+			// 取消请求，将当前节点从队列中移除
+			cancelAcquire(node);
+	}
+}
+```
+AQS的队列为FIFO队列，所以每次被CPU唤醒，且当前线程不是头节点的位置，也是会被挂起的。AQS通过这样的方式，实现了竞争的排队策略
+
+释放：
+```java
+public final boolean release(int arg) {
+	// 同样是由子类实现
+	if (tryRelease(arg)) {
+		Node h = head;
+		if (h != null && h.waitStatus != 0)
+			// 找到AQS的头节点，唤醒它的下一个节点
+			unparkSuccessor(h);
+		return true;
+	}
+	return false;
+}
+
+private void unparkSuccessor(Node node) {
+	int ws = node.waitStatus;
+	if (ws < 0)
+		compareAndSetWaitStatus(node, ws, 0);
+
+	Node s = node.next;
+	if (s == null || s.waitStatus > 0) {
+		s = null;
+		for (Node t = tail; t != null && t != node; t = t.prev)
+			if (t.waitStatus <= 0)
+				s = t;
+	}
+	if (s != null)
+		LockSupport.unpark(s.thread);
+}
+```
+因此，AQS独占功能的实现主要就是使用标志位+队列的方式，记录锁、竞争、释放等一系列独占的状态，因为在AQS的层面state可以表示锁，也可以表示其他状态，它并不关心它的子类把它变成一个什么工具类，只是提供了维护一个独占状态。甚至可以说，AQS只是维护一个状态，一个控制各个线程何时可以访问的状态，它只对状态负责，而这个状态表示什么含义，由子类自己去定义
+
+通过CountDownLatch计数器工具类(类似于一个"栏栅"，在CountDownLatch的计数为0前，调用await方法的线程将一直阻塞)，可以看下AQS的共享功能的实现：
+```java
+// 例如输入5，代表初始化5个，countDown为0后await返回
+public CountDownLatch(int count) {
+	if (count < 0) throw new IllegalArgumentException("count < 0");
+	this.sync = new Sync(count);
+}
+
+private static final class Sync extends AbstractQueuedSynchronizer {
+	Sync(int count) {
+		// 很明显就是修改AQS的state
+		setState(count);
+	}
+}
+```
+先看下await方法：
+```java
+public void await() throws InterruptedException {
+	sync.acquireSharedInterruptibly(1);
+}
+
+public final void acquireSharedInterruptibly(int arg) throws InterruptedException {
+	// 检查下线程是否被中断
+	if (Thread.interrupted())
+		throw new InterruptedException();
+	if (tryAcquireShared(arg) < 0)
+		// 获取共享锁失败，即state不为0，意味着计数器还不为0，将当前线程放入到队列中去
+		doAcquireSharedInterruptibly(arg);
+}
+
+// await方法的获取方式更像是在获取一个独占锁，不过为0时可以多个线程调用，同时等待返回
+protected int tryAcquireShared(int acquires) {
+	return (getState() == 0) ? 1 : -1;
+}
+
+private void doAcquireSharedInterruptibly(int arg) throws InterruptedException {
+	// 标示这是一个共享节点
+	final Node node = addWaiter(Node.SHARED);
+	boolean failed = true;
+	try {
+		for (;;) {
+			final Node p = node.predecessor();
+			// 如果新建节点的前一个节点，就是Head，说明当前节点是AQS队列中等待获取锁的第一个节点，按照FIFO可直接尝试获取锁
+			if (p == head) {
+				int r = tryAcquireShared(arg);
+				if (r >= 0) {
+					// 获取成功，需要将当前节点设置为AQS队列中的第一个节点。队列的头节点表示正在获取锁的节点
+					setHeadAndPropagate(node, r);
+					p.next = null; // help GC
+					failed = false;
+					return;
+				}
+			}
+			// 检查下是否需要将当前节点挂起
+			if (shouldParkAfterFailedAcquire(p, node) &&
+				parkAndCheckInterrupt())
+				throw new InterruptedException();
+		}
+	} finally {
+		if (failed)
+			cancelAcquire(node);
+	}
+}
+
+private void setHeadAndPropagate(Node node, int propagate) {
+	Node h = head; // Record old head for check below
+	setHead(node);
+
+	if (propagate > 0 || h == null || h.waitStatus < 0 ||
+		(h = head) == null || h.waitStatus < 0) {
+		Node s = node.next;
+		// 将当前节点的下一个节点取出来，如果符合条件，做releaseShared操作
+		// 因为共享功能和独占功能不同，独占有且只有一个线程(持有锁的线程重复调用lock会被包装成多个节点在AQS队列中)能获取锁
+		// 而共享状态是可以被共享的，AQS队列中的其他节点也应能第一时间知道状态的变化。因此节点自身获取共享锁成功后，唤醒下一个共享类型节点的操作，实现共享状态的向后传递
+		if (s == null || s.isShared())
+			doReleaseShared();
+	}
+}
+
+private void doReleaseShared() {
+	for (;;) {
+		Node h = head;
+		if (h != null && h != tail) {
+			int ws = h.waitStatus;
+			// 如果头节点是SIGNAL(-1)，则它可能正在等待一个信号，或在等待被唤醒，因此做两件事：
+			// 1.重置waitStatus标志位  2.重置成功后, 唤醒下一个节点 
+			if (ws == Node.SIGNAL) {
+				if (!compareAndSetWaitStatus(h, Node.SIGNAL, 0))
+					continue;            // loop to recheck cases
+				unparkSuccessor(h);
+			}
+			// 如果头节点的waitStatus是出于重置状态waitStatus==0的，将其设置为"传播"状态，即需要将状态向后一个节点传播
+			else if (ws == 0 &&
+					 !compareAndSetWaitStatus(h, 0, Node.PROPAGATE))
+				continue;                // loop on failed CAS
+		}
+		if (h == head)                   // loop if head changed
+			break;
+	}
+}
+```
+对于`doAcquireShared(忽略中断)`，AQS提供了类似的实现。另外还有
+```java
+// 响应中断。每次循环时，会检查当前线程的中断状态，以实现对线程中断的响应
+doAcquireSharedInterruptibly
+// 限制等待时间，超出时间后，方法返回
+doAcquireSharedNanos
+
+if (nanosTimeout <= 0L)
+	return false;
+// 算出超时时间
+final long deadline = System.nanoTime() + nanosTimeout;
+// 自旋...
+for (;;) {
+	// tryAcquireShared... 
+	nanosTimeout = deadline - System.nanoTime();
+	// 超时返回
+	if (nanosTimeout <= 0L)
+		return false;
+	// 如果超时时间小于自旋时间(1000ns)，则不需要挂起线程
+	if (shouldParkAfterFailedAcquire(p, node) &&
+		nanosTimeout > spinForTimeoutThreshold)
+		LockSupport.parkNanos(this, nanosTimeout);
+}
+```
+然后看下countDown：
+```java
+public void countDown() {
+	sync.releaseShared(1);
+}
+
+public final boolean releaseShared(int arg) {
+	// 尝试去释放锁，同样由子类实现
+	// 如果state为0，对CountDownLatch来说：所有的子线程已经执行完毕，可以唤醒调用await()方法的线程了，而这些线程正在 AQS的队列中，且被挂起
+	if (tryReleaseShared(arg)) {
+		doReleaseShared();
+		return true;
+	}
+	return false;
+}
+
+// CountDownLatch，尝试-1
+protected boolean tryReleaseShared(int releases) {
+	// Decrement count; signal when transition to zero
+	for (;;) {
+		int c = getState();
+		if (c == 0)
+			return false;
+		int nextc = c-1;
+		if (compareAndSetState(c, nextc))
+			return nextc == 0;
+	}
+}
+```
+如果获取共享锁失败后，将请求共享锁的线程封装成Node对象放入AQS的队列中，并挂起Node对象对应的线程，实现请求锁线程的等待操作。待共享锁可以被获取后，从头节点开始，依次唤醒头节点及其以后的所有共享类型的节点。实现共享状态的传播
 
 
-
-抽象同步队列AQS(锁的底层支持/条件变量的支持/自定义同步器)
-
-
-
-
-
-### ReentrantLock
+### 独占锁ReentrantLock
 
 ReentrantLock类实现了Lock接口，并提供了与synchronized相同的互斥性和内存可见性，它的底层是通过AQS来实现多线程同步的。与内置锁相比ReentrantLock不仅提供了更丰富的加锁机制，而且在性能上也不逊色于内置锁。提供了定时的锁等待，可中断的锁等待，公平锁，以及实现非块结构的加锁。而synchronized可以执行一些优化，例如对线程封闭的锁对象的锁消除优化，通过增加锁的粒度来消除内置锁的同步，因此当需要一些高级功能时才应该使用ReentrantLock
 
@@ -426,25 +678,100 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     public ReentrantLock(boolean fair) {
         sync = fair ? new FairSync() : new NonfairSync();
     }
-    public void lock() {
-		// FairSync或NonfairSync重写的lock方法
-        sync.lock();
-    }
-	public void unlock() {
-		// 实际执行AQS的release方法
-        sync.release(1);
-    }
+}
+```
+这里补完上面QAS的独占功能部分的子类实现。加锁部分：
+```java
+public void lock() {
+	// FairSync或NonfairSync重写的lock方法
+	sync.lock();
+}
+
+// FairSync
+final void lock() {
+	acquire(1);
+}
+
+protected final boolean tryAcquire(int acquires) {
+	final Thread current = Thread.currentThread();
+	// 获取AQS中的标志位
+	int c = getState();
+	if (c == 0) {
+		// 如果队列中没有其他线程，说明没有线程正在占有锁！
+		if (!hasQueuedPredecessors() &&
+			// 修改一下状态位，这里的acquires是在lock的时候传递来的，即1
+			compareAndSetState(0, acquires)) {
+			// 如果CAS操作状态更新成功则代表当前线程获取锁，将当前线程设到AQS的一个变量中，说明这个线程拿走了锁
+			// exclusiveOwnerThread = thread;
+			setExclusiveOwnerThread(current);
+			return true;
+		}
+	}
+	// 如果不为0说明锁已经被拿走了，但因为ReentrantLock是重入锁，所以还要判断获取锁的线程是不是当前请求锁的线程
+	else if (current == getExclusiveOwnerThread()) {
+		// 是的情况下，acquires累加在state上
+		int nextc = c + acquires;
+		if (nextc < 0)
+			throw new Error("Maximum lock count exceeded");
+		setState(nextc);
+		return true;
+	}
+	return false;
+}
+
+
+// NonfairSync
+final void lock() {
+	if (compareAndSetState(0, 1))
+		// 如果CAS操作状态更新成功则代表当前线程获取锁，将当前线程设到AQS的一个变量中，说明这个线程拿走了锁
+		setExclusiveOwnerThread(Thread.currentThread());
+	else
+		acquire(1);
+}
+```
+释放锁：
+```java
+public void unlock() {
+	// 实际执行AQS的release方法
+	sync.release(1);
+}
+
+protected final boolean tryRelease(int releases) {
+	int c = getState() - releases;
+	if (Thread.currentThread() != getExclusiveOwnerThread())
+		throw new IllegalMonitorStateException();
+	boolean free = false;
+	if (c == 0) {
+		free = true;
+		setExclusiveOwnerThread(null);
+	}
+	setState(c);
+	return free;
 }
 ```
 
-// TODO
-
-http://www.liuhaihua.cn/archives/707946.html
-
-独占锁ReentrantLock(类图结构/获取锁/释放锁)
-
-
 #### ReentrantReadWriteLock 
+
+![wrlock](wrlock.png)
+分别有ReadLock和WriteLock处理不同场景的锁定。写锁使用独占功能，读锁使用共享功能
+
+···java
+// r主要与读锁配套使用
+static final class HoldCounter {
+	// 计数，表示某个读线程重入的次数
+	int count = 0;
+	// 获取当前线程的TID属性的值，用来唯一标识一个线程
+	final long tid = getThreadId(Thread.currentThread());
+}
+
+
+static final class ThreadLocalHoldCounter extends ThreadLocal<HoldCounter> {
+	// 重写初始化方法，获取的都是该HoldCounter值
+	public HoldCounter initialValue() {
+		return new HoldCounter();
+	}
+}
+···
 
 #### StampedLock锁
 
@@ -661,8 +988,6 @@ workerThread：`run`完后通知QuartzSchedulerThread，继续去找可用线程
 ### concurrent其他
 
 Semaphore信号量：控制特定资源同一时间被访问个数
-
-CountDownLatch计数器
 
 CyclieBarrier：阻塞调用的线程，直到条件满足，阻塞线程同时被打开
 
