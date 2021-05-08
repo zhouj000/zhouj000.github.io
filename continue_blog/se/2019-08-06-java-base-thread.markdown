@@ -764,16 +764,39 @@ static final class HoldCounter {
 	final long tid = getThreadId(Thread.currentThread());
 }
 
-
 static final class ThreadLocalHoldCounter extends ThreadLocal<HoldCounter> {
 	// 重写初始化方法，获取的都是该HoldCounter值
 	public HoldCounter initialValue() {
 		return new HoldCounter();
 	}
 }
+
+abstract static class Sync extends AbstractQueuedSynchronizer {
+	// 设置了本地线程计数器和AQS的状态state
+	Sync() {
+		readHolds = new ThreadLocalHoldCounter();
+		setState(getState()); // ensures visibility of readHolds
+    }
+}
 ···
 
+同步状态在重入锁的实现中是表示被同一个线程重复获取的次数，仅仅表示是否锁定，而不用区分是读锁还是写锁。而读写锁需要在同步状态(这个整型变量)上维护多个读线程和一个写线程的状态
+
+因此读写锁对于同步状态的实现是在一个整型变量上通过**按位切割**使用：将变量切割成两部分，高16位表示读，低16位表示写
+![wrlock2](wrlock2.png)
+
+写锁的lock和unlock就是独占式同步状态的获取与释放，因此只要看tryAcquire和tryRelease方法的实现即可。类似于写锁，读锁的lock和unlock的实际实现对应Sync的tryAcquireShared和tryReleaseShared方法
+
+总结：一个线程要想同时持有写锁和读锁，必须先获取写锁再获取读锁；写锁可以**降级**为读锁；读锁不能**升级**为写锁
+
+扩展：  
+[ReentrantReadWriteLock读写锁详解](https://www.cnblogs.com/xiaoxi/p/9140541.html)
+
+
 #### StampedLock锁
+
+[Java多线程进阶（十一）—— J.U.C之locks框架：StampedLock](https://segmentfault.com/a/1190000015808032)  
+
 
 ### 分布式锁
 
@@ -794,31 +817,191 @@ C(一致性)、A(可用性)、P(分区容错性)
 
 ### 线程池
 
+> 创建线程和线程池(通过ThreadFactory)时要指定与业务相关的名称
 
+直接看线程池ThreadPoolExecutor
+```java
+public ThreadPoolExecutor(int corePoolSize, // 核心线程池大小
+						  int maximumPoolSize, // 最大线程池大小
+						  long keepAliveTime, // 线程最大空闲时间
+						  TimeUnit unit, // 时间单位
+						  BlockingQueue<Runnable> workQueue, // 线程等待队列
+						  ThreadFactory threadFactory, // 线程创建工厂
+						  RejectedExecutionHandler handler) { // 拒绝策略
+	if (corePoolSize < 0 ||
+		maximumPoolSize <= 0 ||
+		maximumPoolSize < corePoolSize ||
+		keepAliveTime < 0)
+		throw new IllegalArgumentException();
+	if (workQueue == null || threadFactory == null || handler == null)
+		throw new NullPointerException();
+	this.acc = System.getSecurityManager() == null ?
+			null :
+			AccessController.getContext();
+	this.corePoolSize = corePoolSize;
+	this.maximumPoolSize = maximumPoolSize;
+	this.workQueue = workQueue;
+	this.keepAliveTime = unit.toNanos(keepAliveTime);
+	this.threadFactory = threadFactory;
+	this.handler = handler;
+}
+```
+BlockingQueu用于存放提交的任务，队列的实际容量与线程池大小相关联：
++ 如果当前线程池任务线程数量小于核心线程池数量，执行器总是优先创建一个任务线程
++ 如果当前线程池任务线程数量大于核心线程池数量，执行器总是优先从线程队列中取一个空闲线程(加入队列)
++ 如果当前线程池任务线程数量大于核心线程池数量，且队列中无空闲任务线程，将会创建一个任务线程，直到超出maximumPoolSize，如果超时maximumPoolSize，则任务将会被拒绝
 
+主要有三种队列策略：
++ 直接握手队列
+	- 一个很好的默认选择是SynchronousQueue，它将任务交给线程而不需要保留，如果没有线程立即可用运行它，那么排队任务的尝试将失败，因此将构建新的线程
+	- 通常需要无限制的maximumPoolSizes来避免拒绝新提交的任务
+	- 适合具有内部依赖关系的请求集中处理的场景，可以避免锁定
+	- 注意：当任务持续以平均提交速度>平均处理速度时，会导致线程数量会无限增长问题
++ 无界队列
+	- 例如没有预定义容量的LinkedBlockingQueue，在corePoolSize线程繁忙时将所有新任务会放到队列中等待，从而导致maximumPoolSize的值没有任何作用
+	- 适合不同任务互不影响、独立的场景
+	-注意：当任务持续以平均提交速度>平均处理速度时，会导致队列无限增长
++ 有界队列
+	- 例如ArrayBlockingQueue与maximumPoolSizes配置防止资源耗尽，但是需要调试，相互权衡
+	- 使用大队列和较小的maximumPoolSizes可以最大限度地减少CPU使用率，操作系统资源和上下文切换开销，但会导致人为的低吞吐量。如果任务经常被阻塞(比如I/O限制)，那么系统可以调度比我们允许的更多的线程
+	- 使用小队列通常需要较大的maximumPoolSizes，这会使CPU更繁忙，但可能会遇到不可接受的调度开销，这也会降低吞吐量
 
+ThreadPoolExecutor为提供了每个任务执行前后提供了钩子方法，重写`beforeExecute(Thread，Runnable)`和`afterExecute(Runnable，Throwable)`方法来操纵执行环境
 
+几种默认线程池
+```java
+ExecutorService es = Executors.newFixedThreadPool(10);
 
+// 适用场景：可用于Web服务瞬时削峰，但需注意长时间持续高峰情况造成的队列阻塞
+public static ExecutorService newFixedThreadPool(int nThreads) {
+	return new ThreadPoolExecutor(nThreads, nThreads, // 固定核心线程
+								  0L, TimeUnit.MILLISECONDS,
+								  new LinkedBlockingQueue<Runnable>()); // 无界阻塞队列
+}
 
-线程池ThreadPoolExecutor 
+// 适用场景：快速处理大量耗时较短的任务，如Netty的NIO接受请求时可使用
+public static ExecutorService newCachedThreadPool() {
+	return new ThreadPoolExecutor(0, Integer.MAX_VALUE,	// 线程数量几乎无限制
+								  60L, TimeUnit.SECONDS,
+								  new SynchronousQueue<Runnable>()); // 同步队列，入队出队必须同时传递
+}
 
-ScheduledThreadPoolExecutor 
+// 支持任务周期性调度的线程池。对比Timer而言是多线程、任务之间不影响、相对时间、异常无影响
+public ScheduledThreadPoolExecutor(int corePoolSize) {
+	super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
+		  new DelayedWorkQueue());
+}
+```
 
-线程同步器CountDownLatch    回环屏障CyclicBarrier   信号量Semaphore
+1、工作线程与核心线程数比较，队列判断  
+2、addWorker创建核心/非核心线程(，执行任务)  
+2-1、自旋、CAS、重读ctl等结合，判断是否可以创建worker  
+2-2、创建worker，使用ReentrantLock锁，然后并启动线程  
+3、runWorker一直loop循环，一个个任务处理，没有任务就去getTask()，可能会阻塞
 
+ThreadPoolExecutor的执行主要围绕Worker，Worker实现了AbstractQueuedSynchronizer并继承了Runnable
 
+[ThreadPoolExecutor执行原理](https://www.jianshu.com/p/23cb8b903d2c)
 
-> 创建线程和线程池时要指定与业务相关的名称
+> 使用线程池的情况下当程序结束时，需要记得调用shutdown()手动关闭线程池，如果希望线程池中的等待队列中的任务不继续执行，可以使用shutdownNow()方法
 
-使用线程池的情况下当程序结束时，需要记得调用shutdown关闭线程池
+一个线程不应该由其他线程来强制中断或停止，而是应该由线程自己自行停止。所以`Thread.stop, Thread.suspend, Thread.resume`都已经被废弃了。`Thread.interrupt`的作用其实也不是中断线程，而是**通知线程应该中断了**，具体到底中断还是继续运行，应该由被通知的线程自己处理
++ 如果线程处于被阻塞状态（例如处于sleep, wait, join等状态），那么线程将立即退出被阻塞状态，并抛出一个InterruptedException异常
++ 如果线程处于正常活动状态，那么仅会将该线程的中断标志设置为true而已。被设置中断标志的线程将继续正常运行不受影响
++ 在正常运行任务时，经常检查本线程的中断标志位，如果被设置了中断标志就自行停止线程
+
+所以想要正确的关闭线程池，并不是简单的调用`shutdown`方法那么简单，要考虑到应用场景的需求，如何拒绝新来的请求任务？如何处理等待队列中的任务？如何处理正在执行的任务？想好这几个问题，再确定如何优雅而正确的关闭线程池
 
 ### FutureTask
 
+```java
+public FutureTask(Callable<V> callable) {
+	if (callable == null)
+		throw new NullPointerException();
+	this.callable = callable;
+	this.state = NEW;       // ensure visibility of callable
+}
 
+public FutureTask(Runnable runnable, V result) {
+	this.callable = Executors.callable(runnable, result);
+	this.state = NEW;       // ensure visibility of callable
+}
+```
+调用run方法：
+```java
+public void run() {
+	if (state != NEW ||
+		!UNSAFE.compareAndSwapObject(this, runnerOffset, null, Thread.currentThread()))
+		return;
+	try {
+		Callable<V> c = callable;
+		if (c != null && state == NEW) {
+			V result;
+			boolean ran;
+			try {
+				// 1、获取返回值
+				result = c.call();
+				ran = true;
+			} catch (Throwable ex) {
+				result = null;
+				ran = false;
+				// 2、FutureTask的异常处理
+				setException(ex);
+			}
+			if (ran)
+				// 3、设置返回值
+				set(result);
+		}
+	} finally {
+		// runner must be non-null until state is settled to
+		// prevent concurrent calls to run()
+		runner = null;
+		// state must be re-read after nulling runner to prevent
+		// leaked interrupts
+		int s = state;
+		if (s >= INTERRUPTING)
+			handlePossibleCancellationInterrupt(s);
+	}
+}
 
+protected void setException(Throwable t) {
+	if (UNSAFE.compareAndSwapInt(this, stateOffset, NEW, COMPLETING)) {
+		outcome = t;
+		// 设置为异常状态
+		UNSAFE.putOrderedInt(this, stateOffset, EXCEPTIONAL);
+		finishCompletion();
+	}
+}
 
+protected void set(V v) {
+	if (UNSAFE.compareAndSwapInt(this, stateOffset, NEW, COMPLETING)) {
+		outcome = v;
+		// 设置为正常结束状态
+		UNSAFE.putOrderedInt(this, stateOffset, NORMAL); // final state
+		finishCompletion();
+	}
+}
+```
+再看下get阻塞方法：
+```java
+public V get() throws InterruptedException, ExecutionException {
+	int s = state;
+	// 未完成：status为NEW和COMPLETING，则进入阻塞状态，等待完成
+	if (s <= COMPLETING)
+		s = awaitDone(false, 0L);
+	return report(s);  //判断处理返回值
+}
 
-
+private V report(int s) throws ExecutionException {
+	Object x = outcome;
+	// 根据state判断线程处理状态，并对outcome返回结果进行强转。
+	if (s == NORMAL)
+		return (V)x;
+	if (s >= CANCELLED)
+		throw new CancellationException();
+	throw new ExecutionException((Throwable)x); //在主线程中抛出异常
+}
+```
 
 
 ## 其他
