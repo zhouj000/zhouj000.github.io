@@ -28,6 +28,10 @@ catalog: true
 
 [Java新特性: Java8、Java9、Java10](https://zhouj000.github.io/2019/07/30/about-java8910/)
 
+[Java基础SE(一) 数据类型与关键字](https://zhouj000.github.io/2021/04/11/java-base-base/)  
+[Java基础SE(二) 集合](https://zhouj000.github.io/2021/02/26/java-base-collections/)  
+[Java基础SE(三) 线程与并发](https://zhouj000.github.io/2021/05/09/java-base-thread/)  
+[Java基础SE(四) IO](https://zhouj000.github.io/2021/04/21/java-base-io/)  
 
 
 ## > 进阶
@@ -69,6 +73,9 @@ catalog: true
 [Java性能优化02-并行优化](https://zhouj000.github.io/2019/01/08/java-optimize-02/)  
 [Java性能优化03-JVM调优](https://zhouj000.github.io/2019/01/10/java-optimize-03/)  
 [Java性能优化04-调优工具](https://zhouj000.github.io/2019/01/11/java-optimize-04/)  
+
+[Java监控与性能优化(一) 概况](https://zhouj000.github.io/2020/02/04/java-monitoring-optimization-1/)  
+[Java监控与性能优化(二) 性能分析](https://zhouj000.github.io/2020/11/15/java-monitoring-optimization-2/)  
 
 ### >> 线上问题分析
 
@@ -180,3 +187,9 @@ Map Reduce
 # 其他
 
 [了解Markdown语法](https://zhouj000.github.io/2018/06/11/about-markdown/)
+
+
+[银行技术架构(一) 支付清算体系](https://zhouj000.github.io/2020/01/05/pay-audit/)   
+[银行技术架构(二) 业务模式与银行账户](https://zhouj000.github.io/2020/01/11/bank-account/)   
+[银行技术架构(三) 货币](https://zhouj000.github.io/2021/01/24/huobi/)   
+[支付系统(一) 架构样例](https://zhouj000.github.io/2021/01/25/pay-system1/)   

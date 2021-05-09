@@ -1,21 +1,22 @@
 ---
 layout:     post
 title:      "Java基础SE(三) 线程与并发"
-date:       2019-05-05
+date:       2021-05-09
 author:     "ZhouJ000"
-header-img: "img/in-post/2019/post-bg-2019-headbg.jpg"
+header-img: "img/in-post/2021/post-bg-2021-headbg.jpg"
 catalog: true
 tags:
     - java
 --- 
 
 
+[Java基础SE(一) 数据类型与关键字](https://zhouj000.github.io/2021/04/11/java-base-base/)  
 [Java基础SE(二) 集合](https://zhouj000.github.io/2021/02/26/java-base-collections/)  
-
+[Java基础SE(三) 线程与并发](https://zhouj000.github.io/2021/05/09/java-base-thread/)  
+[Java基础SE(四) IO](https://zhouj000.github.io/2021/04/21/java-base-io/)  
 
 [Java基础: JVM(九) Java内存模型](https://zhouj000.github.io/2019/07/09/java-base-jmm/)  
 [Java性能优化02-并行优化](https://zhouj000.github.io/2019/01/08/java-optimize-02/)  
-
 
 
 
@@ -38,7 +39,7 @@ tags:
 
 ## 线程状态
 
-![thread_status](thread_status.jpg)
+![thread_status](/img/in-post/2021/05/thread_status.jpg)
 
 线程状态可以分为：  
 1、**新建**(new)  
@@ -304,7 +305,7 @@ public long sum() {
 
 所以，synchronized同步代码块是需要JVM通过字节码显式的去**获取和释放monitor**实现同步；而synchronized同步方法只是检查`ACC_SYNCHRONIZED`标志是否被设置，不需要JVM去显式的实现。实际上这两个同步方式实际都是通过获取monitor和释放monitor来实现同步的，而monitor的实现依赖于底层操作系统的**mutex**互斥原语，而操作系统实现线程之间的切换的时候需要从用户态转到内核态，这个转成过程开销比较大
 
-![monitorout](monitorout.jpg)
+![monitorout](/img/in-post/2021/05/monitorout.jpg)
 
 线程尝试获取monitor的所有权，如果获取失败说明monitor被其他线程占用，则将线程加入到的同步队列中，等待其他线程释放monitor，当其他线程释放monitor后，有可能刚好有线程来获取monitor的所有权，那么系统会将monitor的所有权给这个线程，而不会去唤醒同步队列的第一个节点去获取，所以synchronized是**非公平锁**。如果线程获取monitor成功则进入到monitor中，并且将其进入数+1
 
@@ -326,13 +327,13 @@ public long sum() {
 	- 实例数据：对象的实际数据，即程序中定义的各种类型的字段内容
 	- 对齐填充：对齐方式为8字节整数倍对齐
 
-![markword](markword.jpg)
+![markword](/img/in-post/2021/05/markword.jpg)
 
 在32位虚拟机下，`Mark Word`的结构和数据可能为以下5种中的一种：
-![mw32](mw32.jpg)
+![mw32](/img/in-post/2021/05/mw32.jpg)
 
 在64位虚拟机下，`Mark Word`的结构和数据可能为以下2种中的一种：
-![mw64](mw64.jpg)
+![mw64](/img/in-post/2021/05/mw64.jpg)
 
 总结：是否偏向锁和锁标志位这两个标识和synchronized的锁膨胀息息相关
 
@@ -350,7 +351,7 @@ java虚拟机的实现中每个对象都有一个对象头，用于保存对象�
 `[javaThread* | epoch | age |1|01]`  
 前23位表示持有偏向锁的线程，后续2位表示偏向锁的时间戳，4位比特表示对象年龄，年龄后1位为1表示偏向锁，最后2位位01表示可偏向/未锁定。当获得锁的线程再次尝试获取锁时，通过mark word的线程信息可以判断当前线程是否持有偏向锁。当然在锁竞争激烈的场景下反而得不到优化，可以使用`-XX:-UseBiasedLocking`禁用偏向锁
 
-![basicObjectLock](basicObjectLock.png)
+![basicObjectLock](/img/in-post/2021/05/basicObjectLock.png)
 
 偏向锁失败后，java虚拟机让线程申请**轻量级锁**。轻量级锁在虚拟机内部使用一个称为**BasicObjectLock**的对象实现，这个对象内部由一个**BasicLock对象**和一个**持有该锁的Java对象指针**组成。BaseicObjectLock对象放置在Java栈的栈帧中，在BasicLock对象内部还维护着**displaced_header**字段，它用于备份对象头部的**mark word**。当对象处于轻量级锁定时其头部mark word为:  
 `[ptr         |00] locked`  
@@ -365,7 +366,7 @@ if (mark == (markOop)Atomic::cmpxchg_ptr(lock, ojb()->mark_addr(), mark)) {
 ```
 首先BasicLock通过set_displaced_header方法备份原对象的mark word。然后使用CAS操作尝试将BasicLock的地址复制到对象头的mark word，如果复制成功则枷锁成功，如果失败则认为加锁失败，那么轻量级锁有可能膨胀为重量级锁
 
-![weight-lock](weight-lock.jpg)
+![weight-lock](/img/in-post/2021/05/weight-lock.jpg)
 
 + Mark Word：默认存储对象的HashCode，分代年龄和锁标志位信息。它会根据对象的状态复用自己的存储空间
 + Klass Point：对象指向它的类元数据的指针，虚拟机通过这个指针来确定这个对象是哪个类的实例
@@ -379,14 +380,14 @@ ObjectSynchronizer::inflate(THREAD, obj())-> enter(THREAD);
 ```
 首先**废弃**前面BasicLock备份的对象头信息，然后正式启用重量级锁。启用过程分为两步：首先通过`inflate()`方法进行**锁膨胀**，其目的是获得对象的**ObjectMonitor**，然后使用`enter()`方法尝试**进入该锁**。在`enter()`方法调用中，线程很可能会在操作系统层面被挂起，如果这样，线程间切换和调度的成本会比较高。因此锁膨胀后虚拟机会做最后的争取，希望线程可以快速进入**临界区**而避免被操作系统挂起，一种较为有效的方式就是使用**自旋锁**。自旋锁可以使线程在没有获得锁时不被挂起，而转去执行一个空循环，在若干空循环后线程如果可以获得锁则继续执行，如果依旧不能获取才会挂起。JDK1.7以后不用设置参数，默认启用，且自选次数由虚拟机自行调整
 
-![spz](spz.jpg)
+![spz](/img/in-post/2021/05/spz.jpg)
 
 重量级锁的实现是基于底层操作系统的mutex互斥原语的，这个开销是很大的。所以JVM对synchronized做了优化，JVM先利用对象头实现锁的功能，如果线程的竞争过大则会将锁升级(膨胀)为重量级锁，也就是使用monitor对象
 
-![sch2](sch2.jpg)
-![sch3](sch3.jpg)
+![sch2](/img/in-post/2021/05/sch2.jpg)
+![sch3](/img/in-post/2021/05/sch3.jpg)
 
-![sdb](sdb.jpg)
+![sdb](/img/in-post/2021/05/sdb.jpg)
 
 扩展：  
 [深入分析synchronized原理和锁膨胀过程(二)](https://ddnd.cn/2019/03/22/java-synchronized-2/)  
@@ -752,7 +753,7 @@ protected final boolean tryRelease(int releases) {
 
 #### ReentrantReadWriteLock 
 
-![wrlock](wrlock.png)
+![wrlock](/img/in-post/2021/05/wrlock.png)
 分别有ReadLock和WriteLock处理不同场景的锁定。写锁使用独占功能，读锁使用共享功能
 
 ···java
@@ -783,7 +784,7 @@ abstract static class Sync extends AbstractQueuedSynchronizer {
 同步状态在重入锁的实现中是表示被同一个线程重复获取的次数，仅仅表示是否锁定，而不用区分是读锁还是写锁。而读写锁需要在同步状态(这个整型变量)上维护多个读线程和一个写线程的状态
 
 因此读写锁对于同步状态的实现是在一个整型变量上通过**按位切割**使用：将变量切割成两部分，高16位表示读，低16位表示写
-![wrlock2](wrlock2.png)
+![wrlock2](/img/in-post/2021/05/wrlock2.png)
 
 写锁的lock和unlock就是独占式同步状态的获取与释放，因此只要看tryAcquire和tryRelease方法的实现即可。类似于写锁，读锁的lock和unlock的实际实现对应Sync的tryAcquireShared和tryReleaseShared方法
 
@@ -1037,7 +1038,7 @@ ThreadLocalMap(ThreadLocal<?> firstKey, Object firstValue) {
 
 每个线程的本地变量不是存放在ThreadLocal实例中，而是放在调用线程的ThreadLocals变量里面。也就是说，ThreadLocal类型的本地变量是存放在**具体的线程空间**上，其本身相当于一个装载本地变量的工具壳，通过set方法将value添加到调用线程的threadLocals中，当调用线程调用get方法时候能够从它的threadLocals中取出变量。如果调用线程一直不终止，那么这个本地变量将会一直存放在他的threadLocals中，所以不使用本地变量的时候需要调用**remove方法**将threadLocals中删除不用的本地变量
 
-![trl](trl.jpg)
+![trl](/img/in-post/2021/05/trl.jpg)
 
 接下来看Threadlocal的set方法：
 ```java
@@ -1174,3 +1175,4 @@ Semaphore信号量：控制特定资源同一时间被访问个数
 
 CyclieBarrier：阻塞调用的线程，直到条件满足，阻塞线程同时被打开
 
+![concurrent-package](/img/in-post/2021/05/concurrent-package.png)
