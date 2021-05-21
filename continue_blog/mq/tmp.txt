@@ -1,6 +1,24 @@
-https://www.jianshu.com/p/2838890f3284
-https://blog.csdn.net/iie_libi/article/details/54236502
-https://blog.csdn.net/initiallht/article/details/104745720
+
+
+RocketMq之Producer原理浅析
 http://www.zyiz.net/tech/detail-139670.html
+
+RocketMQ学习总结   :  Producer
 https://cloud.tencent.com/developer/article/1652750?from=article.detail.1645912
+RocketMq之Consumer原理浅析
 https://cloud.tencent.com/developer/article/1645910?from=article.detail.1652750
+
+
+
+
+
+
+
+
+
+
+
+
+
+RocketMQ事务消费和顺序消费详解
+https://www.cnblogs.com/520playboy/p/6750023.html
