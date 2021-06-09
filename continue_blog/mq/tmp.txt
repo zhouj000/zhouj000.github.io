@@ -1,22 +1,8 @@
 
 
-RocketMq之Producer原理浅析
-http://www.zyiz.net/tech/detail-139670.html
 
-RocketMQ学习总结   :  Producer
-https://cloud.tencent.com/developer/article/1652750?from=article.detail.1645912
 RocketMq之Consumer原理浅析
 https://cloud.tencent.com/developer/article/1645910?from=article.detail.1652750
-
-
-
-
-
-
-
-
-
-
 
 
 

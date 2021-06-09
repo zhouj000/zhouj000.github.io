@@ -9,6 +9,8 @@ tags:
     - mq
 --- 
 
+[重看RocketMQ源码(一)](https://zhouj000.github.io/2021/05/10/rocketmq-source1/)  
+
 
 
 # 概念
