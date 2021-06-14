@@ -9,6 +9,8 @@ tags:
     - mq
 --- 
 
+[重看RocketMQ源码(一)](https://zhouj000.github.io/2021/05/10/rocketmq-source1/)  
+
 
 
 # 概念
@@ -70,6 +72,11 @@ RocketMQ优势：
 
 例如，如果上次请求的latency超过550Lms，就避让3000ms；超过1000ms，就退避60000ms
 
++ 一个topic分布在多个broker上，一个broker可以配置多个topic，它们是多对多的关系
++ 如果某个topic消息量很大，应该给它多配置几个队列，并且尽量多分布在不同broker上，减轻某个broker的压力
++ topic消息量都比较均匀的情况下，如果某个broker上的队列越多，则该broker压力越大
++ 一个消费者集群多台机器共同消费一个topic的多个队列，一个队列只会被一个消费者消费。如果某个消费者挂掉，分组内其它消费者会接替挂掉的消费者继续消费
+
 ## 创建topic
 
 #### 自动创建topic
@@ -92,19 +99,23 @@ RocketMQ优势：
 
 **顺序消息Queue的数量尽量提前预分配**，虽然可以在后期动态增加，但是可能会破坏Key和Queue之间对应关系打乱消费顺序
 
+> 顺序消息中，produce在发送消息时，把消息发到同一个队列(queue，并非在同一个topic)中，消费者注册消息监听器为MessageListenerOrderly，这样就可以保证消费端只有一个线程去消费消息
+
+> 问题：个别队列由于哈希不均导致消息过多，消费速度跟不上，产生消息堆积问题遇到消息失败的消息，无法跳过，当前队列消费暂停
+
 #### 通过broker模式创建与通过集群模式创建
 
 用集群模式去创建topic时，集群里面每个broker的queue的数量相同，当用单个broker模式去创建topic时，每个broker的queue数量可以不一致
 
 ## 消息存储
 
-**ReputMessageService**不停地分发请求并异步构建ConsumeQueue（逻辑消费队列）和IndexFile（索引文件）数据
+**ReputMessageService**不停地分发请求并异步构建ConsumeQueue(逻辑消费队列)和IndexFile(索引文件)数据
 
 ![rms](/img/in-post/2021/05/rms.png)
 
 #### ConsumeQueue
 
-ConsumeQueue（逻辑消费队列）作为消费消息的索引，保存了指定Topic下的队列消息在CommitLog中的起始物理偏移量offset，消息大小size和消息Tag的HashCode值
+ConsumeQueue(逻辑消费队列)作为消费消息的索引，保存了指定Topic下的队列消息在CommitLog中的起始物理偏移量offset，消息大小size和消息Tag的HashCode值
 
 **consumequeue文件**采取定长设计，每一个条目共20个字节，分别为8字节的commitlog物理偏移量、4字节的消息长度、8字节tag hashcode，单个文件由30W个条目组成，可以像数组一样随机访问每一个条目，每个ConsumeQueue文件大小约5.72M
 
@@ -112,11 +123,11 @@ ConsumeQueue（逻辑消费队列）作为消费消息的索引，保存了指�
 
 ![IndexFile](/img/in-post/2021/05/IndexFile.png)
 
-IndexFile（索引文件）提供了一种可以通过key或时间区间来查询消息的方法
+IndexFile(索引文件)提供了一种可以通过key或时间区间来查询消息的方法
 
 IndexFile的底层存储设计为在文件系统中实现HashMap结构，故rocketmq的索引文件其底层实现为hash索引
 
-文件名fileName是以创建时的时间戳命名的，文件大小是固定的，等于`40+500W*4+2000W*20=420000040`个字节大小。如果消息设置了KEYS属性（多个KEY以空格分隔），会用`topic + “#” + KEY`来做索引
+文件名fileName是以创建时的时间戳命名的，文件大小是固定的，等于`40+500W*4+2000W*20=420000040`个字节大小。如果消息设置了KEYS属性(多个KEY以空格分隔)，会用`topic + “#” + KEY`来做索引
 
 根据topic和key找到IndexFile索引文件中的一条记录，根据其中的commitLog offset从CommitLog文件中读取消息的实体内容
 
@@ -124,11 +135,11 @@ IndexFile的底层存储设计为在文件系统中实现HashMap结构，故rock
 
 ![mmap](/img/in-post/2021/05/mmap.png)
 
-页缓存（PageCache)是OS对文件的缓存，用于加速对文件的读写。一般来说，程序对文件进行顺序读写的速度几乎接近于内存的读写速度，主要原因就是由于OS使用PageCache机制对读写访问操作进行了性能优化，将一部分的内存用作PageCache。对于数据的写入，OS会先写入至Cache内，随后通过异步的方式由pdflush内核线程将Cache内的数据刷盘至物理磁盘上。对于数据的读取，如果一次读取文件时出现未命中PageCache的情况，OS从物理磁盘上访问读取文件的同时，会顺序对其他相邻块的数据文件进行预读取
+页缓存(PageCache)是OS对文件的缓存，用于加速对文件的读写。一般来说，程序对文件进行顺序读写的速度几乎接近于内存的读写速度，主要原因就是由于OS使用PageCache机制对读写访问操作进行了性能优化，将一部分的内存用作PageCache。对于数据的写入，OS会先写入至Cache内，随后通过异步的方式由pdflush内核线程将Cache内的数据刷盘至物理磁盘上。对于数据的读取，如果一次读取文件时出现未命中PageCache的情况，OS从物理磁盘上访问读取文件的同时，会顺序对其他相邻块的数据文件进行预读取
 
-在RocketMQ中，ConsumeQueue逻辑消费队列存储的数据较少，并且是顺序读取，在page cache机制的预读取作用下，Consume Queue文件的读性能几乎接近读内存，即使在有消息堆积情况下也不会影响性能。而对于CommitLog消息存储的日志数据文件来说，读取消息内容时候会产生较多的随机访问读取，严重影响性能。如果选择合适的系统IO调度算法，比如设置调度算法为“Deadline”（此时块存储采用SSD的话），随机读的性能也会有所提升
+在RocketMQ中，ConsumeQueue逻辑消费队列存储的数据较少，并且是顺序读取，在page cache机制的预读取作用下，Consume Queue文件的读性能几乎接近读内存，即使在有消息堆积情况下也不会影响性能。而对于CommitLog消息存储的日志数据文件来说，读取消息内容时候会产生较多的随机访问读取，严重影响性能。如果选择合适的系统IO调度算法，比如设置调度算法为“Deadline”(此时块存储采用SSD的话)，随机读的性能也会有所提升
 
-RocketMQ主要通过MappedByteBuffer对文件进行读写操作。其中，利用了NIO中的FileChannel模型将磁盘上的物理文件直接映射到用户态的内存地址中（这种Mmap的方式减少了传统IO将磁盘文件数据在操作系统内核地址空间的缓冲区和用户应用程序地址空间的缓冲区之间来回进行拷贝的性能开销），将对文件的操作转化为直接对内存地址进行操作，从而极大地提高了文件的读写效率（正因为需要使用内存映射机制，故RocketMQ的文件存储都使用定长结构来存储，方便一次将整个文件映射至内存）
+RocketMQ主要通过MappedByteBuffer对文件进行读写操作。其中，利用了NIO中的FileChannel模型将磁盘上的物理文件直接映射到用户态的内存地址中(这种Mmap的方式减少了传统IO将磁盘文件数据在操作系统内核地址空间的缓冲区和用户应用程序地址空间的缓冲区之间来回进行拷贝的性能开销)，将对文件的操作转化为直接对内存地址进行操作，从而极大地提高了文件的读写效率(正因为需要使用内存映射机制，故RocketMQ的文件存储都使用定长结构来存储，方便一次将整个文件映射至内存)
 
 #### 刷盘机制
 
@@ -156,7 +167,7 @@ Mmap+PageCache的方式，读写消息都走的是pageCache，这样子读写都
 
 ![ReBalance](/img/in-post/2021/05/ReBalance.png)
 
-+ AllocateMessageQueueAveragely：平均分配（默认）
++ AllocateMessageQueueAveragely：平均分配(默认)
 + AllocateMessageQueueAveragelyByCircle：轮询分配
 + AllocateMessageQueueConsistentHash：一致性hash分配
 
@@ -208,7 +219,7 @@ SQL expression的构建和执行由**rocketmq-filter模块**负责的。每次�
 		+ 同一个consumer group的订阅关系，保存在Client RebalanceImpl类的Map中。key为topic
 		+ 不同的消费者启动后，依次注册订阅关系，因为tag不一样，导致Map中同一topic的tag被覆盖。比如：消费者1订阅tag1，消费者2订阅tag2。最后map中只保存tag2
 		+ 过滤的核心是tag，tag被更新，过滤条件被改变。服务端过滤后只返回tag2的消息
-		+ 客户端接收消息后，再次过滤。先启动的消费者1订阅tagA，但是服务端返回tag2，所以消费者1收不到任何消息。消费者2能收到一半的消息（集群模式，假设消息平均分配，另外一半分给消费者1）
+		+ 客户端接收消息后，再次过滤。先启动的消费者1订阅tagA，但是服务端返回tag2，所以消费者1收不到任何消息。消费者2能收到一半的消息(集群模式，假设消息平均分配，另外一半分给消费者1)
 	- TOPIC不一致
 
 NameServer的假死导致路由信息无法更新：  
@@ -237,7 +248,7 @@ topic：%RETRY_topic%
 	- 不会重试
 + 顺序消费
 	- 终止当前队列消费，延时1s重新消费(队列阻塞消费，1s重试一次)
-	- 重试次数大于等于最大次数(默认16)，发送重试消息（broker对于重试次数超过16次的消息会放入死信队列）
+	- 重试次数大于等于最大次数(默认16)，发送重试消息(broker对于重试次数超过16次的消息会放入死信队列)
 	- 重试消息发送失败：继续阻塞重试
 
 #### 死信队列
@@ -252,6 +263,14 @@ topic：`%DLQ% + consumerGroup`
 ![trs-mq2](/img/in-post/2021/05/trs-mq2.png)
 ![trs-mq3](/img/in-post/2021/05/trs-mq3.png)
 ![trs-mq4](/img/in-post/2021/05/trs-mq4.png)
+
+#### 应用场景
+
+A(存在DB操作)、B(存在DB操作)两方需要保证分布式事务一致性，通过引入中间层MQ，A和MQ保持事务一致性(异常情况下通过MQ反查A接口实现check)，B和MQ保证事务一致(通过重试)，从而达到最终事务一致性
+
+原理：大事务=小事务+异步
+
+TCC方案：创建订单并发送订单创建消息(核心逻辑，成功后修改状态，并发送消息给非核心系统)，同时使用延时(指定时间)消息创建回滚任务(判断订单状态)
 
 #### RemotingCommand协议
 
@@ -363,7 +382,7 @@ RocketMQ使用Netty中的自定义长度解码器LengthFieldBasedFrameDecoder解
 	- 处理生产消息的队列大小，默认值可能有点小，比如5万TPS(异步发送)的情况下，卡200ms就会爆。设置比较小的数字可能是担心有大量大消息撑爆内存(比如100K的话，1万个的消息大概占用1G内存，也还好)，具体可以自己算，如果都是小消息，可以把这个数字改大。可以修改Broker参数限制Client发送大消息
 + brokerFastFailureEnable
 	- 默认值：True
-	- Broker端快速失败（限流），和下面两个参数配合。这个机制可能有争议，client设置了超时时间，如果client还愿意等，并且sendThreadPoolQueue还没有满，不应该失败，sendThreadPoolQueue满了自然会拒绝新的请求。但如果Client设置的超时时间很短，没有这个机制可能导致消息重复。可以自行决定是否开启。理想情况下，能根据Client设置的超时时间来清理队列是最好的
+	- Broker端快速失败(限流)，和下面两个参数配合。这个机制可能有争议，client设置了超时时间，如果client还愿意等，并且sendThreadPoolQueue还没有满，不应该失败，sendThreadPoolQueue满了自然会拒绝新的请求。但如果Client设置的超时时间很短，没有这个机制可能导致消息重复。可以自行决定是否开启。理想情况下，能根据Client设置的超时时间来清理队列是最好的
 + waitTimeMillsInSendQueue
 	- 默认值：200
 	- 200ms很容易导致发送失败，建议改大，比如1000ms
@@ -377,12 +396,25 @@ RocketMQ使用Netty中的自定义长度解码器LengthFieldBasedFrameDecoder解
 1、MessageQueue已经足够。如果MessageQueue有16个，消费者实例只有2台，则可以临时申请14台机器，启用16个消费者实例同时消费  
 2、使用新的topic增加MessageQueue数量。如果MessageQueue数量比较少，则需要临时修改消费者系统代码，把消息写入一个新的Topic，这个topic有16个MessageQueue，然后再部署16个消费者实例同时消费
 
+#### 最佳实践
+
+Producer端：  
+1、Topic：一个应用尽可能用一个Topic，消息子类型用tags来标识  
+2、key：每个消息在业务层面的唯一标识码`message.setKeys(uniqueId);`，方便将来定位消息丢失问题。服务器会为每个消息创建索引(哈希索引)，应用可以通过 topic，key来查询这条消息内容，以及消息被谁消费。由于是哈希索引，请务必保证key 尽可能唯一，这样可以避免潜在的哈希冲突  
+3、日志：消息发送成功或者失败，要打印消息日志，务必带上`send result`和`key`字段  
+4、send：send消息方法，只要不抛异常，就代表发送成功。但是发送成功会有多个状态，在sendResult里定义(SEND_OK、FLUSH_DISK_TIMEOUT、FLUSH_SLAVE_TIMEOUT、SLAVE_NOT_AVAILABLE)
+
+Consumer端：  
+1、幂等：RocketMQ使用的消息原语是`At Least Once`，所以consumer可能多次收到同一个消息，需要做好幂等  
+2、日志：消费时记录日志，以便后续定位问题  
+3、批量消费：尽量使用批量方式消费方式，可以很大程度上提高消费吞吐量
+
 
 ### 对比Kafka
 
 + 存储结构
 + 稀疏索引
-+ 时间轮（对比Timer、ScheduledThreadPoolExecutor、rocketmq延时消息）
++ 时间轮(对比Timer、ScheduledThreadPoolExecutor、rocketmq延时消息)
 
 批处理打包发送机制：多条消息打包成一个batch。多个batch打包成一个request。减少网络通信，提高吞吐量
 
@@ -432,7 +464,7 @@ mmap：
 什么时候Kafka不合适
 + 业务希望个别消费失败以后可以重试，并且不堵塞后续其它消息的消费
 + 业务希望消息可以延迟一段时间再投递
-+ 业务需要发送的时候保证数据库操作和消息发送是一致的（也就是事务发送）
++ 业务需要发送的时候保证数据库操作和消息发送是一致的(也就是事务发送)
 + 为了排查问题，有的时候业务需要一定的单个消息查询能力
 什么时候选择RocketMQ
 + 吞吐量高：单机吞吐量可达十万级
