@@ -1,0 +1,1146 @@
+---
+layout:     post
+title:      "Elasticsearch(二) 搜索"
+date:       2021-12-29
+author:     "ZhouJ000"
+header-img: "img/in-post/2021/post-bg-2021-headbg.jpg"
+catalog: true
+tags:
+    - 大数据
+--- 
+
+[Elasticsearch(一) 入门](https://zhouj000.github.io/2021/10/18/es1/)  
+[Elasticsearch(二) 搜索](https://zhouj000.github.io/2021/12/29/es2/)  
+
+
+
+# 搜索
+
+空搜索`http://localhost:9200/megacorp/employee/_search`
+```
+{
+    "took": 48,		// 请求耗费毫秒
+    "timed_out": false,		// 是否超时
+    "_shards": {	// 参与分片的总数
+        "total": 1,
+        "successful": 1,
+        "skipped": 0,
+        "failed": 0
+    },
+    "hits": {
+        "total": {
+            "value": 3,		// 匹配到的文档总数
+            "relation": "eq"
+        },
+        "max_score": 1.0,	// 与查询所匹配文档的_score的最大值
+        "hits": [		// 文档
+            {
+                "_index": "megacorp",
+                "_type": "employee",
+                "_id": "1",
+                "_score": 1.0,		// 与查询的匹配程度。这里没有指定查询，因此1是中性的_score
+                "_source": {
+                    "first_name": "John",
+                    "last_name": "Smith",
+                    "age": 25,
+                    "about": "I love to go rock climbing",
+                    "interests": ["sports", "music"]
+                }
+            },
+            {
+                "_index": "megacorp",
+                "_type": "employee",
+                "_id": "2",
+                "_score": 1.0,
+                "_source": {
+                    "first_name": "Jane",
+                    "last_name": "Smith",
+                    "age": 32,
+                    "about": "I like to collect rock albums",
+                    "interests": ["music"]
+                }
+            },
+            {
+                "_index": "megacorp",
+                "_type": "employee",
+                "_id": "3",
+                "_score": 1.0,
+                "_source": {
+                    "first_name": "Douglas",
+                    "last_name": "Fir",
+                    "age": 35,
+                    "about": "I like to build cabinets",
+                    "interests": ["forestry"]
+                }
+            }
+        ]
+    }
+}
+```
+上面的例子指定了特殊的索引和类型，规则如下：
+```
+/_search			在所有的索引中搜索所有的类型
+/test/_search		在test索引中搜索所有的类型
+/a,b/_search		在a和b索引中搜索所有的文档
+/a*,b*/_search		在任何以a或b开头的索引中搜索所有的类型
+/test/user,employee/_search		在test索引中搜索user和employee类型	
+/_all/user,employee/_search		在所有的索引中搜索user和employee类型	
+```
+
+> 搜索一个索引有五个主分片和搜索五个索引各有一个分片准确来说是等价的
+
+ES接受`from`和`size`参数实现分页功能。size默认为10，from默认为0。考虑到分页过深以及一次请求许多结果的情况，需要在结果集返回之前先进行排序。要注意的是请求经常会跨越多个分片，每个分片都产生自己的排序结果，这些结果需要进行**集中排序**以保证整体顺序是正确的
+
+分布式系统中深度分页
+```
+假设在一个有5个主分片的索引中搜索：
+
+当请求结果的第一页(结果从1 - 10)，每一个分片产生前10的结果，并且返回给协调节点，协调节点对50个结果排序得到全部结果的前10个
+
+那么当请求第1000页的​结果，即从10001 - 10010。每个分片不得不产生前10010个结果，然后协调节点对全部50050个结果排序，最后会丢弃掉这些结果中的50040个结果
+
+这可以看到在分布式系统中，对结果排序的成本随分页的深度成指数上升。这就是web搜索引擎对任何查询都不要返回超过1000个结果的原因
+```
+
+使用_mapping可以查看映射：`GET http://localhost:9200/megacorp/_mapping/?pretty`查看test索引中的映射([ES7中剔除了映射类型](https://blog.51cto.com/u_14298057/2384062))
+```
+{
+    "megacorp": {
+        "mappings": {
+            "properties": {
+                "about": {
+                    "type": "text",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                        }
+                    }
+                },
+                "age": {
+                    "type": "long"
+                },
+                "first_name": {
+                    "type": "text",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                        }
+                    }
+                },
+                "interests": {
+                    "type": "text",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                        }
+                    }
+                },
+                "last_name": {
+                    "type": "text",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+## 索引
+
++ 倒排索引
++ 分析
+	- 分词
+		+ 字符过滤器
+		+ 分词器
+		+ Token 过滤器
+	- 标准化
+	- 内置分析器
+		+ 标准分析器
+		+ 简单分析器
+		+ 空格分析器
+		+ 语言分析器
+
+测试分词器
+```
+GET http://localhost:9200/_analyze
+{
+  "analyzer": "standard",
+  "text": "Text to analyze"
+}
+
+返回：
+{
+    "tokens": [
+        {
+            "token": "text",
+            "start_offset": 0,
+            "end_offset": 4,
+            "type": "<ALPHANUM>",
+            "position": 0
+        },
+        {
+            "token": "to",
+            "start_offset": 5,
+            "end_offset": 7,
+            "type": "<ALPHANUM>",
+            "position": 1
+        },
+        {
+            "token": "analyze",
+            "start_offset": 8,
+            "end_offset": 15,
+            "type": "<ALPHANUM>",
+            "position": 2
+        }
+    ]
+}
+```
+
+### 手动创建索引
+
+创建一个新的索引，采用的是默认的配置，新的字段通过动态映射的方式被添加到类型映射。如果要对这个建立索引的过程做更多的控制，比如想要确保这个索引有数量适中的主分片，并且在我们索引任何数据之前，分析器和映射已经被建立好。那么为了达到这个目的，我们需要手动创建索引，在请求体里面传入设置或类型映射
+
+```
+PUT /my_index
+{
+    "settings": {
+        "number_of_shards":   1,	// 每个索引的主分片数，默认值是5
+        "number_of_replicas": 0,	// 每个主分片的副本数，默认值是1
+		"analysis": {			// 一个分析器就是在一个包里面组合了三种函数的一个包装器，三种函数按照顺序被执行
+								// 字符过滤器、分词器(必须且唯一)、词单元过滤器
+            "analyzer": {
+                "my_analyzer": {	// my_analyzer分析器非全局，只存在于my_index索引中		
+                    "type":      "custom",
+					"char_filter": [ "html_strip", "&_to_and" ],	// html清除 + 自定义映射字符过滤器
+					"tokenizer": "standard",	// 使用标准分词器分词
+					"filter": [ "lowercase" ]	// 使用小写词过滤器
+                    "stopwords": "_spanish_"	// 使用一个预定义的西班牙语停用词列表
+                }
+            },
+			"char_filter": {
+				"&_to_and": {
+					"type":     "mapping",
+					"mappings": [ "&=> and " ]	// 把 & 替换为 and
+				}
+			},
+			"tokenizer": { ... custom tokenizers ... },
+			"filter": { ... custom token filters ... }
+        }
+    },
+    "mappings": {
+        "type_one": { ... any mappings ... },
+        "type_two": { ... any mappings ... },
+        ...
+    }
+}
+```
+最后还要告诉ES在哪里使用它，比如把这个分析器应用在一个string字段上
+```
+PUT /my_index/_mapping/my_type
+{
+    "properties": {
+        "title": {
+            "type":      "string",
+            "analyzer":  "my_analyzer"
+        }
+    }
+}
+```
+删除索引
+```
+DELETE /my_index
+DELETE /my_index1,my_index2
+DELETE /index_*
+DELETE /_all
+```
+
+> Elasticsearch提供了优化好的默认配置。除非理解这些配置的作用并且知道为什么要去修改，否则不要随意修改
+
+映射的最高一层被称为**根对象**，它可能包含下面几项：
++ 一个**properties节点**，列出了文档中可能包含的每个字段的映射
++ 各种**元数据**字段，它们都以一个下划线开头，例如`_type 、_id、_source`
++ **设置项**，控制如何动态处理新的字段，例如`analyzer、dynamic_date_formats、dynamic_templates`
++ 其他设置，可以同时应用在根对象和其他object类型的字段上，例如`enabled、dynamic、include_in_all`
+
+文档字段和属性的三个最重要的设置：
++ type
+	- 字段的数据类型，例如string、date
++ index
+	- 字段是否应当被当成全文来搜索(analyzed)、或被当成一个准确的值(not_analyzed)、还是完全不可被搜索(no)
++ analyzer
+	- 确定在索引和搜索时全文字段使用的analyzer
+
+#### 动态映射与动态模板
+	
+// TODO
+
+
+### 索引重建
+
+通过使用_alias(单个操作)和_aliases(多个原子级操作)可以使用别名在零停机下从旧索引切换到新索引，还可以给多个索引分组、给索引的一个子集创建视图。同时别名的开销很小，应该广泛使用，在你的应用中使用别名而不是索引名，这样就可以在任何时候重建索引
+
+索引创建后，可以在索引当中添加新的类型、在类型中添加新的字段。但是如果想修改已存在字段的属性(修改分词器、类型等)，目前只能通过重建索引的方式来实现，需要保证索引_source属性值为true，即存储原始数据。索引重建的过程就是将原索引数据查询出来、入到新建的索引当中去，为了重建过程不影响客户端查询，创建索引时需要使用索引别名
+
+```
+PUT /my_index_v1 {...}
+// 别名my_index指向my_index_v1索引
+PUT /my_index_v1/_alias/my_index 
+
+// 查询这个别名指向哪一个索引
+GET /*/_alias/my_index
+// 查询哪些别名指向这个索引
+GET /my_index_v1/_alias/*
+
+// 为了重新索引数据，用新映射创建索引my_index_v2
+PUT /my_index_v2
+{
+    "mappings": {
+        "my_type": {
+            "properties": {
+                "tags": {
+                    "type":   "string",
+                    "index":  "not_analyzed"
+                }
+            }
+        }
+    }
+}
+
+// 用scroll从旧的索引检索批量文档，用bulk API把文档从my_index_v1索引到my_index_v2
+GET /old_index/_search?scroll=1m
+{
+    "query": {
+        "range": {
+            "date": {
+                "gte":  "2021-01-01",
+                "lt":   "2021-12-01"
+            }
+        }
+    },
+    "sort": ["_doc"],
+    "size":  1000
+}
+// 或直接使用Reindex API对文档重建索引
+POST _reindex
+{
+  "source": {
+    "index": "my_index_v1"
+  },
+  "dest": {
+    "index": "my_index_v2"
+  }
+}
+
+// 一个别名可以指向多个索引，所以在添加别名到新索引的同时，必须从旧的索引中删除它
+POST /_aliases	// 原子化操作
+{
+    "actions": [
+        { "remove": { "index": "my_index_v1", "alias": "my_index" }},
+        { "add":    { "index": "my_index_v2", "alias": "my_index" }}
+    ]
+}
+
+```
+
+### 更新索引
+
+> 因为历史原因，倒排索引被用来对整个非结构化文本文档进行标引。es中的文档是有字段和值的结构化JSON文档。所以在JSON文档中，每个被索引的字段都有自己的倒排索引
+
+倒排索引被写入磁盘后是**不可改变的**，它永远不会修改。不变性有重要的价值：
++ 不需要锁。如果你从来不更新索引，你就不需要担心多进程同时修改数据的问题
++ 一旦索引被读入内核的文件系统缓存，便会留在哪里。由于其不变性，只要文件系统缓存中还有足够的空间，那么大部分读请求会直接请求内存，而不会命中磁盘。这提供了很大的性能提升
++ 其它缓存(像filter缓存)，在索引的生命周期内始终有效。它们不需要在每次数据改变时被重建，因为数据不会变化
++ 写入单个大的倒排索引允许数据被压缩，减少磁盘I/O和需要被缓存到内存的索引的使用量
+
+如果你需要让一个新的文档可被搜索，就需要**重建整个索引**。这要么对一个索引所能包含的数据量造成了很大的限制，要么对索引可被更新的频率造成了很大的限制
+
+那怎样在保留不变性的前提下实现倒排索引的更新呢？**用更多的索引**，通过增加新的补充索引来反映最新的修改，而不是直接重写整个倒排索引。每一个倒排索引都会被**轮流查询**到，从最早的开始直到​查询完后，再对结果进行**合并**
+
+
+
+## 表达式
+
+一条复合语句可以将多条语句(叶子语句和其它复合语句)合并成一个单一的查询语句，例如：
+```
+{
+    "bool": {
+        "must": { "match":   { "email": "business opportunity" }},
+		"filter":   { "range": { "age" : { "gt" : 30 }} },
+        "should": [
+            { "match":       { "starred": true }},
+            { "bool": {
+                "must":      { "match": { "folder": "inbox" }},
+                "must_not":  { "match": { "spam": true }}
+            }}
+        ],
+        "minimum_should_match": 1
+    }
+}
+```
+
+可以使用`{..., "_source": [ "title", "created" ]}`来达到只获取特定的字段的效果
+
+_all字段是一个把其它字段值当作一个大字符串来索引的特殊字段，当不知道文档的结构时，可以使用_all来做任何查询`{"match": {"_all": "everything"}}`。该字段为搜索的应急之策。通过查询指定字段会使查询更加灵活、强大
+
+ES的查询语言DSL拥有一套查询组件，这些组件可以以无限组合的方式进行搭配。这套组件可分为过滤情况和查询情况。过滤情况不评分，只是查看是否匹配；而查询情况为评分查询，在匹配这个文档是否匹配时，还会判断这个文档匹配的程度如何，会将相关度分配到_score字段，并按相关度对匹配到的文档进行排序，这非常适合全文搜索的场景
+
+常用查询：
++ match查询
++ multi_match查询
++ range查询
++ term查询
+	- 精确匹配
++ terms查询
++ exists查询
++ missing查询
++ bool组合多查询
+	- must：文档必须匹配这些条件才能被包含进来
+	- must_not：文档必须不匹配这些条件才能被包含进来
+	- should：如果满足这些语句中的任意语句，将增加_score，否则无任何影响。它们主要用于修正每个文档的相关性得分
+		+ 如果没有must语句，那至少要满足其中一条，否则对should的匹配没有要求
+	- filter：必须匹配，但它以不评分、过滤模式来进行。这些语句对评分没有贡献，只是根据过滤标准来排除或包含文档
+	- 每一个子查询都独自地计算文档的相关性得分。bool查询会将这些得分进行合并，并返回一个代表整个布尔操作的得分
++ constant_score查询
+	- 替代只有filter语句的bool查询，性能上完全一致，对JSON简洁性和清晰度有帮助
++ scroll游标查询
+	- 游标查询会取某个时间点的快照数据，就像保留初始化时的索引视图一样。这样在执行大批量的文档查询时，不用付出深度分页那种代价
+
+```
+GET http://localhost:9200/megacorp/_validate/query
+{
+   "query": {
+      "match" : {
+         "last_name" : "really powerful"
+      }
+   }
+}
+验证查询是否合法：
+{
+    "_shards": {
+        "total": 1,
+        "successful": 1,
+        "failed": 0
+    },
+    "valid": true
+}
+如果将match和last_name的位置互换，则会返回"valid": false。可以使用?explain来查看原因
+GET http://localhost:9200/megacorp/_validate/query?explain
+{
+    "valid": false,
+    "error": "ParsingException[unknown query [last_name]]; nested: NamedObjectNotFoundException[[3:21] unknown field [last_name]];; org.elasticsearch.common.xcontent.NamedObjectNotFoundException: [3:21] unknown field [last_name]"
+}
+换回来后再请求就返回：
+{
+    "_shards": {
+        "total": 1,
+        "successful": 1,
+        "failed": 0
+    },
+    "valid": true,
+    "explanations": [
+        {
+            "index": "megacorp",
+            "valid": true,
+            "explanation": "+(last_name:really last_name:powerful) #*:*"
+        }
+    ]
+}
+```
+
+使用sort可以显示设定排序`{..., "sort": { "createTime": { "order": "desc" }}}`。得到的结果_score不被计算，因为它并没有用于排序。计算_score的花销巨大，通常仅用于排序，因此如果不根据相关性排序，记录_score是没有意义的。如果无论如何都要计算_score，可以将`track_scores`参数设置为true
+
+如果需要多级排序，先按createTime排序，然后相同的按相关性排序，可以传：
+```
+{
+    "query" : {
+        "bool" : {
+            "must":    { "match": { "tweet": "manage text search" }},
+            "filter" : { "term" : { "user_id" : 2 }}
+        }
+    },
+    "sort": [
+        { "createTime": { "order": "desc" }},
+        { "_score": 	{ "order": "desc" }}
+    ]
+}
+```
+
+### 相关性
+
+ES的相似度算法被定义为检索词频率/反向文档频率，TF/IDF：
++ 检索词频率
+	- 检索词在该字段出现的频率。出现频率越高，相关性也越高
++ 反向文档频率
+	- 每个检索词在索引中出现的频率。频率越高，相关性越低。检索词出现在多数文档中会比出现在少数文档中的权重更低
++ 字段长度准则
+	- 字段的长度是多少。长度越长，相关性越低。检索词出现在一个短的title要比同样的词出现在一个长的content字段权重更大
+
+
+## 进阶搜索
+
+当进行精确值查找时，会使用过滤器(filters)。因为它们执行速度非常快，不会计算相关度，而且很容易被缓存，如果可以应该尽可能多的使用过滤式查询
+```
+GET /test/products/_search
+{
+    "query" : {
+        "constant_score" : { 
+            "filter" : {
+                "term" : { 
+                    "price" : 20
+                }
+            }
+        }
+    }
+}
+```
+
+1. 查找匹配文档
+2. 创建bitset
+	+ 过滤器会创建一个bitset(一个包含0和1的数组)，它描述了哪个文档会包含该term。匹配文档的标志位是1
+3. 迭代bitset(s)
+	+ 一旦为每个查询生成了bitsets，ES就会循环迭代bitsets从而找到满足所有过滤条件的匹配文档的集合。执行顺序是启发式的，但一般来说先迭代稀疏的bitset，因为它可以排除掉大量的文档
+4. 增量使用计数
+	+ ES能够缓存非评分查询从而获取更快的访问。因为非评分计算的倒排索引已经足够快了，所以一般只要缓存那些我们知道在将来会被再次使用的查询，来避免资源的浪费
+	+ ES会为每个索引跟踪保留查询使用的历史状态。如果查询在最近的256次查询中会被用到，那么它就会被缓存到内存中
+	+ 当bitset被缓存后，缓存会在那些低于10000个文档或少于3%的总索引数的段(segment)中被忽略。这些小的段将会消失，所以为它们分配缓存是一种浪费
+
+过滤器的计算核心就是采用一个**bitset记录与过滤器匹配的文档**。ES积极地把这些bitset缓存起来以备随后使用。一旦缓存成功，bitset可以复用任何已使用过的相同过滤器，而无需再次计算整个过滤器。bitsets是独立于它所属搜索请求其他部分的，是属于一个查询组件的，并不依赖于它所存在的查询上下文
+
+理论上非评分查询先于评分查询执行，实际情况并非如此，执行有它的复杂性，这取决于查询计划是如何重新规划的，比如有些启发式的算法是付出查询代价的。非评分查询任务旨在降低那些将对评分查询计算带来更高成本的文档数量，从而达到快速搜索的目的，所以概念上是首先执行的，这有助于写出高效又快速的搜索请求
+
+当需要组合搜索时就要使用bool过滤器，这是个复合过滤器，可以接受多个其他过滤器作为参数，并将这些过滤器结合成各式各样的布尔(逻辑)组合。bool过滤器可以嵌套
+
+range范围搜索
+
+`null、[](空数组)和[null]`这些都是等价的，它们无法存于倒排索引中，ES提供了一些工具来处理空或缺失值。有exists存在查询和missing查询，它们还可以处理一个对象的内部字段
+
+### 全文搜索
+
+全文搜索两个最重要的方面是相关性和分析(Analysis)
+
+所有查询会或多或少的执行相关度计算，但不是所有查询都有分析阶段，和一些完全不会对文本进行操作的查询(比如bool、function_score)不同，文本查询可以划分成两大类：
++ **基于词项的查询**
+	- 比如term这样的，底层查询不需要分析阶段，它们对单个词项进行操作。用term查询词项Foo只要在倒排索引中查找准确词项，并且用TF/IDF算法为每个包含该词项的文档计算相关度评分_score。它不会对词的多样性进行处理(比如foo或FOO)
++ **基于全文的查询**
+	- 像match或query_string这样的查询是高层查询，它们了解字段映射的信息
+	- 如果查询日期(date)或整数(integer)字段，它们会将查询字符串分别作为日期或整数对待
+	- 如果查询一个(not_analyzed)未分析的精确值字符串字段，它们会将整个查询字符串作为单个词项对待
+	- 但如果要查询一个(analyzed)已分析的全文字段，它们会先将查询字符串传递到一个合适的分析器，然后生成一个供查询的词项列表
+	- 一旦组成了词项列表，这个查询会对每个词项逐一执行底层的查询，再将结果合并，然后为每个文档生成一个最终的相关度评分
+
+> 我们很少直接使用基于词项的搜索，通常情况下都是对全文进行查询，而非单个词项，这只需要简单的执行一个高层全文查询，进而在高层查询内部会以基于词项的底层查询完成搜索
+
+匹配查询match是个核心查询。无论需要查询什么字段，match查询都应该会是首选的查询方式。它是一个高级全文查询，这表示它既能处理全文字段，又能处理精确字段
+
+为了提高精度，可以设定操作符
+```
+{
+    "query": {
+        "match": {
+            "title": {      
+                "query":    "quick brown dog",
+                "operator": "and"
+				// "minimum_should_match": "75%" 最小匹配参数，指定必须匹配的词项数用来表示一个文档是否相关
+            }
+        }
+    }
+}
+```
+
+对于组合查询来说，与过滤器一样，bool查询也可以接受must、must_not和should参数下的多个查询语句
+```
+{
+  "query": {
+    "bool": {
+      "must":     { "match": { "title": "quick" }},
+      "must_not": { "match": { "title": "lazy"  }},
+      "should": [
+                  { "match": { "title": "brown" }},
+                  { "match": { "title": "dog"   }}
+      ],
+	  "minimum_should_match": 2	 // 控制需要匹配的should语句的数量，同样可以是数字或百分比
+    }
+  }
+}
+```
+可以为查询语句提升权重，通过boost来设置，默认值为1，越大则权重越大(非线性的)
+```
+{
+    "query": {
+        "bool": {
+            "must": {
+                "match": {  
+                    "content": {
+                        "query":    "full text search",	// 默认1
+                        "operator": "and"
+                    }
+                }
+            },
+            "should": [
+                { "match": {
+                    "content": {
+                        "query": "Elasticsearch",
+                        "boost": 3 		// 权重3
+                    }
+                }},
+                { "match": {
+                    "content": {
+                        "query": "Lucene",
+                        "boost": 2 		// 权重2
+                    }
+                }}
+            ]
+        }
+    }
+}
+```
+
+查询只能查找倒排索引表中真实存在的项，所以保证文档在索引时与查询字符串在搜索时应用相同的分析过程非常重要，这样查询的项才能够匹配倒排索引中的项
+
+每个字段都可以有不同的分析器，既可以通过配置为字段**指定**分析器，也可以使用更高层的类型(type)、索引(index)或节点(node)的**默认配置**。在索引时，一个字段值是根据配置或默认分析器分析的
+
+像match查询这样的高层查询知道字段映射的关系，能为每个被查询的字段应用正确的分析器
+
+分析器可以从三个层面进行定义：按字段(per-field)、按索引(per-index)或全局缺省(global default)。ES会按照以下顺序依次处理，直到它找到能够使用的分析器：  
+1、字段映射里定义的analyzer  
+2、索引设置中名为default的分析器  
+3、standard标准分析器  
+在搜索时，顺序有些许不同(ES支持一个可选的search_analyzer映射和一个等价的default_search映射)：  
+1、查询自己定义的analyzer  
+2、字段映射里定义的search_analyzer  
+3、字段映射里定义的analyzer  
+4、索引设置中名为 default_search 的分析器  
+5、索引设置中名为default的分析器  
+6、standard标准分析器
+
+> 保持简单：在创建索引或者增加类型映射时，为每个全文字段设置分析器
+
+> 通常多数字符串字段都是not_analyzed精确值字段，比如标签tag或枚举enum，而且更多的全文字段会使用默认的standard分析器或english/其他某种语言的分析器。这样只需要为少数一两个字段指定自定义分析
+
+> 由于每个分片会根据该分片内的所有文档计算一个本地IDF，如果数据量太少，会导致文档不是均匀分布存储的，那么这些IDF之间的差异会导致不正确的结果。不过本地和全局的IDF的差异会随着索引里文档数的增多渐渐消失
+
++ 召回率Recall
+	- 返回所有的相关文档
+	- 为了提高召回率的效果，需要扩大搜索范围。不仅返回与用户搜索词精确匹配的文档，还会返回我们认为与查询相关的所有文档
++ 精确率Precision
+	- 不返回无关文档
+	- 提高全文相关性精度的常用方式是为同一文本建立多种方式的索引，每种方式都提供了一个不同的相关度信号signal。主字段会以尽可能多的形式的去匹配尽可能多的文档
+
+### 近相查询
+
+match_phrase查询用于找到相邻近搜索词的查询，它首先将查询字符串解析成一个词项列表，然后对这些词项进行搜索，但只保留那些包含全部搜索词项，且位置与搜索词项相同的文档
+```
+{
+    "query": {
+        "match_phrase": {
+            "title": "quick brown fox"
+        }
+    }
+}
+等价于
+"match": {
+    "title": {
+        "query": "quick brown fox",
+        "type":  "phrase"
+    }
+}
+```
+
+> 当一个字符串被分词后，这个分析器不但会返回一个词项列表，而且还会返回各词项在原始字符串中的位置或者顺序关系
+
+位置信息可以被存储在倒排索引中，因此像match_phrase查询这类对词语位置敏感的查询，就可以利用位置信息去匹配包含所有查询词项，且各词项顺序也与我们搜索指定一致的文档，中间不夹杂其他词项
+
+那么上面查询quick brown fox必须满足：
++ quick、brown和fox需要全部出现在域中
++ brown的位置应该比quick的位置大1
++ fox的位置应该比quick的位置大2 
+
+> 本质上讲，match_phrase查询是利用一种低级别的span查询族去做词语位置敏感的匹配。Span查询是一种词项级别的查询，所以它们没有分词阶段，只对指定的词项进行精确搜索
+
+这种匹配非常严格，这时候可以使用slop参数告诉match_phrase，查询词条相隔多远时仍然能将文档视为匹配
+```
+{
+    "query": {
+        "match_phrase": {
+            "title": {
+            	"query": "quick brown fox",
+            	"slop":  2
+            }
+        }
+    }
+}
+```
+
+在对多值字段查询时，由于ES对数组分析生成了单个字符串，我们如果查询里面相邻元素的部分，也会由于它们存在而匹配。因此这时需要使用position_increment_gap，它在字段映射中配置
+```
+// 文档字段
+"names": [ "John Abraham", "Lincoln Smith"]
+// 查询
+"query": {
+	"match_phrase": {
+		"names": "Abraham Lincoln"
+	}
+}
+将会查询到文档，因为这2个正好是相邻的
+
+DELETE /my_index/groups/
+PUT /my_index/_mapping/groups 
+{
+    "properties": {
+        "names": {
+            "type":                "string",
+            "position_increment_gap": 100
+        }
+    }
+}
+这样当我们查询数组时，里面的元素间距将变为100，除非定义100的slop来查询，否则不会查询到
+```
+
+> 设置高slop查询时，越近分数越高
+
+在进行多值查询时，有时候大部分匹配就够了，所以可以将match查询拆为must子句和should子句，为must增加minimum_should_match参数去除长尾，用should的形式来添加更多特定查询：
+```
+{
+  "query": {
+    "bool": {
+      "must": {
+        "match": { 
+          "title": {
+            "query":                "quick brown fox",
+            "minimum_should_match": "30%"
+          }
+        }
+      },
+      "should": {
+        "match_phrase": { 
+          "title": {
+            "query": "quick brown fox",
+            "slop":  50
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+[寻找相关词](https://www.elastic.co/guide/cn/elasticsearch/guide/current/shingles.html)
+
+### 部分匹配
+
+部分匹配就类似于SQL的`like %xx%`，有时候我们会需要这样查询，例如匹配邮编、序列号、用户输入即搜索等场景
+
+前缀查询中，prefix查询是一个词级别的底层的查询，它不会在搜索之前分析查询字符串，它假定传入前缀就正是要查找的前缀
+```
+{
+    "query": {
+        "prefix": {
+            "postcode": "W1"
+        }
+    }
+}
+```
+为了支持前缀匹配，查询会做以下事情：  
+1、扫描词列表并查找到第一个以W1开始的词  
+2、搜集关联的文档ID  
+3、移动到下一个词  
+4、如果这个词也是以W1开头，查询跳回到第二步再重复执行，直到下一个词不以W1为止
+
+如果倒排索引中有数以百万的邮编都是以W1开头时，前缀查询则需要访问每个词然后计算结果。**前缀越短所需访问的词越多**，所以当字段中词的集合很小时，可以放心使用，但由于它的伸缩性并不好，会对集群带来很多压力，要使用较长的前缀来限制这种影响，减少需要访问的量
+
+与prefix前缀查询的特性类似，wildcard通配符查询也是一种底层**基于词**的查询，它还允许使用标准的shell通配符查询
+```
+"query": {
+	"wildcard": {
+		"postcode": "W?F*HW" 
+	}
+}
+```
+regexp正则式查询允许写出这样更复杂的模式
+```
+"query": {
+	"regexp": {
+		"postcode": "W[0-9].+" 
+	}
+}
+```
+wildcard和regexp查询的工作方式与prefix查询完全一样，它们也需要扫描倒排索引中的词列表才能找到所有匹配的词，然后依次获取每个词相关的文档ID，与prefix查询的唯一不同是它们能支持更为复杂的匹配模式，所以依然要注意性能问题
+
+[Ngrams](https://www.elastic.co/guide/cn/elasticsearch/guide/current/_index_time_search_as_you_type.html)
+
+
+### 相关度
+
++ 布尔模型
+	- 使用AND、OR和NOT来查找匹配文档
++ 实用评分函数
+	- 将布尔模型、TF/IDF、向量空间模型组合到单个高效的包里以收集匹配文档并进行评分计算
++ 词频/逆向文档频率(TF/IDF)
+	- 词频、逆向文档频率、字段长度归一值
++ 向量空间模型
+	- 测量查询向量和文档向量之间的角度就可以得到每个文档的相关度
++ 其他
+	- 查询归一因子：试图将查询归一化，这样就能将两个不同的查询结果相比较
+	- 协调因子：为那些查询词包含度高的文档提供奖励
+	- 字段长度归一化
+	- 词或查询语句权重提升
+
+> 可以使用参数indices_boost来提升整个索引的权重
+
+
+## 聚合
+
+聚合和搜索是一起的，意味着可以在单个请求中对相同的数据进行过滤和分析，这是因为聚合会在用户搜索的上下文里计算
+
++ 桶(Buckets)
+	- 满足特定条件的文档的集合
+	- 当聚合开始执行时，每个文档里的值计算符合哪个桶的条件，当匹配到后，文档将放入相应的桶并接着进行聚合操作
+	- 桶可以被嵌套在其他桶里面，提供层次化的或者有条件的划分方案
+	- 分桶是一种达到目的的手段，它提供了一种给文档分组的方法来让我们可以计算感兴趣的指标
++ 指标(Metrics)
+	- 对桶内的文档进行统计计算
+	- 大多数指标是简单的数学运算，例如最小值、最大值，平均值、汇总等
+	- 
+
+每个聚合都是一个或多个桶(类似于group by)和零个或多个指标(类似于count())的组合。例如查询每个颜色车的数量
+```
+{
+    "size" : 0,		// 不关心搜索结果的具体内容，将返回记录数设置为0来提高查询速度
+    "aggs" : { 
+        "popular_colors" : { 	// 聚合名称
+            "terms" : {
+              "field" : "color"
+            }
+        }
+    }
+}
+
+// 返回
+{
+...
+   "hits": {
+      "hits": [] 	// size为0，因此没有结果返回
+   },
+   "aggregations": {
+      "popular_colors": { 	// 标签作为aggregations一部分返回
+         "buckets": [
+            {
+               "key": "red", 	// 颜色
+               "doc_count": 4 	// 包含该词项的文档数量
+            },
+            {
+               "key": "blue",
+               "doc_count": 2
+            },
+            {
+               "key": "green",
+               "doc_count": 2
+            }
+         ]
+      }
+   }
+}
+```
+进一步加入指标，例如查询该颜色车的平均价格
+```
+{
+   "size" : 0,
+   "aggs": {
+      "colors": {
+         "terms": {
+            "field": "color"
+         },
+         "aggs": { 	// 新的聚合层将avg度量嵌套置于terms桶内，就为每个颜色生成了平均价格
+            "avg_price": { 
+               "avg": {
+                  "field": "price" 
+               }
+            }
+         }
+      }
+   }
+}
+
+// 返回
+"aggregations": {
+  "colors": {
+	 "buckets": [
+		{
+		   "key": "red",
+		   "doc_count": 4,
+		   "avg_price": { 
+			  "value": 32500
+		   }
+		},
+	  ...
+	 ]
+  }
+}		  
+```
+使用嵌套
+```
+{
+   "size" : 0,
+   "aggs": {
+      "colors": {
+         "terms": {
+            "field": "color"
+         },
+         "aggs": {
+            "avg_price": { "avg": { "field": "price" }
+            },
+            "make" : {
+                "terms" : {		// terms桶，为每个汽车制造商生成唯一的桶
+                    "field" : "make"
+                },
+                "aggs" : { 
+                    "min_price" : { "min": { "field": "price"} }, 
+                    "max_price" : { "max": { "field": "price"} } 
+                }
+            }
+         }
+      }
+   }
+}
+```
+
+> 聚合能够十分容易地转换成图表和图形，比如直方图histogram、extended_stats度量、按时间统计的date_histogram等
+
+通常我们希望聚合是在查询范围内的，但有时我们也想要搜索它的子集，而聚合的对象却是所有数据。比如我们想知道福特汽车与所有汽车平均售价的比较。我们可以用普通的聚合查询范围内的数据得到第一个信息，然后用**全局桶**获得第二个信息
+```
+{
+    "size" : 0,
+    "query" : {
+        "match" : {
+            "make" : "ford"
+        }
+    },
+    "aggs" : {
+        "single_avg_price": {	// 在范围内聚合
+            "avg" : { "field" : "price" } 
+        },
+        "all": {
+            "global" : {}, 		// 全局桶没有参数
+            "aggs" : {
+                "avg_price": {	// 针对所有文档聚合
+                    "avg" : { "field" : "price" } 
+                }
+
+            }
+        }
+    }
+}
+```
+过滤查询聚合。例如查询售价在10,000美元之上的所有汽车、同时为这些车计算平均售价
+```
+{
+    "size" : 0,
+    "query" : {
+        "constant_score": {
+            "filter": {
+                "range": {
+                    "price": {
+                        "gte": 10000
+                    }
+                }
+            }
+        }
+    },
+    "aggs" : {
+        "single_avg_price": {
+            "avg" : { "field" : "price" }
+        }
+    }
+}
+```
+如果需要对聚合结果进行过滤，可以使用过滤桶filter。例如在搜索ford的基础上，带出近一个月的平均售价
+```
+{
+   "size" : 0,
+   "query":{
+      "match": {
+         "make": "ford"
+      }
+   },
+   "aggs":{
+      "recent_sales": {
+         "filter": { 	// 使用 过滤桶 在查询范围基础上应用过滤器
+            "range": {
+               "sold": {
+                  "from": "now-1M"
+               }
+            }
+         },
+         "aggs": {
+            "average_price":{
+               "avg": {	// 	avg度量只会对ford和上个月售出的文档计算平均售价
+                  "field": "price" 
+               }
+            }
+         }
+      }
+   }
+}
+```
+使用后过滤器post_filter可以对聚合结果的一部分进行过滤，它是接收一个过滤器的顶层搜索请求元素，这个过滤器在查询之后执行。可以利用这个行为对查询条件应用更多的过滤器，而不会影响其他的操作
+```
+{
+    "size" : 0,
+    "query": {
+        "match": {
+            "make": "ford"	// 查询品牌
+        }
+    },
+    "post_filter": {    // 按照颜色过滤
+        "term" : {
+            "color" : "green"
+        }
+    },
+    "aggs" : {
+        "all_colors": {
+            "terms" : { "field" : "color" }
+        }
+    }
+}
+```
+
+> post_filter的特性是在查询之后执行，任何过滤对性能带来的好处(比如缓存)都会完全失去。post_filter只与聚合一起使用
+
+多值桶(terms、histogram和date_histogram)动态生成很多桶，默认的桶会根据doc_count降序排列。这些排序模式是桶固有的能力，比如指定terms聚合按doc_count值的升序排序
+```
+{
+    "size" : 0,
+    "aggs" : {
+        "colors" : {
+            "terms" : {
+              "field" : "color",
+              "order": {
+                "_count" : "asc" 
+              }
+            }
+        }
+    }
+}
+```
+又比如按照度量计算的结果值进行排序
+```
+{
+    "size" : 0,
+    "aggs" : {
+        "colors" : {
+            "terms" : {
+              "field" : "color",
+              "order": {	// 桶按照计算平均值的升序排序
+			  // 如果想使用多值度量进行排序，只需以度量为关键词使用点式路径，例如stats.variance
+                "avg_price" : "asc" 
+              }
+            },
+            "aggs": {
+                "avg_price": {	// 计算每个桶的平均售价
+                    "avg": {"field": "price"} 
+                }
+            }
+        }
+    }
+}
+```
+使用`>`可以进行深度的度量排序。需要注意的是，嵌套路径上的每个桶必须都是单值桶，目前的单值桶有filter、global和reverse_nested 
+```
+{
+    "size" : 0,
+    "aggs" : {
+        "colors" : {
+            "histogram" : {
+              "field" : "price",
+              "interval": 20000,
+              "order": {	// 按照嵌套度量的方差对桶的直方图进行排序
+                "red_green_cars>stats.variance" : "asc" 
+              }
+            },
+            "aggs": {
+                "red_green_cars": {	// 使用单值过滤器filter，可以使用嵌套排序
+                    "filter": { "terms": {"color": ["red", "green"]}}, 
+                    "aggs": {	// 按照这个统计结果排序
+                        "stats": {"extended_stats": {"field" : "price"}} 
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+> Elasticsearch目前支持两种近似算法(cardinality和percentiles)。它们会提供准确但不是100%精确的结果。以牺牲一点小小的估算错误为代价，这些算法可以为我们换来高速的执行效率和极小的内存消耗
+
+> 聚合使用一个叫**Doc values**的数据结构。Doc values可以使聚合更快、更高效、并且内存友好。Doc values的存在是因为倒排索引只对某些操作是高效的。倒排索引的优势在于查找包含某个项的文档，而对于从另外一个方向的相反操作并不高效，例如确定哪些项是否存在单个文档里，而聚合需要这种次级的访问模式
+
+**倒排索引将词项映射到包含它们的文档，Doc values将文档映射到它们包含的词项**
+
+》 
+Doc values不仅可以用于聚合，任何需要查找某个文档包含的值的操作都必须使用它。例如除了聚合，还包括排序、访问字段值的脚本、父子关系处理
+
+Doc Values是在索引时与倒排索引同时生成。也就是说Doc Values和倒排索引一样，基于Segement生成并且是不可变的。同时Doc Values和倒排索引一样序列化到磁盘，这样对性能和扩展性有很大帮助。Doc Values通过序列化把数据结构持久化到磁盘，我们可以充分利用操作系统的内存，而不是JVM的Heap。因为Doc Values不是由JVM来管理，所以Elasticsearch实例可以配置一个很小的JVM Heap，这样给系统留出来更多的内存。同时更小的Heap可以让JVM更加快速和高效的回收
+
+> Doc Values默认对所有字段启用，除了analyzed strings。也就是说所有的数字、地理坐标、日期、IP和不分析(not_analyzed)字符类型都会默认开启
+
+内存的管理形式可以有多种形式，这取决于我们特定的应用场景：
++ 在规划时
+	- 组织好数据，使聚合运行在 not_analyzed 字符串而不是 analyzed 字符串，这样可以有效的利用 doc values 。
++ 在测试时
+	- 验证分析链不会在之后的聚合计算中创建高基数字段。
++ 在搜索时
+	- 合理利用近似聚合和数据过滤。
++ 在节点层
+	- 设置硬内存大小以及动态的断熔限制。
++ 在应用层
+	- 通过监控集群内存的使用情况和 Full GC 的发生频率，来调整是否需要给集群资源添加更多的机器节点
+
+
+## 其他
+
+### 人类语言
+
++ 开始处理各种语言
+	- 使用语言分析器
+	- 配置语言分析器
+	- 每份文档一种语言
+	- 每个域一种语言
+	- 混合语言域
++ 词汇识别
+	- 标准分析器
+	- 标准分词器
+	- icu_分词器
+	- 整理输入文本
++ 归一化词元
++ 将单词还原为词根
+	- 词干提取算法
+	- 字典词干提取器
+	- Hunspell词干提取器
+	- 选择一个词干提取器
+	- 控制词干提取
+	- 原形词干提取
++ 停用词: 性能与精度
++ 同义词
+	- 同义词格式
+	- 扩展或收缩
+	- 同义词和分析链
+	- 多词同义词和短语查询
+	- 符号同义词
++ 拼写错误
+	- 模糊性
+	- 模糊查询
+	- 模糊匹配查询
+	- 模糊性评分
+	- 语音匹配
+
+### 地理位置
+
+// TODO

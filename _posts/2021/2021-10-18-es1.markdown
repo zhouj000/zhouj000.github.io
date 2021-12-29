@@ -1,13 +1,17 @@
 ---
 layout:     post
-title:      "Java基础SE(三) 线程与并发-补充"
-date:       2021-05-24
+title:      "Elasticsearch(一) 入门"
+date:       2021-10-18
 author:     "ZhouJ000"
 header-img: "img/in-post/2021/post-bg-2021-headbg.jpg"
 catalog: true
 tags:
     - 大数据
 --- 
+
+[Elasticsearch(一) 入门](https://zhouj000.github.io/2021/10/18/es1/)  
+[Elasticsearch(二) 搜索](https://zhouj000.github.io/2021/12/29/es2/)  
+
 
 
 # 介绍
