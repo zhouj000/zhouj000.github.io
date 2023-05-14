@@ -458,7 +458,9 @@ Server JIT编译器的生成代码对循环做了大量优化，包括**循环�
 
 
 扩展：  
-[Java HotSpot VM Options](https://www.oracle.com/java/technologies/javase/vmoptions-jsp.html)
+[Java HotSpot VM Options](https://www.oracle.com/java/technologies/javase/vmoptions-jsp.html)  
+《Java性能权威指南》  
+
 
 参考：  
 《Java性能优化权威指南》  
